@@ -1,15 +1,15 @@
 # SuperHeat
 多功能加热控制器（二代），平板加热台、风枪双控。
 
-* 本项目的地址 https://github.com/ClimbSnail/SuperHeat （最新的资料）
-* 或者 https://gitee.com/ClimbSnailQ/SuperHeat （仅为预览，不一定是最新的）
-* 旧版一代控制器项目 https://github.com/ClimbSnail/HeatPlatform_SMT （底成本方案）
+* 本项目的地址 https://github.com/ClimbSnail/SuperHeat （github为最新资料）
+* 或者 https://gitee.com/ClimbSnailQ/SuperHeat （gitee非最新，仅为预览）
+* 上一代旧版控制器项目 https://github.com/ClimbSnail/HeatPlatform_SMT （底成本方案）
 
 # 项目简介
 本项目使用ESP32模组开发。同时控制加热板和风枪工作，亦可 __同时插接两个风枪__ 或 __同时插接两个加热板__ 。
 
 1. 使用TFT 1.3寸240*240的屏幕，使用`LVGL`做界面，增强操作的动画效果。
-2. 配套上位机软件，用于更新固件和绘制温控曲线等等。
+2. 配套上位机软件，用于`更新固件`和`绘制温控曲线`等等。
 3. 分体式设计，使用航空头外接设备，支持单口输出`2000W`功率。
 4. 后期将会添加休眠功能，可用于`显示天气`、`监控电脑硬件`等。
 5. 还会有更多的功能加入。。。。
