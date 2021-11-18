@@ -4,7 +4,7 @@
 #define SuperHeat_VERSION "0.6.0"
 
 #include <Arduino.h>
-#include "rgb_led.h"
+// #include "rgb_led.h"
 #include "config.h"
 #include "display.h"
 #include "network.h"
@@ -15,20 +15,22 @@
 // define pins
 #define ADC0_PIN 36
 #define ADC1_PIN 39
-#define BL_PWM_PIN 34
-#define PWM_1_PIN 35
+#define ADC2_PIN 34
+#define ADC3_PIN 35
+#define BL_PWM_PIN 12
+#define PWM_1_PIN 33
 #define PWM_2_PIN 32
-#define FAN_1_PIN 33
-#define FAN_2_PIN 25
+#define PWM_3_PIN 15
+#define FAN_1_PIN 2
+#define FAN_2_PIN 13
 #define EC11_A_PIN 26
 #define EC11_B_PIN 27
 #define EC11_SW_PIN 14
-#define BEEP_PIN 0
+#define BEEP_PIN 19
 #define TOUCH_PIN 4
 #define SW_1_PIN 22
 #define SW_2_PIN 21
 #define DAC_1 25
-#define DAC_2 26
 // #define TX_PIN 0
 // #define RX_PIN 0
 
@@ -46,22 +48,22 @@
 
 #define USER_SET_PARAM_NUM 10 // 用户的设置项保存参数的数量（UserData）
 
-extern Config g_cfg; // 全局配置文件
-extern Pixel rgb;
-extern Network g_network; // 网络连接
-extern Preferences prefs; // 声明Preferences对象
-extern Display screen;    // 屏幕对象
-// extern Knobs knobs;       // EC11编码器
-extern Buzzer buzzer;     // 蜂鸣器
-
-boolean doDelayMillisTime(unsigned long interval,
-                          unsigned long *previousMillis,
-                          boolean state);
-
 #include <TFT_eSPI.h>
 /*
 TFT pins should be set in path/to/Arduino/libraries/TFT_eSPI/User_Setups/Setup24_ST7789.h
 */
 extern TFT_eSPI *tft;
+
+extern Config g_cfg; // 全局配置文件
+// extern Pixel rgb;
+extern Network g_network; // 网络连接
+extern Preferences prefs; // 声明Preferences对象
+extern Display screen;    // 屏幕对象
+extern Knobs knobs;       // EC11编码器
+extern Buzzer buzzer;     // 蜂鸣器
+
+boolean doDelayMillisTime(unsigned long interval,
+                          unsigned long *previousMillis,
+                          boolean state);
 
 #endif

@@ -16,7 +16,7 @@ Buzzer::Buzzer(uint8_t buzzer_num, uint16_t cycle_time)
     m_cycle_time = cycle_time != 0 ? cycle_time : 1;
 
     pinMode(m_pin_num, OUTPUT);
-    digitalWrite(m_pin_num, HIGH); // 默认关闭蜂鸣器
+    digitalWrite(m_pin_num, LOW); // 默认关闭蜂鸣器
 }
 
 void Buzzer::timer_handler(TimerHandle_t xTimer)
@@ -27,7 +27,7 @@ void Buzzer::timer_handler(TimerHandle_t xTimer)
     }
     else
     {
-        digitalWrite(m_pin_num, HIGH); // 定时时间到了 关闭蜂鸣器
+        digitalWrite(m_pin_num, LOW); // 定时时间到了 关闭蜂鸣器
     }
 }
 
@@ -44,6 +44,6 @@ void Buzzer::set_beep_time(uint16_t time)
     m_count = time / m_cycle_time;
     if (0 != m_count)
     {
-        digitalWrite(m_pin_num, LOW); // 开始定时 开启蜂鸣器
+        digitalWrite(m_pin_num, HIGH); // 开始定时 开启蜂鸣器
     }
 }
