@@ -12,7 +12,7 @@ uint8_t Knobs::flag = 0;
 /***********************************************************
  * 编码器类的初始化   注：在大多数情况下，
  * 只能使用引脚0、2、4、5、12、13、14、15和16
- * 
+ *
  */
 Knobs::Knobs(uint8_t pinA_num, uint8_t pinB_num, uint8_t pinSw_num)
 {
@@ -66,7 +66,7 @@ void Knobs::interruter_funcSW_ON(void)
 {
     // 发生外部中断后执行的函数
     int status = digitalRead(m_pinSw_num);
-    if (0 == status)    // 按下
+    if (0 == status) // 按下
     {
         // delay(10);   // 不能加延时，会发生终端异常
         status = digitalRead(m_pinSw_num);
@@ -75,8 +75,9 @@ void Knobs::interruter_funcSW_ON(void)
             m_previousMillis = millis();
         }
     }
-    else{   // 松开
-        
+    else
+    { // 松开
+
         status = digitalRead(m_pinSw_num);
         if (false || 1 == status)
         {

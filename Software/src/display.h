@@ -3,8 +3,6 @@
 
 #include <lvgl.h>
 
-#define LCD_BL_PWM_CHANNEL 0
-
 class Display
 {
 public:

@@ -5,7 +5,8 @@
    Paste the byte array into a sketch tab and add two lines
    at the start with a unique font name and }; at the end:
 
-                const uint8_t  fontName[] PROGMEM = {
+        #include <pgmspace.h>
+        const uint8_t  fontName[] PROGMEM = {
 
              Insert byte array here
 
@@ -16,6 +17,7 @@
         #include "fontName.h"
 */
 
+#include <pgmspace.h>
 
 const uint8_t  Unicode_Test_72[] PROGMEM = {
 0x00, 0x00, 0x00, 0x16, 0x00, 0x00, 0x00, 0x0B, 0x00, 0x00, 0x00, 0x48, 0x00, 0x00, 0x00, 0x00, 

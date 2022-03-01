@@ -18,6 +18,7 @@
 #define ADC2_PIN 34
 #define ADC3_PIN 35
 #define BL_PWM_PIN 12
+// #define PWM_1_PIN 19
 #define PWM_1_PIN 33
 #define PWM_2_PIN 32
 #define PWM_3_PIN 15
@@ -26,6 +27,7 @@
 #define EC11_A_PIN 26
 #define EC11_B_PIN 27
 #define EC11_SW_PIN 14
+// #define BEEP_PIN 33
 #define BEEP_PIN 19
 #define TOUCH_PIN 4
 #define SW_1_PIN 22
@@ -39,7 +41,9 @@
 #define PWM_2_CHANNEL 9
 #define FAN_1_CHANNEL 10
 #define FAN_2_CHANNEL 11
+#define BEEP_CHANNEL 12
 #define HIGH_CHANNEL 0
+#define LCD_BL_PWM_CHANNEL 1
 
 // #define TFT_RES_PIN 16
 // #define TFT_DC_PIN 17
@@ -60,7 +64,7 @@ extern Network g_network; // 网络连接
 extern Preferences prefs; // 声明Preferences对象
 extern Display screen;    // 屏幕对象
 extern Knobs knobs;       // EC11编码器
-extern Buzzer buzzer;     // 蜂鸣器
+// extern Buzzer buzzer;     // 蜂鸣器
 
 boolean doDelayMillisTime(unsigned long interval,
                           unsigned long *previousMillis,

@@ -5,7 +5,8 @@
    Paste the byte array into a sketch tab and add two lines
    at the start with a unique font name:
 
-                const uint8_t  fontName[] PROGMEM = {
+        #include <pgmspace.h>
+        const uint8_t  fontName[] PROGMEM = {
 
    At the end add:
 
@@ -16,6 +17,7 @@
         #include "NotoSansBold36.h"
 */
 
+#include <pgmspace.h>
 
 const uint8_t  NotoSansBold36[] PROGMEM = {
 0x00, 0x00, 0x00, 0x5E, 0x00, 0x00, 0x00, 0x0B, 0x00, 0x00, 0x00, 0x24, 0x00, 0x00, 0x00, 0x00, 

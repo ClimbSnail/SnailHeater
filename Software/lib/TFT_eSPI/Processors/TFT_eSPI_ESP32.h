@@ -71,12 +71,6 @@
   #define DMA_BUSY_CHECK
 #endif
 
-#if defined(TFT_PARALLEL_8_BIT)
-  #define SPI_BUSY_CHECK
-#else
-  #define SPI_BUSY_CHECK while (*_spi_cmd&SPI_USR)
-#endif
-
 // If smooth font is used then it is likely SPIFFS will be needed
 #ifdef SMOOTH_FONT
   // Call up the SPIFFS (SPI FLASH Filing System) for the anti-aliased fonts
@@ -187,12 +181,8 @@
 // Define the WR (TFT Write) pin drive code
 ////////////////////////////////////////////////////////////////////////////////////////
 #if defined (TFT_WR)
-  #if (TFT_WR >= 32)
-    // Note: it will be ~1.25x faster if the TFT_WR pin uses a GPIO pin lower than 32
-    #define WR_L GPIO.out1_w1tc.val = (1 << (TFT_WR - 32))
-    #define WR_H GPIO.out1_w1ts.val = (1 << (TFT_WR - 32))
-  #elif (TFT_WR >= 0)
-    // TFT_WR, for best performance, should be in range 0-31 for single register parallel write
+  #if (TFT_WR >= 0)
+    // TFT_WR, by design, must be in range 0-31 for single register parallel write
     #define WR_L GPIO.out_w1tc = (1 << TFT_WR)
     #define WR_H GPIO.out_w1ts = (1 << TFT_WR)
   #else
@@ -223,7 +213,11 @@
   #ifdef USE_HSPI_PORT
 
     #ifndef TFT_MISO
-      #define TFT_MISO -1
+      #define TFT_MISO 12
+    #endif
+    #if (TFT_MISO == -1)
+      #undef TFT_MISO
+      #define TFT_MISO 12
     #endif
 
     #ifndef TFT_MOSI
@@ -245,7 +239,11 @@
   #else // VSPI port
 
     #ifndef TFT_MISO
-      #define TFT_MISO -1
+      #define TFT_MISO 19
+    #endif
+    #if (TFT_MISO == -1)
+      #undef TFT_MISO
+      #define TFT_MISO 19
     #endif
 
     #ifndef TFT_MOSI
@@ -292,15 +290,8 @@
   // Mask for the 8 data bits to set pin directions
   #define dir_mask ((1 << TFT_D0) | (1 << TFT_D1) | (1 << TFT_D2) | (1 << TFT_D3) | (1 << TFT_D4) | (1 << TFT_D5) | (1 << TFT_D6) | (1 << TFT_D7))
 
-  #if (TFT_WR >= 32)
-    // Data bits and the write line are cleared sequentially
-    #define clr_mask (dir_mask); WR_L
-  #elif (TFT_WR >= 0)
-    // Data bits and the write line are cleared to 0 in one step (1.25x faster)
-    #define clr_mask (dir_mask | (1 << TFT_WR))
-  #else
-    #define clr_mask
-  #endif
+  // Data bits and the write line are cleared to 0 in one step
+  #define clr_mask (dir_mask | (1 << TFT_WR))
 
   // A lookup table is used to set the different bit patterns, this uses 1kByte of RAM
   #define set_mask(C) xset_mask[C] // 63fps Sprite rendering test 33% faster, graphicstest only 1.8% faster than shifting in real time
@@ -325,20 +316,13 @@
 
   #else
 
-    #ifdef PSEUDO_16_BIT
-      // One write strobe for both bytes
-      #define tft_Write_16(C)  GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t) ((C) >> 0)); WR_H
-      #define tft_Write_16S(C) GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t) ((C) >> 8)); WR_H
-    #else
-      // Write 16 bits to TFT
-      #define tft_Write_16(C) GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t) ((C) >> 8)); WR_H; \
-                              GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t) ((C) >> 0)); WR_H
+    // Write 16 bits to TFT
+    #define tft_Write_16(C) GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t) ((C) >> 8)); WR_H; \
+                            GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t) ((C) >> 0)); WR_H
 
-      // 16 bit write with swapped bytes
-      #define tft_Write_16S(C) GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t) ((C) >> 0)); WR_H; \
-                               GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t) ((C) >> 8)); WR_H
-    #endif
-
+    // 16 bit write with swapped bytes
+    #define tft_Write_16S(C) GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t) ((C) >> 0)); WR_H; \
+                             GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t) ((C) >> 8)); WR_H
   #endif
 
   // Write 32 bits to TFT
@@ -362,8 +346,8 @@
    // Read pin
   #ifdef TFT_RD
     #if (TFT_RD >= 32)
-      #define RD_L GPIO.out1_w1tc.val = (1 << (TFT_RD - 32))
-      #define RD_H GPIO.out1_w1ts.val = (1 << (TFT_RD - 32))
+      #define RD_L GPIO.out1_w1tc.val =  = (1 << (TFT_RD - 32))
+      #define RD_H GPIO.out1_w1ts.val =  = (1 << (TFT_RD - 32))
     #elif (TFT_RD >= 0)
       #define RD_L GPIO.out_w1tc = (1 << TFT_RD)
       //#define RD_L digitalWrite(TFT_WR, LOW)
@@ -387,9 +371,6 @@
   #define tft_Write_16(C)  spi.transfer(((C) & 0xF800)>>8); \
                            spi.transfer(((C) & 0x07E0)>>3); \
                            spi.transfer(((C) & 0x001F)<<3)
-
-  // Future option for transfer without wait
-  #define tft_Write_16N(C) tft_Write_16(C)
 
   // Convert swapped byte 16 bit colour to 18 bit and write in 3 bytes
   #define tft_Write_16S(C) spi.transfer((C) & 0xF8); \
@@ -424,9 +405,6 @@
   // Write 16 bits with corrected endianess for 16 bit colours
   #define tft_Write_16(C) TFT_WRITE_BITS((C)<<8 | (C)>>8, 16)
 
-  // Future option for transfer without wait
-  #define tft_Write_16N(C) tft_Write_16(C)
-
   // Write 16 bits
   #define tft_Write_16S(C) TFT_WRITE_BITS(C, 16)
 
@@ -444,7 +422,7 @@
 // Macros for all other SPI displays
 ////////////////////////////////////////////////////////////////////////////////////////
 #else
-/* Old macros
+
   // ESP32 low level SPI writes for 8, 16 and 32 bit values
   // to avoid the function call overhead
   #define TFT_WRITE_BITS(D, B) \
@@ -466,41 +444,11 @@
   #define tft_Write_32(C) TFT_WRITE_BITS(C, 32)
 
   // Write two address coordinates
-  #define tft_Write_32C(C,D) TFT_WRITE_BITS((uint16_t)((D)<<8 | (D)>>8)<<16 | (uint16_t)((C)<<8 | (C)>>8), 32)
-
-  // Write same value twice
-  #define tft_Write_32D(C) TFT_WRITE_BITS((uint16_t)((C)<<8 | (C)>>8)<<16 | (uint16_t)((C)<<8 | (C)>>8), 32)
-//*/
-//* Replacement slimmer macros
-  #define TFT_WRITE_BITS(D, B) *_spi_mosi_dlen = B-1;    \
-                               *_spi_w = D;             \
-                               *_spi_cmd = SPI_USR;      \
-                        while (*_spi_cmd & SPI_USR);
-
-  // Write 8 bits
-  #define tft_Write_8(C) TFT_WRITE_BITS(C, 8)
-
-  // Write 16 bits with corrected endianess for 16 bit colours
-  #define tft_Write_16(C) TFT_WRITE_BITS((C)<<8 | (C)>>8, 16)
-
-  // Future option for transfer without wait
-  #define tft_Write_16N(C) *_spi_mosi_dlen = 16-1;       \
-                           *_spi_w = ((C)<<8 | (C)>>8); \
-                           *_spi_cmd = SPI_USR;
-
-  // Write 16 bits
-  #define tft_Write_16S(C) TFT_WRITE_BITS(C, 16)
-
-  // Write 32 bits
-  #define tft_Write_32(C) TFT_WRITE_BITS(C, 32)
-
-  // Write two address coordinates
   #define tft_Write_32C(C,D)  TFT_WRITE_BITS((uint16_t)((D)<<8 | (D)>>8)<<16 | (uint16_t)((C)<<8 | (C)>>8), 32)
 
   // Write same value twice
   #define tft_Write_32D(C) TFT_WRITE_BITS((uint16_t)((C)<<8 | (C)>>8)<<16 | (uint16_t)((C)<<8 | (C)>>8), 32)
 
-//*/
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////////////

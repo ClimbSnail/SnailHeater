@@ -39,7 +39,7 @@ void Display::init()
 
     lv_log_register_print_cb(my_print); /* register print function for debugging */
 
-    setBackLight(0.01); // 设置亮度 为了先不显示初始化时的"花屏"
+    setBackLight(0.00); // 设置亮度 为了先不显示初始化时的"花屏"
 
     tft->begin(); /* TFT init */
     tft->fillScreen(TFT_BLACK);
@@ -49,6 +49,7 @@ void Display::init()
     // 以下setRotation函数是经过更改的第4位兼容原版 高四位设置镜像
     // 正常方向需要设置为0 如果加上分光棱镜需要镜像改为4 如果是侧显示的需要设置为5
     tft->setRotation(g_cfg.extern_info.rotation); /* mirror 修改反转，如果加上分光棱镜需要改为4镜像*/
+    tft->setRotation(0);
 
     setBackLight(g_cfg.extern_info.backLight / 100.0); // 设置亮度
 

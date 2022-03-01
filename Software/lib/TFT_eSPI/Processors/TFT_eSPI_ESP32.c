@@ -31,8 +31,8 @@
   volatile uint32_t* _spi_cmd       = (volatile uint32_t*)(SPI_CMD_REG(SPI_PORT));
   volatile uint32_t* _spi_user      = (volatile uint32_t*)(SPI_USER_REG(SPI_PORT));
   // Register writes only:
-  volatile uint32_t* _spi_mosi_dlen = (volatile uint32_t*)(SPI_MOSI_DLEN_REG(SPI_PORT));
-  volatile uint32_t* _spi_w         = (volatile uint32_t*)(SPI_W0_REG(SPI_PORT));
+           uint32_t* _spi_mosi_dlen =          (uint32_t*)(SPI_MOSI_DLEN_REG(SPI_PORT));
+           uint32_t* _spi_w         =          (uint32_t*)(SPI_W0_REG(SPI_PORT));
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -191,12 +191,11 @@ void TFT_eSPI::pushPixels(const void* data_in, uint32_t len)
 ** Function name:           pushBlock - for ESP32
 ** Description:             Write a block of pixels of the same colour
 ***************************************************************************************/
-/*
 void TFT_eSPI::pushBlock(uint16_t color, uint32_t len){
   
   uint32_t color32 = (color<<8 | color >>8)<<16 | (color<<8 | color >>8);
   bool empty = true;
-  volatile uint32_t* spi_w = (volatile uint32_t*)_spi_w;
+  uint32_t* spi_w   = (uint32_t*)_spi_w;
   if (len > 31)
   {
     *_spi_mosi_dlen =  511;
@@ -237,43 +236,7 @@ void TFT_eSPI::pushBlock(uint16_t color, uint32_t len){
   }
   while ((*_spi_cmd)&SPI_USR); // Move to later in code to use transmit time usefully?
 }
-//*/
-//*
-void TFT_eSPI::pushBlock(uint16_t color, uint32_t len){
 
-  volatile uint32_t* spi_w = _spi_w;
-  uint32_t color32 = (color<<8 | color >>8)<<16 | (color<<8 | color >>8);  
-  uint32_t i = 0;
-  uint32_t rem = len & 0x1F;
-  len =  len - rem;
-
-  // Start with partial buffer pixels
-  if (rem)
-  {
-    while (*_spi_cmd&SPI_USR);
-    for (i=0; i < rem; i+=2) *spi_w++ = color32;
-    *_spi_mosi_dlen = (rem << 4) - 1;
-    *_spi_cmd = SPI_USR;
-    if (!len) return; //{while (*_spi_cmd&SPI_USR); return; }
-    i = i>>1; while(i++<16) *spi_w++ = color32;
-  }
-
-  while (*_spi_cmd&SPI_USR);
-  if (!rem) while (i++<16) *spi_w++ = color32;
-  *_spi_mosi_dlen =  511;
-
-  // End with full buffer to maximise useful time for downstream code
-  while(len)
-  {
-    while (*_spi_cmd&SPI_USR);
-    *_spi_cmd = SPI_USR;
-      len -= 32;
-  }
-
-  // Do not wait here
-  //while (*_spi_cmd&SPI_USR);
-}
-//*/
 /***************************************************************************************
 ** Function name:           pushSwapBytePixels - for ESP32
 ** Description:             Write a sequence of pixels with swapped bytes
@@ -513,11 +476,7 @@ void TFT_eSPI::pushBlock(uint16_t color, uint32_t len){
   #if defined (SSD1963_DRIVER)
     while (--len) {WR_L; WR_H; WR_L; WR_H; WR_L; WR_H;}
   #else
-    #ifdef PSEUDO_16_BIT
-      while (--len) {WR_L; WR_H;}
-    #else
-      while (--len) {WR_L; WR_H; WR_L; WR_H;}
-    #endif
+    while (--len) {WR_L; WR_H; WR_L; WR_H;}
   #endif
   }
   else while (len--) {tft_Write_16(color);}
@@ -681,7 +640,7 @@ void TFT_eSPI::pushImageDMA(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t
     }
   }
 
-  if (spiBusyCheck) dmaWait(); // In case we did not wait earlier
+  if (spiBusyCheck) dmaWait(); // Incase we did not wait earlier
 
   setAddrWindow(x, y, dw, dh);
 
