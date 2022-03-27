@@ -2,8 +2,8 @@
 // #include "rgb_led.h"
 #include "config.h"
 #include "network.h"
-#include "knobs.h"
-#include "buzzer.h"
+#include "driver/knobs.h"
+#include "driver/buzzer.h"
 #include <Preferences.h>
 
 #include <TFT_eSPI.h>

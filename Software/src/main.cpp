@@ -1,44 +1,33 @@
 #include <Arduino.h>
-#include "lv_port_indev.h"
-#include "lv_port_fatfs.h"
+#include "driver/lv_port_indev.h"
+#include "driver/lv_port_fatfs.h"
 #include "common.h"
 #include "config.h"
+#include "controller/hot_air.h"
+#include "controller/oscilloscope.h"
+#include "controller/signal_generator.h"
+#include "controller/power.h"
+
+// 创建热风枪
+HotAir hotAir("HotAit", PWM_1_PIN, PWM_1_CHANNEL, FAN_1_PIN, FAN_1_CHANNEL, ADC0_PIN, SW_0_PIN);
+// HotAir hotAir("HotAit", PWM_2_PIN, PWM_2_CHANNEL, FAN_2_PIN, FAN_2_CHANNEL, ADC1_PIN, SW_1_PIN);
+// 创建示波器
+Oscilloscope oscilloscope("Oscilloscope", ADC2_PIN, ADC3_PIN);
+// 创建函数发生器
+SignalGenerator signalGenerator("SignalGenerator", DAC_1);
+// 可调电源
+Power power("Power", POWER_PIN, POWER_PWM_PIN, POWER_PWM_CHANNEL);
 
 TimerHandle_t xTimer_beep = NULL;
 
 KeyInfo ret_info;
 
 uint32_t updateTime = 0; // time for next update
-int oldi = 0;
-int i = 0;
-
-volatile int swInterruptCounter_1 = 0;
-volatile int swInterruptCounter_2 = 0;
-
-// 同步标志
-portMUX_TYPE mux_1 = portMUX_INITIALIZER_UNLOCKED;
-portMUX_TYPE mux_2 = portMUX_INITIALIZER_UNLOCKED;
 
 void gotTouch()
 {
     Serial.println("ESP32 Touch Interrupt");
     // buzzer.set_beep_time(1000);
-}
-
-void sw_1()
-{
-    portENTER_CRITICAL_ISR(&mux_1);
-    swInterruptCounter_1++;
-    Serial.println("sw_1");
-    portEXIT_CRITICAL_ISR(&mux_1);
-}
-
-void sw_2()
-{
-    portENTER_CRITICAL_ISR(&mux_2);
-    swInterruptCounter_2++;
-    Serial.println("sw_2");
-    portEXIT_CRITICAL_ISR(&mux_2);
 }
 
 void setup()
@@ -47,6 +36,11 @@ void setup()
     Serial.println("\nSuperHeat Version: " SuperHeat_VERSION "\n");
 
     config_read(&g_cfg);
+
+    hotAir.start();
+    oscilloscope.start();
+    signalGenerator.start();
+    power.start();
 
     touchSetCycles(0x3000, 0x1000); // measure值表示量程范围 0x1000为100 0x3000为300
     // 其中40为阈值，当通道T0上的值<40时，会触发中断
@@ -65,54 +59,6 @@ void setup()
     // // 蜂鸣器
     // buzzer.set_beep_time(1000);
 
-    ledcSetup(PWM_1_CHANNEL, 5, 8);
-    ledcAttachPin(PWM_1_PIN, PWM_1_CHANNEL);
-    ledcWrite(PWM_1_CHANNEL, (int)(0.2 * 255));
-    // pinMode(PWM_1_PIN, OUTPUT);
-    // digitalWrite(PWM_1_PIN, HIGH);
-
-    ledcSetup(PWM_2_CHANNEL, 5, 8);
-    ledcAttachPin(PWM_2_PIN, PWM_2_CHANNEL);
-    ledcWrite(PWM_2_CHANNEL, (int)(0.2 * 255));
-
-    ledcSetup(HIGH_CHANNEL, 5000, 8);
-    ledcAttachPin(PWM_3_PIN, HIGH_CHANNEL);
-    ledcWrite(HIGH_CHANNEL, (int)(0.2 * 255));
-
-    // ledcSetup(FAN_1_CHANNEL, 5000, 8);
-    // ledcAttachPin(FAN_1_PIN, FAN_1_CHANNEL);
-    // ledcWrite(FAN_1_CHANNEL, (int)(0.2 * 255));
-
-    // ledcSetup(BEEP_CHANNEL, 5000, 8);
-    // ledcAttachPin(BEEP_PIN, BEEP_CHANNEL);
-    // ledcWrite(BEEP_CHANNEL, (int)(0.8 * 255));
-
-    // ledcSetup(FAN_2_CHANNEL, 5000, 8);
-    // ledcAttachPin(FAN_2_PIN, FAN_2_CHANNEL);
-    // ledcWrite(FAN_2_CHANNEL, (int)(0.02 * 255));
-
-    // ADC引脚
-    // adcAttachPin(ADC3_PIN); //将引脚连接到ADC
-    pinMode(ADC0_PIN, INPUT);
-    pinMode(ADC1_PIN, INPUT);
-    pinMode(ADC2_PIN, INPUT);
-    pinMode(ADC3_PIN, INPUT);
-    // analogSetPinAttenuation(ADC2_PIN, ADC_0db);
-
-    pinMode(BEEP_PIN, OUTPUT);
-
-    // 开关
-    // 按下与松开
-    pinMode(SW_1_PIN, INPUT_PULLUP);
-    pinMode(SW_2_PIN, INPUT_PULLUP);
-    pinMode(FAN_1_PIN, OUTPUT);
-    pinMode(FAN_2_PIN, OUTPUT);
-    attachInterrupt(digitalPinToInterrupt(SW_1_PIN), sw_1, FALLING);
-    attachInterrupt(digitalPinToInterrupt(SW_2_PIN), sw_2, RISING);
-
-    dacWrite(DAC_1, 100); // 输出DAC
-    delay(5);
-
     tft->fillRect(0, 0, 240, 140, TFT_GOLD);
     tft->fillRect(0, 140, 240, 140, TFT_DARKGREY);
 
@@ -128,9 +74,6 @@ void setup()
 void loop()
 {
     // while(1);
-
-    // portENTER_CRITICAL(&mux_1);
-
     ret_info = knobs.get_data();
     Serial.printf("count---> ");
     Serial.print(ret_info.pulse_count);
@@ -142,45 +85,10 @@ void loop()
     Serial.printf("\ttouchRead---> ");
     Serial.print(touchRead(TOUCH_PIN));
 
-    Serial.printf("\tADC0 ---> ");
-    Serial.print(analogRead(ADC0_PIN));
-    Serial.printf("\tADC1 ---> ");
-    Serial.println(analogRead(ADC1_PIN));
-
-    Serial.printf("\tADC2 ---> ");
-    Serial.print(analogRead(ADC2_PIN) / 4096.0 * 3.3 * 21);
-    Serial.printf("\tADC3 ---> ");
-    Serial.println(analogRead(ADC3_PIN) / 4096.0 * 3.3 * 6);
-
-    // digitalWrite(PWM_1_PIN, HIGH);
-    // delay(500);
-    // digitalWrite(PWM_1_PIN, LOW);
-    // delay(500);
-    ledcWrite(PWM_1_CHANNEL, (int)(0.01 * 255));
-    ledcWrite(PWM_2_CHANNEL, (int)(0.01 * 255));
-    // ledcWrite(FAN_1_CHANNEL, (int)(0.01 * 255));
-    // ledcWrite(FAN_2_CHANNEL, (int)(0.01 * 255));
-    digitalWrite(FAN_1_PIN, HIGH);
-    digitalWrite(FAN_2_PIN, HIGH);
-    delay(1500);
-    ledcWrite(PWM_1_CHANNEL, (int)(1 * 255));
-    ledcWrite(PWM_2_CHANNEL, (int)(1 * 255));
-    // ledcWrite(FAN_1_CHANNEL, (int)(0.8 * 255));
-    // ledcWrite(FAN_2_CHANNEL, (int)(0.8 * 255));
-    digitalWrite(FAN_1_PIN, LOW);
-    digitalWrite(FAN_2_PIN, LOW);
-    delay(1500);
-
-    // portEXIT_CRITICAL(&mux_1);
-
     // buzzer.set_beep_time(1000);
-    // digitalWrite(BEEP_PIN, LOW);
-    // delay(1000);
-    // digitalWrite(BEEP_PIN, HIGH);
-    // delay(1000);
-    // digitalWrite(BEEP_PIN, LOW);
-    // delay(500);
 
+    // int oldi = 0;
+    // int i = 0;
     // updateTime = millis(); // Next update time
     // if (updateTime <= millis())
     // {
@@ -197,51 +105,18 @@ void loop()
     //     }
     // }
 
-    // // while (1)
-    // {
-    //     int dutyCycle;
-    //     dutyCycle = 0;
-    //     ledcWrite(PWM_1_CHANNEL, dutyCycle);
-    //     ledcWrite(PWM_2_CHANNEL, dutyCycle);
-    //     ledcWrite(HIGH_CHANNEL, dutyCycle);
-    //     ledcWrite(FAN_1_CHANNEL, dutyCycle);
-    //     ledcWrite(FAN_2_CHANNEL, dutyCycle);
-    //     // ledcWrite(BEEP_CHANNEL, dutyCycle);
-    //     delay(1000);
-    //     dutyCycle = 128;
-    //     ledcWrite(PWM_1_CHANNEL, dutyCycle);
-    //     ledcWrite(PWM_2_CHANNEL, dutyCycle);
-    //     ledcWrite(HIGH_CHANNEL, dutyCycle);
-    //     ledcWrite(FAN_1_CHANNEL, dutyCycle);
-    //     ledcWrite(FAN_2_CHANNEL, dutyCycle);
-    //     // ledcWrite(BEEP_CHANNEL, dutyCycle);
-    //     delay(1000);
-    //     dutyCycle = 255;
-    //     ledcWrite(PWM_1_CHANNEL, dutyCycle);
-    //     ledcWrite(PWM_2_CHANNEL, dutyCycle);
-    //     ledcWrite(HIGH_CHANNEL, dutyCycle);
-    //     ledcWrite(FAN_1_CHANNEL, dutyCycle);
-    //     ledcWrite(FAN_2_CHANNEL, dutyCycle);
-    //     // ledcWrite(BEEP_CHANNEL, dutyCycle);
-    //     delay(1000);
-
-    //     // for (int dutyCycle = 0; dutyCycle <= 255; dutyCycle = dutyCycle + 5)
-    //     // {
-    //     //     ledcWrite(PWM_1_CHANNEL, dutyCycle);
-    //     //     ledcWrite(PWM_2_CHANNEL, dutyCycle);
-    //     //     ledcWrite(HIGH_CHANNEL, dutyCycle);
-    //     //     ledcWrite(FAN_1_CHANNEL, dutyCycle);
-    //     //     ledcWrite(FAN_2_CHANNEL, dutyCycle);
-    //     //     delay(500);
-    //     // }
-    //     // for (int dutyCycle = 255; dutyCycle >=0; dutyCycle = dutyCycle - 5)
-    //     // {
-    //     //     ledcWrite(PWM_1_CHANNEL, dutyCycle);
-    //     //     ledcWrite(PWM_2_CHANNEL, dutyCycle);
-    //     //     ledcWrite(HIGH_CHANNEL, dutyCycle);
-    //     //     ledcWrite(FAN_1_CHANNEL, dutyCycle);
-    //     //     ledcWrite(FAN_2_CHANNEL, dutyCycle);
-    //     //     delay(500);
-    //     // }
-    // }
+    for (int dutyCycle = 0; dutyCycle <= 100; ++dutyCycle)
+    {
+        hotAir.setAirDuty(dutyCycle);
+        hotAir.setPowerDuty(dutyCycle);
+        delay(200);
+        if (dutyCycle == 100)
+        {
+            delay(1000);
+        }
+        else if (dutyCycle == 0)
+        {
+            delay(1000);
+        }
+    }
 }

@@ -6,10 +6,10 @@
 #include <Arduino.h>
 // #include "rgb_led.h"
 #include "config.h"
-#include "display.h"
+#include "driver/display.h"
 #include "network.h"
-#include "knobs.h"
-#include "buzzer.h"
+#include "driver/knobs.h"
+#include "driver/buzzer.h"
 #include <Preferences.h>
 
 // define pins
@@ -17,6 +17,8 @@
 #define ADC1_PIN 39
 #define ADC2_PIN 34
 #define ADC3_PIN 35
+#define POWER_PIN 0
+#define POWER_PWM_PIN 5
 #define BL_PWM_PIN 12
 // #define PWM_1_PIN 19
 #define PWM_1_PIN 33
@@ -30,8 +32,8 @@
 // #define BEEP_PIN 33
 #define BEEP_PIN 19
 #define TOUCH_PIN 4
-#define SW_1_PIN 22
-#define SW_2_PIN 21
+#define SW_0_PIN 22
+#define SW_1_PIN 21
 #define DAC_1 25
 // #define TX_PIN 0
 // #define RX_PIN 0
@@ -39,6 +41,7 @@
 // pwm通道
 #define PWM_1_CHANNEL 8
 #define PWM_2_CHANNEL 9
+#define POWER_PWM_CHANNEL 7
 #define FAN_1_CHANNEL 10
 #define FAN_2_CHANNEL 11
 #define BEEP_CHANNEL 12
