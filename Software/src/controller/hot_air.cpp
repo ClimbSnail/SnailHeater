@@ -2,6 +2,8 @@
 #include "common.h"
 #include "hot_air.h"
 
+#define AMPLIFY_MULTIPLE 101 // 放大倍数
+
 // HotAir hotAir("HotAit", PWM_1_PIN, PWM_1_CHANNEL, FAN_1_PIN, FAN_1_CHANNEL, ADC0_PIN, SW_0_PIN);
 
 HotAir::HotAir(const char *name, uint8_t powerPin, uint8_t powerPinChannel,
@@ -9,6 +11,7 @@ HotAir::HotAir(const char *name, uint8_t powerPin, uint8_t powerPinChannel,
                uint8_t temperaturePin, uint8_t shakePin)
 {
     strncpy(m_name, name, 16);
+    m_pidContorller = new PID(4.5, 0.15, 0.2, 0.2);
     // 引脚
     m_powerPin = powerPin;
     m_powerPinChannel = powerPinChannel;
@@ -18,11 +21,15 @@ HotAir::HotAir(const char *name, uint8_t powerPin, uint8_t powerPinChannel,
     m_shakePin = shakePin;
 
     //
-    m_powerDuty = (int)(0.2 * 255);
-    m_airDuty = (int)(0.2 * 255);
+    m_powerDuty = (int)(1.0 * 255);
+    m_airDuty = 0;
 
+    m_targetTemp = 0;
     m_swInterruptCounter = 0;
     m_swMux = portMUX_INITIALIZER_UNLOCKED;
+
+    m_bufIndex = 0;
+    m_m_tempBufCnt = 0;
 }
 
 HotAir::~HotAir()
@@ -52,12 +59,11 @@ bool HotAir::start()
     // ADC引脚（读取热电偶）
     // adcAttachPin(m_temperaturePin); //将引脚映射到ADC
     pinMode(m_temperaturePin, INPUT);
-    // analogSetPinAttenuation(ADC2_PIN, ADC_0db); // 设置精度
-    // analogRead(m_temperaturePin); // 读取ADC引脚
+    // analogSetPinAttenuation(m_temperaturePin, ADC_0db); // 设置精度
 
     // 振动开关
     pinMode(m_shakePin, INPUT_PULLUP);
-    attachInterrupt(digitalPinToInterrupt(m_shakePin), interruptCallBack, FALLING);
+    // attachInterrupt(digitalPinToInterrupt(m_shakePin), interruptCallBack, FALLING);
 }
 
 static void interruptCallBack()
@@ -74,10 +80,21 @@ void HotAir::swInterruptCallBack()
     portEXIT_CRITICAL_ISR(&m_swMux);
 }
 
+bool HotAir::setTargetTemp(int16_t temperature)
+{
+    m_targetTemp = temperature;
+    return 0;
+}
+
+int16_t HotAir::getTargetTemp()
+{
+    return m_targetTemp;
+}
+
 bool HotAir::setPowerDuty(uint8_t duty)
 {
     m_powerDuty = constrain(duty, 0, 100);
-    ledcWrite(m_powerPinChannel, (int)(2.55*m_powerDuty));
+    ledcWrite(m_powerPinChannel, (int)(2.55 * m_powerDuty));
     return 0;
 }
 
@@ -91,7 +108,7 @@ bool HotAir::setAirDuty(uint8_t duty)
     m_airDuty = constrain(duty, 0, 100);
     Serial.printf("\tm_airDuty ---> ");
     Serial.println(m_airDuty);
-    ledcWrite(m_airPinChannel, (int)(2.55*m_airDuty));
+    ledcWrite(m_airPinChannel, (int)(2.55 * m_airDuty));
     return 0;
 }
 
@@ -100,10 +117,40 @@ uint8_t HotAir::getAirDuty()
     return m_airDuty;
 }
 
-bool HotAir::process()
+double HotAir::getTemperature()
 {
     Serial.printf("\tADC ---> ");
-    Serial.print(analogRead(m_temperaturePin));
+    uint16_t votl = analogRead(m_temperaturePin) + analogRead(m_temperaturePin) + analogRead(m_temperaturePin);
+    double votl_avg = 3300.0 / 4096 * votl / 3 / AMPLIFY_MULTIPLE;
+    Serial.print(votl_avg);
+
+    // 将本次的温度存入缓冲区 并计算Buffer中的总大小
+    m_m_tempBufCnt -= m_tempBuf[m_bufIndex];
+    m_tempBuf[m_bufIndex] = votl_avg / 0.04096;
+    m_m_tempBufCnt += m_tempBuf[m_bufIndex];
+    // 下标推进
+    m_bufIndex = (m_bufIndex + 1) % TEMPERATURE_BUF_LEN;
+
+    return m_m_tempBufCnt / TEMPERATURE_BUF_LEN;
+}
+
+bool HotAir::process()
+{
+
+    double now_temp = getTemperature();
+    int pwm = 100 - m_pidContorller->get_output(m_targetTemp, now_temp) / 4;
+    Serial.print("\tnow_temp --> ");
+    Serial.print(now_temp);
+    Serial.print("\tPwm --> ");
+    Serial.println(pwm);
+    if (pwm > 0)
+    {
+        this->setPowerDuty(pwm);
+    }
+    if (digitalRead(m_shakePin) == 0)
+    {
+        Serial.println("-> SW");
+    }
 }
 
 bool HotAir::end()

@@ -20,6 +20,8 @@ Power power("Power", POWER_PIN, POWER_PWM_PIN, POWER_PWM_CHANNEL);
 
 TimerHandle_t xTimer_beep = NULL;
 
+TimerHandle_t xTimer_hotair = NULL;
+
 KeyInfo ret_info;
 
 uint32_t updateTime = 0; // time for next update
@@ -28,6 +30,11 @@ void gotTouch()
 {
     Serial.println("ESP32 Touch Interrupt");
     // buzzer.set_beep_time(1000);
+}
+
+void hot_air(TimerHandle_t xTimer)
+{
+    hotAir.process();
 }
 
 void setup()
@@ -52,13 +59,6 @@ void setup()
     /*** Init IMU as input device ***/
     lv_port_indev_init();
 
-    // xTimer_beep = xTimerCreate("BEEP contorller",
-    //                            buzzer.m_cycle_time / portTICK_PERIOD_MS,
-    //                            pdTRUE, (void *)0, buzzer.timer_handler);
-    // xTimerStart(xTimer_beep, 0); //开启定时器
-    // // 蜂鸣器
-    // buzzer.set_beep_time(1000);
-
     tft->fillRect(0, 0, 240, 140, TFT_GOLD);
     tft->fillRect(0, 140, 240, 140, TFT_DARKGREY);
 
@@ -69,22 +69,35 @@ void setup()
     // // tft->print("USB");         //显示USB
     // tft->drawString("USB", 30, 30); //显示USB
     // tft->endWrite();
+
+    // xTimer_beep = xTimerCreate("BEEP contorller",
+    //                            buzzer.m_cycle_time / portTICK_PERIOD_MS,
+    //                            pdTRUE, (void *)0, buzzer.timer_handler);
+    // xTimerStart(xTimer_beep, 0); //开启定时器
+    // // 蜂鸣器
+    // buzzer.set_beep_time(1000);
+    hotAir.setAirDuty(40);
+    hotAir.setTargetTemp(80);
+    xTimer_hotair = xTimerCreate("HotAit contorller",
+                                 200 / portTICK_PERIOD_MS,
+                                 pdTRUE, (void *)0, hot_air);
+    xTimerStart(xTimer_hotair, 0); //开启定时器
 }
 
 void loop()
 {
     // while(1);
     ret_info = knobs.get_data();
-    Serial.printf("count---> ");
+    Serial.printf("【Knobs】 count---> ");
     Serial.print(ret_info.pulse_count);
     Serial.printf("\tstatus---> ");
     Serial.print(ret_info.switch_status);
     Serial.printf("\ttime---> ");
-    Serial.println(ret_info.switch_time);
-
+    Serial.print(ret_info.switch_time);
     Serial.printf("\ttouchRead---> ");
-    Serial.print(touchRead(TOUCH_PIN));
+    Serial.println(touchRead(TOUCH_PIN));
 
+    delay(2000);
     // buzzer.set_beep_time(1000);
 
     // int oldi = 0;
@@ -104,19 +117,4 @@ void loop()
     //         tft->drawFastHLine(0, oldi + 50, 50, TFT_RED);
     //     }
     // }
-
-    for (int dutyCycle = 0; dutyCycle <= 100; ++dutyCycle)
-    {
-        hotAir.setAirDuty(dutyCycle);
-        hotAir.setPowerDuty(dutyCycle);
-        delay(200);
-        if (dutyCycle == 100)
-        {
-            delay(1000);
-        }
-        else if (dutyCycle == 0)
-        {
-            delay(1000);
-        }
-    }
 }
