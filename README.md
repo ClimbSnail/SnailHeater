@@ -23,6 +23,8 @@
 添加这个qq群`148563337`，需要的朋友多的话，可以考虑一起做。
 
 ##### 前面板
+![SuperHeat](Images/SuperHeat.png)
+
 ![SuperHeat](Images/SuperHeat_Screen_B.png)
 
 ##### 主控制板
