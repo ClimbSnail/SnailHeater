@@ -1,5 +1,5 @@
 # SuperHeat
-多功能加热控制器（二代），平板加热台、风枪双控。本项目内有220V高压，务必小心，后果自负。
+多功能加热控制器（二代），平板加热台、风枪双控、可调电源。本项目内有220V高压，务必小心，后果自负。
 
 另外：为了充分利用硬件资源，将会附带双路示波器（采样2M）、函数发生器、高精度脉冲输出（可用与点焊机）。额外会有锁屏时钟等等超多功能。
 
@@ -23,12 +23,13 @@
 添加这个qq群`148563337`，需要的朋友多的话，可以考虑一起做。
 
 ##### 前面板
-![SuperHeat](Images/SuperHeat.png)
+![SuperHeat](Images/SuperHeat_Screen_B.png)
 
-##### 功率控制板
-![SuperHeat](Images/SuperHeat_Ctrl_F.png)
+##### 主控制板
+![SuperHeat](Images/SuperHeat_Ctrl.png)
 
-![SuperHeat](Images/SuperHeat_Ctrl_B.png)
+##### 功率板
+![SuperHeat](Images/SuperHeat_Power.png)
 
 ### 铝基板
 铝基板使用的是希尔伯特曲线，电阻的计算可以使用此链接https://www.a8blog.com/traceres.htm
