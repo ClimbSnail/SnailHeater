@@ -5,10 +5,9 @@
 // #include "lv_demo_encoder.h"
 #include "common.h"
 
-#define CONFIG_SCREEN_HOR_RES       240
-#define CONFIG_SCREEN_VER_RES       240
-#define CONFIG_SCREEN_BUFFER_SIZE   (CONFIG_SCREEN_HOR_RES * CONFIG_SCREEN_VER_RES /2)
-
+#define CONFIG_SCREEN_HOR_RES 280
+#define CONFIG_SCREEN_VER_RES 240
+#define CONFIG_SCREEN_BUFFER_SIZE (CONFIG_SCREEN_HOR_RES * CONFIG_SCREEN_VER_RES / 24)
 
 #define DISP_HOR_RES CONFIG_SCREEN_HOR_RES
 #define DISP_VER_RES CONFIG_SCREEN_VER_RES
@@ -31,10 +30,10 @@ void disp_flush_cb(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color
     uint32_t w = (area->x2 - area->x1 + 1);
     uint32_t h = (area->y2 - area->y1 + 1);
 
-    tft->setAddrWindow(area->x1, area->y1, w, h);
     tft->startWrite();
+    tft->setAddrWindow(area->x1, area->y1, w, h);
     // tft->writePixels(&color_p->full, w * h);
-    tft->pushColors(&color_p->full, w * h, true); //
+    tft->pushColors((uint16_t *)(&color_p->full), w * h, true); //
     tft->endWrite();
     // Initiate DMA - blocking only if last DMA is not complete
     // tft->pushImageDMA(area->x1, area->y1, w, h, bitmap, &color_p->full);
@@ -42,17 +41,15 @@ void disp_flush_cb(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color
     lv_disp_flush_ready(disp);
 }
 
-static void disp_wait_cb(lv_disp_drv_t* disp_drv)
+static void disp_wait_cb(lv_disp_drv_t *disp_drv)
 {
-//    __wfi();
+    //    __wfi();
 }
 
 void Display::init()
 {
     ledcSetup(LCD_BL_PWM_CHANNEL, 5000, 8);
     ledcAttachPin(BL_PWM_PIN, LCD_BL_PWM_CHANNEL);
-
-    lv_init();
 
     setBackLight(0.00); // 设置亮度 为了先不显示初始化时的"花屏"
 
@@ -64,9 +61,12 @@ void Display::init()
     // 以下setRotation函数是经过更改的第4位兼容原版 高四位设置镜像
     // 正常方向需要设置为0 如果加上分光棱镜需要镜像改为4 如果是侧显示的需要设置为5
     tft->setRotation(g_cfg.extern_info.rotation); /* mirror 修改反转，如果加上分光棱镜需要改为4镜像*/
-    tft->setRotation(0);
+    tft->setRotation(1);
 
     setBackLight(g_cfg.extern_info.backLight / 100.0); // 设置亮度
+    setBackLight(0.99);                                // 设置亮度
+
+    lv_init();
 
     lv_log_register_print_cb(
         reinterpret_cast<lv_log_print_g_cb_t>(my_print)); /* register print function for debugging */

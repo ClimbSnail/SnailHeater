@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include "pid.h"
 
-#define TEMPERATURE_BUF_LEN 30
+#define TEMPERATURE_BUF_LEN 10
 
 /**********************************
  * 热风枪控制器
@@ -23,9 +23,11 @@ private:
     uint8_t m_temperaturePin;              // 热电偶的读取引脚（一定是ADC引脚）
     uint8_t m_shakePin;                    // 振动开关的检查引脚
     int16_t m_targetTemp;                  // 目标温度
+    double m_nowTemp;                      // 当前温度
     double m_tempBuf[TEMPERATURE_BUF_LEN]; // 温度缓冲区
-    double m_m_tempBufCnt;                 // Buffer的总和
+    double m_tempBufCnt;                   // Buffer的总和
     int16_t m_bufIndex;
+    bool m_sleepFlag; // 休眠状态
 
     volatile int m_swInterruptCounter;
     portMUX_TYPE m_swMux;
@@ -37,21 +39,22 @@ public:
     ~HotAir();
     bool start();
     bool process();
-    double getTemperature();                 // 获取实时温度
+    double getTemperature(int flag = false); // 获取实时温度
     bool setTargetTemp(int16_t temperature); // 设置温度
     int16_t getTargetTemp();
     uint8_t getPowerDuty();
-    bool setAirDuty(uint8_t duty); // 占空比 0-100
+    bool setAirDuty(uint8_t duty, bool flag = false); // 占空比 0-100
     uint8_t getAirDuty();
     void swInterruptCallBack(); // 友元中断函数
     bool end();
 
 private:
     bool setPowerDuty(uint8_t duty); // 占空比 0-100
+    bool disableAir(void);
 };
 
-extern HotAir hotAir;
+// extern HotAir hotAir;
 
-static void interruptCallBack();
+// static void interruptCallBack();
 
 #endif

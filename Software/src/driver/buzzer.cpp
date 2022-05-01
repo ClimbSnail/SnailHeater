@@ -1,6 +1,6 @@
 #include "buzzer.h"
 
-uint16_t Buzzer::m_count = 0;
+volatile uint16_t Buzzer::m_count = 0;
 uint16_t Buzzer::m_cycle_time = 1;
 uint8_t Buzzer::m_pin_num = 0;
 
@@ -14,13 +14,17 @@ Buzzer::Buzzer(uint8_t buzzer_num, uint16_t cycle_time)
     m_count = 0;
     m_pin_num = buzzer_num;
     m_cycle_time = cycle_time != 0 ? cycle_time : 1;
+}
 
+bool Buzzer::start()
+{
     pinMode(m_pin_num, OUTPUT);
     digitalWrite(m_pin_num, LOW); // 默认关闭蜂鸣器
 
     // ledcSetup(BEEP_CHANNEL, 5000, 8);
     // ledcAttachPin(m_pin_num, BEEP_CHANNEL);
     // ledcWrite(BEEP_CHANNEL, (int)(0.8 * 255));
+    return true;
 }
 
 void Buzzer::timer_handler(TimerHandle_t xTimer)

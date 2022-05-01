@@ -19,6 +19,7 @@ bool SignalGenerator::start()
 
 bool SignalGenerator::process()
 {
+    Serial.printf("\n");
     Serial.printf(m_name);
     Serial.printf("\tchannel_0 ---> ");
     dacWrite(m_channelPin, 100); // 输出DAC

@@ -1,7 +1,7 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#define SuperHeat_VERSION "0.6.0"
+#define SuperHeat_VERSION "0.9.0"
 
 #include <Arduino.h>
 // #include "rgb_led.h"
@@ -20,7 +20,7 @@
 #define POWER_PIN 0
 #define POWER_PWM_PIN 5
 #define BL_PWM_PIN 12
-// #define PWM_1_PIN 19
+
 #define PWM_1_PIN 33
 #define PWM_2_PIN 32
 #define PWM_3_PIN 15
@@ -29,7 +29,7 @@
 #define EC11_A_PIN 26
 #define EC11_B_PIN 27
 #define EC11_SW_PIN 14
-// #define BEEP_PIN 33
+
 #define BEEP_PIN 19
 #define TOUCH_PIN 4
 #define SW_0_PIN 22
@@ -67,7 +67,7 @@ extern Network g_network; // 网络连接
 extern Preferences prefs; // 声明Preferences对象
 extern Display screen;    // 屏幕对象
 extern Knobs knobs;       // EC11编码器
-// extern Buzzer buzzer;     // 蜂鸣器
+extern Buzzer buzzer;     // 蜂鸣器
 
 boolean doDelayMillisTime(unsigned long interval,
                           unsigned long *previousMillis,

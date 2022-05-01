@@ -11,7 +11,8 @@ HotAir::HotAir(const char *name, uint8_t powerPin, uint8_t powerPinChannel,
                uint8_t temperaturePin, uint8_t shakePin)
 {
     strncpy(m_name, name, 16);
-    m_pidContorller = new PID(4.5, 0.15, 0.2, 0.2);
+    // m_pidContorller = new PID(4.5, 0.005, 2.0, 0.1);
+    m_pidContorller = new PID(4.5, 0.5, 2.0, 0.1);
     // 引脚
     m_powerPin = powerPin;
     m_powerPinChannel = powerPinChannel;
@@ -21,15 +22,18 @@ HotAir::HotAir(const char *name, uint8_t powerPin, uint8_t powerPinChannel,
     m_shakePin = shakePin;
 
     //
-    m_powerDuty = (int)(1.0 * 255);
+    m_powerDuty = 100;
     m_airDuty = 0;
 
     m_targetTemp = 0;
+    m_nowTemp = 0;
     m_swInterruptCounter = 0;
     m_swMux = portMUX_INITIALIZER_UNLOCKED;
 
     m_bufIndex = 0;
-    m_m_tempBufCnt = 0;
+    m_tempBufCnt = 30 * TEMPERATURE_BUF_LEN;
+
+    m_sleepFlag = false;
 }
 
 HotAir::~HotAir()
@@ -47,7 +51,7 @@ bool HotAir::start()
     // digitalWrite(m_powerPin, HIGH);
     ledcSetup(m_powerPinChannel, 5, 8);
     ledcAttachPin(m_powerPin, m_powerPinChannel);
-    ledcWrite(m_powerPinChannel, m_powerDuty);
+    this->setPowerDuty(m_powerDuty);
 
     // 风扇引脚
     // pinMode(m_airPin, OUTPUT);
@@ -58,7 +62,8 @@ bool HotAir::start()
 
     // ADC引脚（读取热电偶）
     // adcAttachPin(m_temperaturePin); //将引脚映射到ADC
-    pinMode(m_temperaturePin, INPUT);
+    // pinMode(m_temperaturePin, INPUT);
+    pinMode(m_temperaturePin, INPUT_PULLUP);
     // analogSetPinAttenuation(m_temperaturePin, ADC_0db); // 设置精度
 
     // 振动开关
@@ -66,10 +71,10 @@ bool HotAir::start()
     // attachInterrupt(digitalPinToInterrupt(m_shakePin), interruptCallBack, FALLING);
 }
 
-static void interruptCallBack()
-{
-    hotAir.swInterruptCallBack();
-}
+// static void interruptCallBack()
+// {
+//     hotAir.swInterruptCallBack();
+// }
 
 void HotAir::swInterruptCallBack()
 {
@@ -93,8 +98,10 @@ int16_t HotAir::getTargetTemp()
 
 bool HotAir::setPowerDuty(uint8_t duty)
 {
-    m_powerDuty = constrain(duty, 0, 100);
-    ledcWrite(m_powerPinChannel, (int)(2.55 * m_powerDuty));
+    // 由于本可控硅电路是低电平使能 故反向
+    m_powerDuty = duty;
+    uint8_t value = 100 - constrain(duty, 0, 100);
+    ledcWrite(m_powerPinChannel, (int)(2.55 * value));
     return 0;
 }
 
@@ -103,12 +110,25 @@ uint8_t HotAir::getPowerDuty()
     return m_powerDuty;
 }
 
-bool HotAir::setAirDuty(uint8_t duty)
+bool HotAir::disableAir(void)
 {
+    ledcWrite(m_airPinChannel, (int)(2.55 * 100));
+    return 0;
+}
+
+bool HotAir::setAirDuty(uint8_t duty, bool flag)
+{
+    if (flag)
+    {
+        uint8_t value = 100 - duty;
+        ledcWrite(m_airPinChannel, (int)(2.55 * value));
+        return 0;
+    }
     m_airDuty = constrain(duty, 0, 100);
+    uint8_t value = 100 - m_airDuty;
     Serial.printf("\tm_airDuty ---> ");
     Serial.println(m_airDuty);
-    ledcWrite(m_airPinChannel, (int)(2.55 * m_airDuty));
+    ledcWrite(m_airPinChannel, (int)(2.55 * value));
     return 0;
 }
 
@@ -117,39 +137,61 @@ uint8_t HotAir::getAirDuty()
     return m_airDuty;
 }
 
-double HotAir::getTemperature()
+double HotAir::getTemperature(int flag)
 {
+    if (false == flag)
+    {
+        return m_nowTemp;
+    }
     Serial.printf("\tADC ---> ");
     uint16_t votl = analogRead(m_temperaturePin) + analogRead(m_temperaturePin) + analogRead(m_temperaturePin);
+    Serial.print(votl / 3.0);
     double votl_avg = 3300.0 / 4096 * votl / 3 / AMPLIFY_MULTIPLE;
-    Serial.print(votl_avg);
+    // Serial.print(votl_avg);
 
     // 将本次的温度存入缓冲区 并计算Buffer中的总大小
-    m_m_tempBufCnt -= m_tempBuf[m_bufIndex];
+    m_tempBufCnt -= m_tempBuf[m_bufIndex];
     m_tempBuf[m_bufIndex] = votl_avg / 0.04096;
-    m_m_tempBufCnt += m_tempBuf[m_bufIndex];
+    m_tempBufCnt += m_tempBuf[m_bufIndex];
     // 下标推进
     m_bufIndex = (m_bufIndex + 1) % TEMPERATURE_BUF_LEN;
 
-    return m_m_tempBufCnt / TEMPERATURE_BUF_LEN;
+    return m_tempBufCnt / TEMPERATURE_BUF_LEN;
 }
 
 bool HotAir::process()
 {
-
-    double now_temp = getTemperature();
-    int pwm = 100 - m_pidContorller->get_output(m_targetTemp, now_temp) / 4;
-    Serial.print("\tnow_temp --> ");
-    Serial.print(now_temp);
-    Serial.print("\tPwm --> ");
-    Serial.println(pwm);
-    if (pwm > 0)
+    m_nowTemp = getTemperature(true);
+    if (m_nowTemp <= 45)
     {
-        this->setPowerDuty(pwm);
+        this->disableAir();
     }
-    if (digitalRead(m_shakePin) == 0)
+
+    Serial.print("\nnow_temp --> ");
+    Serial.print(m_nowTemp);
+
+    if (digitalRead(m_shakePin) == 0 && m_sleepFlag == false)
     {
-        Serial.println("-> SW");
+        m_sleepFlag = true;
+        Serial.println("\n-> [Air Sleep]");
+        this->setPowerDuty(0);
+        this->setAirDuty(100, true);
+    }
+    else if (digitalRead(m_shakePin) == 1)
+    {
+        m_sleepFlag = false;
+        int pwm = m_pidContorller->get_output(m_targetTemp, m_nowTemp) / 4;
+        Serial.print("\tPwm --> ");
+        Serial.print(pwm);
+        this->setAirDuty(m_airDuty);
+        if (pwm > 0)
+        {
+            this->setPowerDuty(pwm);
+        }
+        else
+        {
+            this->setPowerDuty(0);
+        }
     }
 }
 

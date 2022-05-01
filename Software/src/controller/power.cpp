@@ -20,6 +20,8 @@ Power::~Power()
 bool Power::start()
 {
     pinMode(m_enPin, OUTPUT);
+    digitalWrite(m_enPin, HIGH);
+
     ledcSetup(m_pwmChannel, 5, 8);
     ledcAttachPin(m_pwmPin, m_pwmChannel);
     ledcWrite(m_pwmChannel, m_volt);
@@ -36,5 +38,6 @@ bool Power::setVolt(uint8_t volt)
 
 bool Power::end()
 {
+    digitalWrite(m_enPin, LOW);
     return true;
 }
