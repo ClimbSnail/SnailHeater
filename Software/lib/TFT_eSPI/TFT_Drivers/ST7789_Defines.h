@@ -7,7 +7,7 @@
   #define TFT_HEIGHT 320
 #endif
 
-#if (TFT_HEIGHT == 240) && (TFT_WIDTH == 240)
+#if (TFT_HEIGHT == 280) && (TFT_WIDTH == 240)
   #define CGRAM_OFFSET
 #endif
 

@@ -3,7 +3,7 @@
 #define ST7789_DRIVER     // Configure all registers
 
 #define TFT_WIDTH  240
-#define TFT_HEIGHT 240
+#define TFT_HEIGHT 280
 
 //#define TFT_RGB_ORDER TFT_RGB  // Colour order Red-Green-Blue
 //#define TFT_RGB_ORDER TFT_BGR  // Colour order Blue-Green-Red

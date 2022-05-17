@@ -31,6 +31,11 @@ case 1: // Landscape (Portrait + 90)
         colstart = 40;
         rowstart = 53;
     }
+    else if(_init_width == 240)
+    {
+        colstart = 20;
+        rowstart = 0;
+    }
     else
     {
         colstart = 0;

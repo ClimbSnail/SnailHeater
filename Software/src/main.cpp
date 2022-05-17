@@ -37,10 +37,10 @@ void gotTouch()
 
 void hot_air(TimerHandle_t xTimer)
 {
-    // hotAir_1.process();
-    // hotAir_2.process();
-    // oscilloscope.process();
-    // signalGenerator.process();
+    hotAir_1.process();
+    hotAir_2.process();
+    oscilloscope.process();
+    signalGenerator.process();
 }
 
 void setup()
@@ -126,13 +126,13 @@ void loop()
     tft->drawString(String("Pwr: ") + hotAir_2.getPowerDuty() + "%", 165, 150);
     tft->drawString(String("Osc2: ") + oscilloscope.getChanne1(), 165, 180);
 
-    ret_info = knobs.get_data();
-    Serial.printf("\n【Knobs】 count---> ");
-    Serial.print(ret_info.pulse_count);
-    Serial.printf("\tstatus---> ");
-    Serial.print(ret_info.switch_status);
-    Serial.printf("\ttime---> ");
-    Serial.print(ret_info.switch_time);
-    Serial.printf("\ttouchRead---> ");
-    Serial.println(touchRead(TOUCH_PIN));
+    // ret_info = knobs.get_data();
+    // Serial.printf("\n【Knobs】 count---> ");
+    // Serial.print(ret_info.pulse_count);
+    // Serial.printf("\tstatus---> ");
+    // Serial.print(ret_info.switch_status);
+    // Serial.printf("\ttime---> ");
+    // Serial.print(ret_info.switch_time);
+    // Serial.printf("\ttouchRead---> ");
+    // Serial.println(touchRead(TOUCH_PIN));
 }
