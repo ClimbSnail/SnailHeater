@@ -15,14 +15,14 @@ private:
     uint8_t m_enPin;      // 电源的使能端
     uint8_t m_pwmPin;     // 电源的FB引脚（DAC或者PWM引脚）
     uint8_t m_pwmChannel; // PWM通道
-    uint8_t m_volt;       // 电源的电压值
+    uint16_t m_volt;       // 电源的电压值
 
 public:
     Power(const char *name, uint8_t enPin,
           uint8_t pwmPin, uint8_t pwmChannel);
     ~Power();
     bool start();
-    bool setVolt(uint8_t volt);
+    bool setVolt(uint16_t volt);
     bool end();
 };
 

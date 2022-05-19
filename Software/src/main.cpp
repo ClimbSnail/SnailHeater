@@ -10,14 +10,14 @@
 #include "UI/settings_gui.h"
 
 // 创建热风枪
-HotAir hotAir_1("HotAit_1", PWM_1_PIN, PWM_1_CHANNEL, FAN_1_PIN, FAN_1_CHANNEL, ADC0_PIN, SW_0_PIN);
-HotAir hotAir_2("HotAit_2", PWM_2_PIN, PWM_2_CHANNEL, FAN_2_PIN, FAN_2_CHANNEL, ADC1_PIN, SW_1_PIN);
+HotAir hotAir_1("HotAit_1", NULL, PWM_1_PIN, PWM_1_CHANNEL, FAN_1_PIN, FAN_1_CHANNEL, ADC0_PIN, SW_0_PIN);
+HotAir hotAir_2("HotAit_2", NULL, PWM_2_PIN, PWM_2_CHANNEL, FAN_2_PIN, FAN_2_CHANNEL, ADC1_PIN, SW_1_PIN);
 // 创建示波器
 Oscilloscope oscilloscope("Oscilloscope", ADC2_PIN, ADC3_PIN);
 // 创建函数发生器
-SignalGenerator signalGenerator("SignalGenerator", DAC_1);
+// SignalGenerator signalGenerator("SignalGenerator", DAC_1);
 // 可调电源
-// Power power("Power", POWER_PIN, POWER_PWM_PIN, POWER_PWM_CHANNEL);
+Power power("Power", POWER_EN_PIN, POWER_PWM_PIN, POWER_PWM_CHANNEL);
 
 TimerHandle_t xTimer_beep = NULL;
 
@@ -40,7 +40,7 @@ void hot_air(TimerHandle_t xTimer)
     hotAir_1.process();
     hotAir_2.process();
     oscilloscope.process();
-    signalGenerator.process();
+    // signalGenerator.process();
 }
 
 void setup()
@@ -57,9 +57,9 @@ void setup()
     hotAir_1.start();
     hotAir_2.start();
     oscilloscope.start();
-    signalGenerator.start();
-    // power.start();
-    // power.setVolt(100);
+    // signalGenerator.start();
+    power.start();
+    power.setVolt(100);
 
     touchSetCycles(0x3000, 0x1000); // measure值表示量程范围 0x1000为100 0x3000为300
     // 其中40为阈值，当通道T0上的值<40时，会触发中断
@@ -107,7 +107,15 @@ void setup()
 void loop()
 {
     // screen.routine();
+    power.setVolt(255);
     delay(500);
+    delay(3000);
+    power.setVolt(70);
+    delay(500);
+    delay(3000);
+    power.setVolt(1);
+    delay(500);
+    delay(3000);
     // delay(1000);
     // power.start();
     // delay(1000);

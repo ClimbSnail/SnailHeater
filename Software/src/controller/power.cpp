@@ -22,17 +22,21 @@ bool Power::start()
     pinMode(m_enPin, OUTPUT);
     digitalWrite(m_enPin, HIGH);
 
-    ledcSetup(m_pwmChannel, 5, 8);
-    ledcAttachPin(m_pwmPin, m_pwmChannel);
-    ledcWrite(m_pwmChannel, m_volt);
+    pinMode(m_pwmPin, OUTPUT);
+
+    // ledcSetup(m_pwmChannel, 10000, 10);
+    // ledcAttachPin(m_pwmPin, m_pwmChannel);
+    // ledcWrite(m_pwmChannel, m_volt);
     return true;
 }
 
-bool Power::setVolt(uint8_t volt)
+bool Power::setVolt(uint16_t volt)
 {
     Serial.printf(m_name);
     m_volt = volt;
-    ledcWrite(m_pwmChannel, m_volt);
+    dacWrite(m_pwmPin, volt); // 输出DAC
+
+    // ledcWrite(m_pwmChannel, m_volt);
     return true;
 }
 

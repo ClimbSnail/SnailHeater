@@ -17,8 +17,8 @@
 #define ADC1_PIN 39
 #define ADC2_PIN 34
 #define ADC3_PIN 35
-#define POWER_PIN 0
-#define POWER_PWM_PIN 5
+#define POWER_EN_PIN 5
+#define POWER_PWM_PIN 25
 #define BL_PWM_PIN 12
 
 #define PWM_1_PIN 33

@@ -6,9 +6,9 @@
 
 // HotAir hotAir("HotAit", PWM_1_PIN, PWM_1_CHANNEL, FAN_1_PIN, FAN_1_CHANNEL, ADC0_PIN, SW_0_PIN);
 
-HotAir::HotAir(const char *name, uint8_t powerPin, uint8_t powerPinChannel,
+HotAir::HotAir(const char *name, SuperManager *m_manager, uint8_t powerPin, uint8_t powerPinChannel,
                uint8_t airPin, uint8_t airPinChannel,
-               uint8_t temperaturePin, uint8_t shakePin)
+               uint8_t temperaturePin, uint8_t shakePin) : ControllerBase(m_manager)
 {
     strncpy(m_name, name, 16);
     // m_pidContorller = new PID(4.5, 0.005, 2.0, 0.1);
@@ -193,6 +193,20 @@ bool HotAir::process()
             this->setPowerDuty(0);
         }
     }
+}
+
+uint8_t HotAir::getWorkState()
+{
+    // 状态机
+
+    return 1;
+}
+
+bool HotAir::message_handle(const char *from, const char *to,
+                            SUPER_MESSAGE_TYPE type, void *message,
+                            void *ext_info)
+{
+    return true;
 }
 
 bool HotAir::end()

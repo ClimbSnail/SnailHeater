@@ -3,16 +3,25 @@
 
 #include <Arduino.h>
 #include "pid.h"
+#include "controller_base.h"
 
 #define TEMPERATURE_BUF_LEN 10
+
+enum SHAKE_STATE : uint8_t
+{
+    SHAKE_STATE_UNKNOW = 0,
+    SHAKE_STATE_WORK,
+    SHAKE_STATE_WORK_TO_SLEEP,
+    SHAKE_STATE_SLEEP,
+    SHAKE_STATE_WAKE
+};
 
 /**********************************
  * 热风枪控制器
  */
-class HotAir
+class HotAir : public ControllerBase
 {
 private:
-    char m_name[16];      // 控制器名字
     PID *m_pidContorller; // pid控制对象
     uint8_t m_powerPin;   // 主要的功率输出引脚（可控硅）
     uint8_t m_powerPinChannel;
@@ -33,20 +42,26 @@ private:
     portMUX_TYPE m_swMux;
 
 public:
-    HotAir(const char *name, uint8_t powerPin, uint8_t powerPinChannel,
+    HotAir(const char *name, SuperManager *m_manager, uint8_t powerPin, uint8_t powerPinChannel,
            uint8_t airPin, uint8_t airPinChannel,
            uint8_t temperaturePin, uint8_t shakePin);
     ~HotAir();
     bool start();
     bool process();
+    bool end();
+    // 消息处理
+    bool message_handle(const char *from, const char *to,
+                        SUPER_MESSAGE_TYPE type, void *message,
+                        void *ext_info);
+
     double getTemperature(int flag = false); // 获取实时温度
     bool setTargetTemp(int16_t temperature); // 设置温度
     int16_t getTargetTemp();
     uint8_t getPowerDuty();
     bool setAirDuty(uint8_t duty, bool flag = false); // 占空比 0-100
     uint8_t getAirDuty();
+    uint8_t getWorkState();
     void swInterruptCallBack(); // 友元中断函数
-    bool end();
 
 private:
     bool setPowerDuty(uint8_t duty); // 占空比 0-100
