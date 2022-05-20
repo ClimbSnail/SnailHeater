@@ -1,14 +1,15 @@
 #include "signal_generator.h"
 
-SignalGenerator::SignalGenerator(const char *name, uint8_t channelPin)
+SignalGenerator::SignalGenerator(const char *name, SuperManager *m_manager,
+                                 uint8_t channelPin) : ControllerBase(name, m_manager)
 {
-    strncpy(m_name, name, 16);
     // 引脚
     m_channelPin = channelPin;
 }
 
 SignalGenerator::~SignalGenerator()
 {
+    this->end();
 }
 
 bool SignalGenerator::start()
@@ -27,6 +28,13 @@ bool SignalGenerator::process()
 }
 
 bool SignalGenerator::end()
+{
+    return true;
+}
+
+bool SignalGenerator::message_handle(const char *from, const char *to,
+                                     SUPER_MESSAGE_TYPE type, void *message,
+                                     void *ext_info)
 {
     return true;
 }

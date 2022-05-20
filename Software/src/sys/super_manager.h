@@ -8,7 +8,10 @@ private:
 public:
     SuperManager();
     ~SuperManager();
+    bool initController();
+    bool loadWindows();
     bool restart();
+    
 };
 
 #endif

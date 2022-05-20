@@ -6,13 +6,11 @@
 
 // HotAir hotAir("HotAit", PWM_1_PIN, PWM_1_CHANNEL, FAN_1_PIN, FAN_1_CHANNEL, ADC0_PIN, SW_0_PIN);
 
-HotAir::HotAir(const char *name, SuperManager *m_manager, uint8_t powerPin, uint8_t powerPinChannel,
+HotAir::HotAir(const char *name, SuperManager *m_manager,
+               uint8_t powerPin, uint8_t powerPinChannel,
                uint8_t airPin, uint8_t airPinChannel,
-               uint8_t temperaturePin, uint8_t shakePin) : ControllerBase(m_manager)
+               uint8_t temperaturePin, uint8_t shakePin) : ControllerBase(name, m_manager)
 {
-    strncpy(m_name, name, 16);
-    // m_pidContorller = new PID(4.5, 0.005, 2.0, 0.1);
-    m_pidContorller = new PID(4.5, 0.5, 2.0, 0.1);
     // 引脚
     m_powerPin = powerPin;
     m_powerPinChannel = powerPinChannel;
@@ -38,11 +36,17 @@ HotAir::HotAir(const char *name, SuperManager *m_manager, uint8_t powerPin, uint
 
 HotAir::~HotAir()
 {
+    this->end();
 }
 
 bool HotAir::start()
 {
     // 初始化PID控制对象
+    if (NULL == m_pidContorller)
+    {
+        // m_pidContorller = new PID(4.5, 0.005, 2.0, 0.1);
+        m_pidContorller = new PID(4.5, 0.5, 2.0, 0.1);
+    }
 
     // 使能对应引脚
 
@@ -73,10 +77,10 @@ bool HotAir::start()
 
 // static void interruptCallBack()
 // {
-//     hotAir.swInterruptCallBack();
+//     hotAir.hotAirSwInterruptCallBack();
 // }
 
-void HotAir::swInterruptCallBack()
+void HotAir::hotAirSwInterruptCallBack()
 {
     portENTER_CRITICAL_ISR(&m_swMux);
     m_swInterruptCounter++;
@@ -137,12 +141,13 @@ uint8_t HotAir::getAirDuty()
     return m_airDuty;
 }
 
-double HotAir::getTemperature(int flag)
+double HotAir::getCurTemperature(bool flag)
 {
     if (false == flag)
     {
         return m_nowTemp;
     }
+    
     Serial.printf("\tADC ---> ");
     uint16_t votl = analogRead(m_temperaturePin) + analogRead(m_temperaturePin) + analogRead(m_temperaturePin);
     Serial.print(votl / 3.0);
@@ -161,12 +166,13 @@ double HotAir::getTemperature(int flag)
 
 bool HotAir::process()
 {
-    m_nowTemp = getTemperature(true);
+    m_nowTemp = getCurTemperature(true);
     if (m_nowTemp <= 45)
     {
         this->disableAir();
     }
 
+    Serial.print("\n[HotAir] ");
     Serial.print("\nnow_temp --> ");
     Serial.print(m_nowTemp);
 
@@ -211,4 +217,8 @@ bool HotAir::message_handle(const char *from, const char *to,
 
 bool HotAir::end()
 {
+    if (NULL != m_pidContorller)
+    {
+        delete m_pidContorller;
+    }
 }

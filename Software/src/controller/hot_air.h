@@ -4,17 +4,7 @@
 #include <Arduino.h>
 #include "pid.h"
 #include "controller_base.h"
-
-#define TEMPERATURE_BUF_LEN 10
-
-enum SHAKE_STATE : uint8_t
-{
-    SHAKE_STATE_UNKNOW = 0,
-    SHAKE_STATE_WORK,
-    SHAKE_STATE_WORK_TO_SLEEP,
-    SHAKE_STATE_SLEEP,
-    SHAKE_STATE_WAKE
-};
+#include "heat_ctrl_base.h"
 
 /**********************************
  * 热风枪控制器
@@ -42,7 +32,8 @@ private:
     portMUX_TYPE m_swMux;
 
 public:
-    HotAir(const char *name, SuperManager *m_manager, uint8_t powerPin, uint8_t powerPinChannel,
+    HotAir(const char *name, SuperManager *m_manager,
+           uint8_t powerPin, uint8_t powerPinChannel,
            uint8_t airPin, uint8_t airPinChannel,
            uint8_t temperaturePin, uint8_t shakePin);
     ~HotAir();
@@ -54,22 +45,18 @@ public:
                         SUPER_MESSAGE_TYPE type, void *message,
                         void *ext_info);
 
-    double getTemperature(int flag = false); // 获取实时温度
-    bool setTargetTemp(int16_t temperature); // 设置温度
+    double getCurTemperature(bool flag = false); // 获取实时温度
+    bool setTargetTemp(int16_t temperature);     // 设置温度
     int16_t getTargetTemp();
     uint8_t getPowerDuty();
     bool setAirDuty(uint8_t duty, bool flag = false); // 占空比 0-100
     uint8_t getAirDuty();
     uint8_t getWorkState();
-    void swInterruptCallBack(); // 友元中断函数
+    void hotAirSwInterruptCallBack(); // 友元中断函数
 
 private:
     bool setPowerDuty(uint8_t duty); // 占空比 0-100
     bool disableAir(void);
 };
-
-// extern HotAir hotAir;
-
-// static void interruptCallBack();
 
 #endif

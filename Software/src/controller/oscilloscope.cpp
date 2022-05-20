@@ -1,8 +1,8 @@
 #include "oscilloscope.h"
 
-Oscilloscope::Oscilloscope(const char *name, uint8_t channelPin_0, uint8_t channelPin_1)
+Oscilloscope::Oscilloscope(const char *name, SuperManager *m_manager,
+                           uint8_t channelPin_0, uint8_t channelPin_1) : ControllerBase(name, m_manager)
 {
-    strncpy(m_name, name, 16);
     // 引脚
     m_channelPin_0 = channelPin_0;
     m_channelPin_1 = channelPin_1;
@@ -12,6 +12,7 @@ Oscilloscope::Oscilloscope(const char *name, uint8_t channelPin_0, uint8_t chann
 
 Oscilloscope::~Oscilloscope()
 {
+    this->end();
 }
 
 bool Oscilloscope::start()
@@ -51,6 +52,13 @@ uint16_t Oscilloscope::getChanne1()
 }
 
 bool Oscilloscope::end()
+{
+    return true;
+}
+
+bool Oscilloscope::message_handle(const char *from, const char *to,
+                                  SUPER_MESSAGE_TYPE type, void *message,
+                                  void *ext_info)
 {
     return true;
 }
