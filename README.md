@@ -63,11 +63,14 @@ T12 | 地 | P+ | 振动开关正极 | 振动开关/发热芯/热电偶 负极 | 
 JBC245 | 可接GND（或空脚） | 发热芯正极 | 振动开关正极 | 振动开关/发热芯/热电偶 负极（GND） | 热电偶正极
 线序 | 线色 | 绿 | 红 | 白 | 蓝 | 黑
 
+### bin文件路径
+* .platformio\packages\framework-arduinoespressif32\variants\adafruit_feather_esp32s2
+* .platformio\packages\framework-arduinoespressif32\tools\partitions\boot_app0.bin
 
 ### 更多内容之后补充
 目前处于开发阶段，持续完善。
 
-调试过程中报错定位代码：`xtensa-esp32-elf-addr2line -pfiaC -e 固件名.elf Backtrace地址信息`
+调试过程中报错定位代码：`xtensa-esp32s2-elf-addr2line -pfiaC -e 固件名.elf Backtrace地址信息`
 
 platformIO模拟器 https://github.com/lvgl/lv_platformio
 
