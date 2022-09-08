@@ -1,9 +1,10 @@
-// Setup for the TTGO T4 ("Bitcoin Tracker") ESP32 board with 2.2" ILI9341 display
+// Setup for the TTGO T Display
+#define USER_SETUP_ID 25
 
 // See SetupX_Template.h for all options available
 
 #define ST7789_DRIVER
-#define TFT_SDA_READ   // Display has a bidirectionsl SDA pin
+#define TFT_SDA_READ   // Display has a bidirectional SDA pin
 
 #define TFT_WIDTH  135
 #define TFT_HEIGHT 240
@@ -17,6 +18,8 @@
 #define TFT_CS              5
 #define TFT_DC              16
 #define TFT_RST             23
+
+#define TOUCH_CS            -1
 
 #define TFT_BL          4  // Display backlight control pin
 
@@ -33,7 +36,7 @@
 #define SMOOTH_FONT
 
 //#define SPI_FREQUENCY  27000000
-  #define SPI_FREQUENCY  40000000   // Maximum for ILI9341
+  #define SPI_FREQUENCY  40000000
 
 
 #define SPI_READ_FREQUENCY  6000000 // 6 MHz is the maximum SPI read speed for the ST7789V

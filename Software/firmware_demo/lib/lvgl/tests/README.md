@@ -5,24 +5,23 @@ The tests in the folder can be run locally and automatically by GitHub CI.
 ## Running locally
 
 ### Requirements (Linux)
-1. Be sure GCC and Python3 is installed.
-2. Install [gcovr](https://gcovr.com/en/stable/index.html) with `pip install gcovr`
-3. Install Ruby with `sudo apt-get install ruby-full`
+
+Install requirements by:
+
+```sh
+scripts/install-prerequisites.sh
+```
 
 ### Run test
-1. Enter `lvgl/tests/`
-2. Run the tests with `./main.py [OPTIONS]`. The options are
-  - `report` Create a html page in the `report` folder with the coverage report.
-  - `test` Build and run only test. Without this option LVGL will be built with various configurations.
-  - `noclean` Do not clean the project before building. Useful while writing test to save some times. 
+1. Run all executable tests with `./tests/main.py test`.
+2. Build all build-only tests with `./tests/main.py build`.
+3. Clean prior test build, build all build-only tests,
+   run executable tests, and generate code coverage
+   report `./tests/main.py --clean --report build test`.
 
-For example: 
-- `./main.py` Run all the test as they run in the CI.
-- `./main.py report test noclean` Run only the test, should be sued when writing tests.
-
+For full information on running tests run: `./tests/main.py --help`.
 
 ## Running automatically
-TODO
 
 GitHub's CI automatically runs these tests on pushes and pull requests to `master` and `releasev8.*` branches. 
 
@@ -38,7 +37,7 @@ GitHub's CI automatically runs these tests on pushes and pull requests to `maste
 ## Add new tests
 
 ### Create new test file
-New test needs to be added into the `src/test_cases` folder. The name of the files should look like `test_<name>.c`. The the basic skeleton of a test file copy `_test_template.c`.
+New test needs to be added into the `src/test_cases` folder. The name of the files should look like `test_<name>.c`. The basic skeleton of a test file copy `_test_template.c`.
 
 ### Asserts
 See the list of asserts [here](https://github.com/ThrowTheSwitch/Unity/blob/master/docs/UnityAssertionsReference.md).

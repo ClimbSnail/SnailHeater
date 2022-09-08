@@ -1,6 +1,6 @@
 ```eval_rst
 .. include:: /header.rst 
-:github_url: |github_link_base|/widgets/dropdown.md
+:github_url: |github_link_base|/widgets/core/dropdown.md
 ```
 # Drop-down list (lv_dropdown)
 
@@ -22,18 +22,19 @@ The Dropdown widget is built from the elements: "button" and "list" (both not re
 - `LV_PART_MAIN` The background of the button. Uses the typical background properties and text properties for the text on it.
 - `LV_PART_INDICATOR` Typically an arrow symbol that can be an image or a text (`LV_SYMBOL`).
 
-The button goes to `LV_STATE_CHECKED` when its opened.
+The button goes to `LV_STATE_CHECKED` when it's opened.
 
 ### List
 - `LV_PART_MAIN` The list itself. Uses the typical background properties. `max_height` can be used to limit the height of the list. 
 - `LV_PART_SCROLLBAR` The scrollbar background, border, shadow properties and width (for its own width) and right padding for the spacing on the right.
 - `LV_PART_SELECTED` Refers to the currently pressed, checked or pressed+checked option. Also uses the typical background properties. 
 
-As list does not exist when the drop-down list is closed it's not possible to simply add styles to it.
-Instead the following should be done:
-1. Ad an event handler to the button for `LV_EVENT_VALUE_CHANGED` (triggered when the list is opened/closed)
-2. Use `lv_obj_t * list = lv_dropdown_get_list(dropdown)`
-3. `if(list != NULL) {/*Add the styles to the list*/}`
+The list is hidden/shown on open/close. To add styles to it use `lv_dropdown_get_list(dropdown)`  to get the list object. For example:
+
+```c
+lv_obj_t * list = lv_dropdown_get_list(dropdown) /*Get the list*/
+lv_obj_add_style(list, &my_style, ...)           /*Add the styles to the list*/}`
+```
 
 Alternatively the theme can be extended with the new styles. 
  
@@ -62,7 +63,7 @@ The list can be created on any side. The default `LV_DIR_BOTTOM` can be modified
 If the list would be vertically out of the screen, it will be aligned to the edge.
 
 ### Symbol
-A symbol (typically an arrow) can be added to the drop down list with `lv_dropdown_set_symbol(dropdown, LV_SYMBOL_...)`
+A symbol (typically an arrow) can be added to the dropdown list with `lv_dropdown_set_symbol(dropdown, LV_SYMBOL_...)`
 
 If the direction of the drop-down list is  `LV_DIR_LEFT` the symbol will be shown on the left, otherwise on the right.
 
@@ -76,6 +77,8 @@ To manually open or close the drop-down list the `lv_dropdown_open/close(dropdow
 ## Events
 Apart from the [Generic events](../overview/event.html#generic-events), the following [Special events](../overview/event.html#special-events) are sent by the drop-down list:
 - `LV_EVENT_VALUE_CHANGED` Sent when the new option is selected or the list is opened/closed.
+- `LV_EVENT_CANCEL`  Sent when the list is closed
+- `LV_EVENT_READY` Sent when the list is opened
 
 See the events of the [Base object](/widgets/obj) too.
 

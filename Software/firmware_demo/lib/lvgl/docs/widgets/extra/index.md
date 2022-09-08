@@ -9,6 +9,7 @@
 .. toctree::
    :maxdepth: 1
    
+   animimg
    calendar
    chart
    colorwheel
@@ -16,6 +17,7 @@
    keyboard
    led
    list
+   menu
    meter
    msgbox
    span

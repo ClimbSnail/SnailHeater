@@ -46,21 +46,21 @@ static void set_y_anim(void * obj, int32_t v);
  *  STATIC VARIABLES
  **********************/
 const lv_obj_class_t lv_roller_class = {
-        .constructor_cb = lv_roller_constructor,
-        .event_cb = lv_roller_event,
-        .width_def = LV_SIZE_CONTENT,
-        .height_def = LV_DPI_DEF,
-        .instance_size = sizeof(lv_roller_t),
-        .editable = LV_OBJ_CLASS_EDITABLE_TRUE,
-        .group_def = LV_OBJ_CLASS_GROUP_DEF_TRUE,
-        .base_class = &lv_obj_class
+    .constructor_cb = lv_roller_constructor,
+    .event_cb = lv_roller_event,
+    .width_def = LV_SIZE_CONTENT,
+    .height_def = LV_DPI_DEF,
+    .instance_size = sizeof(lv_roller_t),
+    .editable = LV_OBJ_CLASS_EDITABLE_TRUE,
+    .group_def = LV_OBJ_CLASS_GROUP_DEF_TRUE,
+    .base_class = &lv_obj_class
 };
 
 const lv_obj_class_t lv_roller_label_class  = {
-        .event_cb = lv_roller_label_event,
-        .instance_size = sizeof(lv_label_t),
-        .base_class = &lv_label_class
-    };
+    .event_cb = lv_roller_label_event,
+    .instance_size = sizeof(lv_label_t),
+    .base_class = &lv_label_class
+};
 
 /**********************
  *      MACROS
@@ -72,12 +72,12 @@ const lv_obj_class_t lv_roller_label_class  = {
 
 /**
  * Create a roller object
- * @param par pointer to an object, it will be the parent of the new roller
+ * @param parent pointer to an object, it will be the parent of the new roller
  * @return pointer to the created roller
  */
 lv_obj_t * lv_roller_create(lv_obj_t * parent)
 {
-    LV_LOG_INFO("begin")
+    LV_LOG_INFO("begin");
     lv_obj_t * obj = lv_obj_class_create_obj(MY_CLASS, parent);
     lv_obj_class_init_obj(obj);
     return obj;
@@ -98,7 +98,7 @@ void lv_roller_set_options(lv_obj_t * obj, const char * options, lv_roller_mode_
     LV_ASSERT_OBJ(obj, MY_CLASS);
     LV_ASSERT_NULL(options);
 
-    lv_roller_t * roller = (lv_roller_t*)obj;
+    lv_roller_t * roller = (lv_roller_t *)obj;
     lv_obj_t * label = get_label(obj);
 
     roller->sel_opt_id     = 0;
@@ -157,7 +157,7 @@ void lv_roller_set_selected(lv_obj_t * obj, uint16_t sel_opt, lv_anim_enable_t a
      *if moving to the next option with an animation which was just deleted in the PRESS Call the ancestor's event handler
      *nothing will continue the animation.*/
 
-    lv_roller_t * roller = (lv_roller_t*)obj;
+    lv_roller_t * roller = (lv_roller_t *)obj;
 
     /*In infinite mode interpret the new ID relative to the currently visible "page"*/
     if(roller->mode == LV_ROLLER_MODE_INFINITE) {
@@ -208,7 +208,7 @@ uint16_t lv_roller_get_selected(const lv_obj_t * obj)
 {
     LV_ASSERT_OBJ(obj, MY_CLASS);
 
-    lv_roller_t * roller = (lv_roller_t*)obj;
+    lv_roller_t * roller = (lv_roller_t *)obj;
     if(roller->mode == LV_ROLLER_MODE_INFINITE) {
         uint16_t real_id_cnt = roller->option_cnt / LV_ROLLER_INF_PAGES;
         return roller->sel_opt_id % real_id_cnt;
@@ -228,7 +228,7 @@ void lv_roller_get_selected_str(const lv_obj_t * obj, char * buf, uint32_t buf_s
 {
     LV_ASSERT_OBJ(obj, MY_CLASS);
 
-    lv_roller_t * roller = (lv_roller_t*)obj;
+    lv_roller_t * roller = (lv_roller_t *)obj;
     lv_obj_t * label = get_label(obj);
     uint32_t i;
     uint16_t line        = 0;
@@ -242,7 +242,7 @@ void lv_roller_get_selected_str(const lv_obj_t * obj, char * buf, uint32_t buf_s
     uint32_t c;
     for(c = 0; i < txt_len && opt_txt[i] != '\n'; c++, i++) {
         if(buf_size && c >= buf_size - 1) {
-            LV_LOG_WARN("lv_dropdown_get_selected_str: the buffer was too small")
+            LV_LOG_WARN("lv_dropdown_get_selected_str: the buffer was too small");
             break;
         }
         buf[c] = opt_txt[i];
@@ -274,7 +274,7 @@ uint16_t lv_roller_get_option_cnt(const lv_obj_t * obj)
 {
     LV_ASSERT_OBJ(obj, MY_CLASS);
 
-    lv_roller_t * roller = (lv_roller_t*)obj;
+    lv_roller_t * roller = (lv_roller_t *)obj;
     if(roller->mode == LV_ROLLER_MODE_INFINITE) {
         return roller->option_cnt / LV_ROLLER_INF_PAGES;
     }
@@ -291,7 +291,7 @@ uint16_t lv_roller_get_option_cnt(const lv_obj_t * obj)
 static void lv_roller_constructor(const lv_obj_class_t * class_p, lv_obj_t * obj)
 {
     LV_UNUSED(class_p);
-    lv_roller_t * roller = (lv_roller_t*)obj;
+    lv_roller_t * roller = (lv_roller_t *)obj;
 
     roller->mode = LV_ROLLER_MODE_NORMAL;
     roller->option_cnt = 0;
@@ -299,9 +299,9 @@ static void lv_roller_constructor(const lv_obj_class_t * class_p, lv_obj_t * obj
     roller->sel_opt_id_ori = 0;
 
     lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLL_CHAIN);
+    lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLL_CHAIN_VER);
 
-    LV_LOG_INFO("begin")
+    LV_LOG_INFO("begin");
     lv_obj_t * label = lv_obj_class_create_obj(&lv_roller_label_class, obj);
     lv_obj_class_init_obj(label);
     lv_roller_set_options(obj, "Option 1\nOption 2\nOption 3\nOption 4\nOption 5", LV_ROLLER_MODE_NORMAL);
@@ -321,21 +321,21 @@ static void lv_roller_event(const lv_obj_class_t * class_p, lv_event_t * e)
 
     lv_event_code_t code = lv_event_get_code(e);
     lv_obj_t * obj = lv_event_get_target(e);
-    lv_roller_t * roller = (lv_roller_t*)obj;
+    lv_roller_t * roller = (lv_roller_t *)obj;
 
     if(code == LV_EVENT_GET_SELF_SIZE) {
         lv_point_t * p = lv_event_get_param(e);
-        p->x =  get_selected_label_width(obj);
+        p->x = get_selected_label_width(obj);
     }
     else if(code == LV_EVENT_STYLE_CHANGED) {
         lv_obj_t * label = get_label(obj);
         /*Be sure the label's style is updated before processing the roller*/
         if(label) lv_event_send(label, LV_EVENT_STYLE_CHANGED, NULL);
         lv_obj_refresh_self_size(obj);
-        refr_position(obj, false);
+        refr_position(obj, LV_ANIM_OFF);
     }
     else if(code == LV_EVENT_SIZE_CHANGED) {
-        refr_position(obj, false);
+        refr_position(obj, LV_ANIM_OFF);
     }
     else if(code == LV_EVENT_PRESSED) {
         roller->moved = 0;
@@ -351,7 +351,7 @@ static void lv_roller_event(const lv_obj_class_t * class_p, lv_event_t * e)
             roller->moved = 1;
         }
     }
-    else if(code == LV_EVENT_RELEASED) {
+    else if(code == LV_EVENT_RELEASED || code == LV_EVENT_PRESS_LOST) {
         release_handler(obj);
     }
     else if(code == LV_EVENT_FOCUSED) {
@@ -365,7 +365,7 @@ static void lv_roller_event(const lv_obj_class_t * class_p, lv_event_t * e)
             if(!editing) {
                 if(roller->sel_opt_id != roller->sel_opt_id_ori) {
                     roller->sel_opt_id = roller->sel_opt_id_ori;
-                    refr_position(obj, true);
+                    refr_position(obj, LV_ANIM_ON);
                 }
             }
             /*Save the current state when entered to edit mode*/
@@ -382,7 +382,7 @@ static void lv_roller_event(const lv_obj_class_t * class_p, lv_event_t * e)
         /*Revert the original state*/
         if(roller->sel_opt_id != roller->sel_opt_id_ori) {
             roller->sel_opt_id = roller->sel_opt_id_ori;
-            refr_position(obj, true);
+            refr_position(obj, LV_ANIM_ON);
         }
     }
     else if(code == LV_EVENT_KEY) {
@@ -390,7 +390,7 @@ static void lv_roller_event(const lv_obj_class_t * class_p, lv_event_t * e)
         if(c == LV_KEY_RIGHT || c == LV_KEY_DOWN) {
             if(roller->sel_opt_id + 1 < roller->option_cnt) {
                 uint16_t ori_id = roller->sel_opt_id_ori; /*lv_roller_set_selected will overwrite this*/
-                lv_roller_set_selected(obj, roller->sel_opt_id + 1, true);
+                lv_roller_set_selected(obj, roller->sel_opt_id + 1, LV_ANIM_ON);
                 roller->sel_opt_id_ori = ori_id;
             }
         }
@@ -398,7 +398,7 @@ static void lv_roller_event(const lv_obj_class_t * class_p, lv_event_t * e)
             if(roller->sel_opt_id > 0) {
                 uint16_t ori_id = roller->sel_opt_id_ori; /*lv_roller_set_selected will overwrite this*/
 
-                lv_roller_set_selected(obj, roller->sel_opt_id - 1, true);
+                lv_roller_set_selected(obj, roller->sel_opt_id - 1, LV_ANIM_ON);
                 roller->sel_opt_id_ori = ori_id;
             }
         }
@@ -450,17 +450,17 @@ static void draw_main(lv_event_t * e)
     lv_obj_t * obj = lv_event_get_target(e);
     if(code == LV_EVENT_DRAW_MAIN) {
         /*Draw the selected rectangle*/
-        const lv_area_t * clip_area = lv_event_get_param(e);
+        lv_draw_ctx_t * draw_ctx = lv_event_get_draw_ctx(e);
         lv_area_t sel_area;
         get_sel_area(obj, &sel_area);
         lv_draw_rect_dsc_t sel_dsc;
         lv_draw_rect_dsc_init(&sel_dsc);
         lv_obj_init_draw_rect_dsc(obj, LV_PART_SELECTED, &sel_dsc);
-        lv_draw_rect(&sel_area, clip_area, &sel_dsc);
+        lv_draw_rect(draw_ctx, &sel_dsc, &sel_area);
     }
     /*Post draw when the children are drawn*/
     else if(code == LV_EVENT_DRAW_POST) {
-        const lv_area_t * clip_area = lv_event_get_param(e);
+        lv_draw_ctx_t * draw_ctx = lv_event_get_draw_ctx(e);
 
         lv_draw_label_dsc_t label_dsc;
         lv_draw_label_dsc_init(&label_dsc);
@@ -471,19 +471,19 @@ static void draw_main(lv_event_t * e)
         get_sel_area(obj, &sel_area);
         lv_area_t mask_sel;
         bool area_ok;
-        area_ok = _lv_area_intersect(&mask_sel, clip_area, &sel_area);
+        area_ok = _lv_area_intersect(&mask_sel, draw_ctx->clip_area, &sel_area);
         if(area_ok) {
             lv_obj_t * label = get_label(obj);
 
             /*Get the size of the "selected text"*/
             lv_point_t res_p;
             lv_txt_get_size(&res_p, lv_label_get_text(label), label_dsc.font, label_dsc.letter_space, label_dsc.line_space,
-                             lv_obj_get_width(obj), LV_TEXT_FLAG_EXPAND);
+                            lv_obj_get_width(obj), LV_TEXT_FLAG_EXPAND);
 
             /*Move the selected label proportionally with the background label*/
             lv_coord_t roller_h = lv_obj_get_height(obj);
             int32_t label_y_prop = label->coords.y1 - (roller_h / 2 +
-                    obj->coords.y1); /*label offset from the middle line of the roller*/
+                                                       obj->coords.y1); /*label offset from the middle line of the roller*/
             label_y_prop = (label_y_prop * 16384) / lv_obj_get_height(
                                label); /*Proportional position from the middle line (upscaled by << 14)*/
 
@@ -509,7 +509,10 @@ static void draw_main(lv_event_t * e)
             label_sel_area.y2 = label_sel_area.y1 + res_p.y;
 
             label_dsc.flag |= LV_TEXT_FLAG_EXPAND;
-            lv_draw_label(&label_sel_area, &mask_sel, &label_dsc, lv_label_get_text(label), NULL);
+            const lv_area_t * clip_area_ori = draw_ctx->clip_area;
+            draw_ctx->clip_area = &mask_sel;
+            lv_draw_label(draw_ctx, &label_dsc, &label_sel_area, lv_label_get_text(label), NULL);
+            draw_ctx->clip_area = clip_area_ori;
         }
     }
 }
@@ -523,7 +526,15 @@ static void draw_label(lv_event_t * e)
     lv_draw_label_dsc_t label_draw_dsc;
     lv_draw_label_dsc_init(&label_draw_dsc);
     lv_obj_init_draw_label_dsc(roller, LV_PART_MAIN, &label_draw_dsc);
-    const lv_area_t * clip_area = lv_event_get_param(e);
+    lv_draw_ctx_t * draw_ctx = lv_event_get_draw_ctx(e);
+
+    /*If the roller has shadow or outline it has some ext. draw size
+     *therefore the label can overflow the roller's boundaries.
+     *To solve this limit the clip area to the "plain" roller.*/
+    const lv_area_t * clip_area_ori = draw_ctx->clip_area;
+    lv_area_t roller_clip_area;
+    if(!_lv_area_intersect(&roller_clip_area, draw_ctx->clip_area, &roller->coords)) return;
+    draw_ctx->clip_area = &roller_clip_area;
 
     lv_area_t sel_area;
     get_sel_area(roller, &sel_area);
@@ -533,17 +544,25 @@ static void draw_label(lv_event_t * e)
     clip2.y1 = label_obj->coords.y1;
     clip2.x2 = label_obj->coords.x2;
     clip2.y2 = sel_area.y1;
-    if(_lv_area_intersect(&clip2, clip_area, &clip2)) {
-        lv_draw_label(&label_obj->coords, &clip2, &label_draw_dsc, lv_label_get_text(label_obj), NULL);
+    if(_lv_area_intersect(&clip2, draw_ctx->clip_area, &clip2)) {
+        const lv_area_t * clip_area_ori2 = draw_ctx->clip_area;
+        draw_ctx->clip_area = &clip2;
+        lv_draw_label(draw_ctx, &label_draw_dsc, &label_obj->coords, lv_label_get_text(label_obj), NULL);
+        draw_ctx->clip_area = clip_area_ori2;
     }
 
     clip2.x1 = label_obj->coords.x1;
     clip2.y1 = sel_area.y2;
     clip2.x2 = label_obj->coords.x2;
     clip2.y2 = label_obj->coords.y2;
-    if(_lv_area_intersect(&clip2, clip_area, &clip2)) {
-        lv_draw_label(&label_obj->coords, &clip2, &label_draw_dsc, lv_label_get_text(label_obj), NULL);
+    if(_lv_area_intersect(&clip2, draw_ctx->clip_area, &clip2)) {
+        const lv_area_t * clip_area_ori2 = draw_ctx->clip_area;
+        draw_ctx->clip_area = &clip2;
+        lv_draw_label(draw_ctx, &label_draw_dsc, &label_obj->coords, lv_label_get_text(label_obj), NULL);
+        draw_ctx->clip_area = clip_area_ori2;
     }
+
+    draw_ctx->clip_area = clip_area_ori;
 }
 
 static void get_sel_area(lv_obj_t * obj, lv_area_t * sel_area)
@@ -575,25 +594,21 @@ static void refr_position(lv_obj_t * obj, lv_anim_enable_t anim_en)
     lv_obj_t * label = get_label(obj);
     if(label == NULL) return;
 
-    lv_text_align_t align = lv_obj_get_style_text_align(label, LV_PART_MAIN);
-    if(align == LV_TEXT_ALIGN_AUTO) {
-        if(lv_obj_get_style_base_dir(obj, LV_PART_MAIN) == LV_BASE_DIR_RTL) align = LV_TEXT_ALIGN_RIGHT;
-        else align = LV_TEXT_ALIGN_LEFT;
-    }
+    lv_text_align_t align = lv_obj_calculate_style_text_align(label, LV_PART_MAIN, lv_label_get_text(label));
 
     switch(align) {
-    case LV_TEXT_ALIGN_CENTER:
-        lv_obj_set_x(label, (lv_obj_get_content_width(obj) - lv_obj_get_width(label)) / 2);
-        break;
-    case LV_TEXT_ALIGN_RIGHT:
-        lv_obj_set_x(label, lv_obj_get_content_width(obj) - lv_obj_get_width(label));
-        break;
-    case LV_TEXT_ALIGN_LEFT:
-        lv_obj_set_x(label, 0);
-        break;
+        case LV_TEXT_ALIGN_CENTER:
+            lv_obj_set_x(label, (lv_obj_get_content_width(obj) - lv_obj_get_width(label)) / 2);
+            break;
+        case LV_TEXT_ALIGN_RIGHT:
+            lv_obj_set_x(label, lv_obj_get_content_width(obj) - lv_obj_get_width(label));
+            break;
+        case LV_TEXT_ALIGN_LEFT:
+            lv_obj_set_x(label, 0);
+            break;
     }
 
-    lv_roller_t * roller = (lv_roller_t*)obj;
+    lv_roller_t * roller = (lv_roller_t *)obj;
     const lv_font_t * font = lv_obj_get_style_text_font(obj, LV_PART_MAIN);
     lv_coord_t line_space = lv_obj_get_style_text_line_space(obj, LV_PART_MAIN);
     lv_coord_t font_h              = lv_font_get_line_height(font);
@@ -635,7 +650,7 @@ static lv_res_t release_handler(lv_obj_t * obj)
     if(label == NULL) return LV_RES_OK;
 
     lv_indev_t * indev = lv_indev_get_act();
-    lv_roller_t * roller = (lv_roller_t*)obj;
+    lv_roller_t * roller = (lv_roller_t *)obj;
 
     /*Leave edit mode once a new option is selected*/
     lv_indev_type_t indev_type = lv_indev_get_type(indev);
@@ -674,7 +689,8 @@ static lv_res_t release_handler(lv_obj_t * obj)
                 if(letter == '\n' && i_prev != letter_i) new_opt++;
                 i_prev = i;
             }
-        } else {
+        }
+        else {
             /*If dragged then align the list to have an element in the middle*/
             const lv_font_t * font = lv_obj_get_style_text_font(obj, LV_PART_MAIN);
             lv_coord_t line_space = lv_obj_get_style_text_line_space(obj, LV_PART_MAIN);
@@ -707,7 +723,7 @@ static lv_res_t release_handler(lv_obj_t * obj)
  */
 static void inf_normalize(lv_obj_t * obj)
 {
-    lv_roller_t * roller = (lv_roller_t*)obj;
+    lv_roller_t * roller = (lv_roller_t *)obj;
 
     if(roller->mode == LV_ROLLER_MODE_INFINITE) {
         uint16_t real_id_cnt = roller->option_cnt / LV_ROLLER_INF_PAGES;

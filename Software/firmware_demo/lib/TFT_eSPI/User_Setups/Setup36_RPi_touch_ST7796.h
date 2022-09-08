@@ -1,7 +1,8 @@
 // See SetupX_Template.h for all options available
+#define USER_SETUP_ID 36
 
 #define RPI_DISPLAY_TYPE
-#define ST7796_DRIVER // 20MHz maximum SPI
+#define ST7796_DRIVER
 
 
 #define TFT_MISO 19

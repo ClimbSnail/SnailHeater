@@ -12,9 +12,9 @@ The best way to think about NuttX is to think of it as a small Unix/Linux for mi
 
 ### Highlights of NuttX
 
-- **Small** - Fits and runs in microcontrollers as small as 32KB Flash and 8KB of RAM.
+- **Small** - Fits and runs in microcontrollers as small as 32 kB Flash and 8 kB of RAM.
 - **Compliant** - Strives to be as compatible as possible with POSIX and Linux.
-- **Versatile** - Supports many architectures (ARM, ARM Thumb, AVR, MIPS, OpenRISC, RISC-V 32-bit and 64-bit, RX65N, x86-64, Xtensa, Z80/Z180, etc).
+- **Versatile** - Supports many architectures (ARM, ARM Thumb, AVR, MIPS, OpenRISC, RISC-V 32-bit and 64-bit, RX65N, x86-64, Xtensa, Z80/Z180, etc.).
 - **Modular** - Its modular design allows developers to select only what really matters and use modules to include new features.
 - **Popular** - NuttX is used by many companies around the world. Probably you already used a product with NuttX without knowing it was running NuttX.
 - **Predictable** - NuttX is a preemptible Realtime kernel, so you can use it to create predictable applications for realtime control.
@@ -24,7 +24,7 @@ The best way to think about NuttX is to think of it as a small Unix/Linux for mi
 ## Why NuttX + LVGL?
 
 Although NuttX has its own graphic library called [NX](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=139629474), LVGL is a good alternative because users could find more eye-candy demos and they can reuse code from previous projects. 
-LVGL is an [Object Oriented Component Based](https://blog.lvgl.io/2018-12-13/extend-lvgl-objects) high-level GUI library, that could fit very well for a RTOS with advanced features like NuttX. 
+LVGL is an [Object-Oriented Component Based](https://blog.lvgl.io/2018-12-13/extend-lvgl-objects) high-level GUI library, that could fit very well for a RTOS with advanced features like NuttX. 
 LVGL is implemented in C and its APIs are in C.
 
 ### Here are some advantages of using LVGL in NuttX
@@ -45,10 +45,10 @@ Using LVGL, Linux and NuttX you can reduce this process and just test everything
 
 ## How to get started with NuttX and LVGL?
 
-There are many boards in the NuttX mainline (https://github.com/apache/incubator-nuttx) with support for LVGL.
-Let's use the [STM32F429IDISCOVERY](https://www.st.com/en/evaluation-tools/32f429idiscovery.html) as example because it is a very popular board.
+There are many boards in the [NuttX mainline](https://github.com/apache/incubator-nuttx) with support for LVGL.
+Let's use the [STM32F429IDISCOVERY](https://www.st.com/en/evaluation-tools/32f429idiscovery.html) as an example because it is a very popular board.
 
-### First you need to install the pre-requisite on your system
+### First you need to install the pre-requisites on your system
 
 Let's use the [Windows Subsystem for Linux](https://acassis.wordpress.com/2018/01/10/how-to-build-nuttx-on-windows-10/)
 
@@ -56,7 +56,7 @@ Let's use the [Windows Subsystem for Linux](https://acassis.wordpress.com/2018/0
 $ sudo apt-get install automake bison build-essential flex gcc-arm-none-eabi gperf git libncurses5-dev libtool libusb-dev libusb-1.0.0-dev pkg-config kconfig-frontends openocd
 ```
 
-### Now let's to create a workspace to save our files
+### Now let's create a workspace to save our files
 
 ```shell
 $ mkdir ~/nuttxspace

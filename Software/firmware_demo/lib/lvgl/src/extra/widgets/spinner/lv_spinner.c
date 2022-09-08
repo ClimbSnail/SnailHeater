@@ -28,8 +28,8 @@ static void arc_anim_end_angle(void * obj, int32_t v);
  *  STATIC VARIABLES
  **********************/
 const lv_obj_class_t lv_spinner_class = {
-        .base_class = &lv_arc_class,
-        .constructor_cb = lv_spinner_constructor
+    .base_class = &lv_arc_class,
+    .constructor_cb = lv_spinner_constructor
 };
 
 static uint32_t time_param;
@@ -45,7 +45,7 @@ static uint32_t arc_length_param;
 
 /**
  * Create a spinner object
- * @param par pointer to an object, it will be the parent of the new spinner
+ * @param parent pointer to an object, it will be the parent of the new spinner
  * @return pointer to the created spinner
  */
 lv_obj_t * lv_spinner_create(lv_obj_t * parent, uint32_t time, uint32_t arc_length)

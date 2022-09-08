@@ -1,5 +1,5 @@
 /**
- * @file lv_ta.h
+ * @file lv_textarea.h
  *
  */
 
@@ -76,7 +76,7 @@ enum {
  **********************/
 
 /**
- * Create a text area objects
+ * Create a text area object
  * @param parent    pointer to an object, it will be the parent of the new text area
  * @return          pointer to the created text area
  */
@@ -199,6 +199,7 @@ void lv_textarea_set_text_selection(lv_obj_t * obj, bool en);
 void lv_textarea_set_password_show_time(lv_obj_t * obj, uint16_t time);
 
 /**
+ * Deprecated: use the normal text_align style property instead
  * Set the label's alignment.
  * It sets where the label is aligned (in one line mode it can be smaller than the text area)
  * and how the lines of the area align in case of multiline text area

@@ -19,7 +19,7 @@
  *********************/
 #define MY_CLASS &lv_bar_class
 
-/** hor. pad and ver. pad cannot make the indicator smaller then this [px]*/
+/** hor. pad and ver. pad cannot make the indicator smaller than this [px]*/
 #define LV_BAR_SIZE_MIN  4
 
 #define LV_BAR_IS_ANIMATING(anim_struct) (((anim_struct).anim_state) != LV_BAR_ANIM_STATE_INV)
@@ -77,7 +77,7 @@ const lv_obj_class_t lv_bar_class = {
 
 lv_obj_t * lv_bar_create(lv_obj_t * parent)
 {
-    LV_LOG_INFO("begin")
+    LV_LOG_INFO("begin");
     lv_obj_t * obj = lv_obj_class_create_obj(MY_CLASS, parent);
     lv_obj_class_init_obj(obj);
     return obj;
@@ -95,7 +95,7 @@ void lv_bar_set_value(lv_obj_t * obj, int32_t value, lv_anim_enable_t anim)
     if(bar->cur_value == value) return;
 
     value = LV_CLAMP(bar->min_value, value, bar->max_value);
-    value = value < bar->start_value ? bar->start_value : value; /*Can't be smaller then the left value*/
+    value = value < bar->start_value ? bar->start_value : value; /*Can't be smaller than the left value*/
 
     if(bar->cur_value == value) return;
     lv_bar_set_value_with_anim(obj, value, &bar->cur_value, &bar->cur_value_anim, anim);
@@ -107,8 +107,12 @@ void lv_bar_set_start_value(lv_obj_t * obj, int32_t value, lv_anim_enable_t anim
 
     lv_bar_t * bar = (lv_bar_t *)obj;
 
+    if(bar->mode != LV_BAR_MODE_RANGE) {
+        return;
+    }
+
     value = LV_CLAMP(bar->min_value, value, bar->max_value);
-    value = value > bar->cur_value ? bar->cur_value : value; /*Can't be greater then the right value*/
+    value = value > bar->cur_value ? bar->cur_value : value; /*Can't be greater than the right value*/
 
     if(bar->start_value == value) return;
     lv_bar_set_value_with_anim(obj, value, &bar->start_value, &bar->start_value_anim, anim);
@@ -130,11 +134,11 @@ void lv_bar_set_range(lv_obj_t * obj, int32_t min, int32_t max)
 
     if(bar->cur_value > max) {
         bar->cur_value = max;
-        lv_bar_set_value(obj, bar->cur_value, false);
+        lv_bar_set_value(obj, bar->cur_value, LV_ANIM_OFF);
     }
     if(bar->cur_value < min) {
         bar->cur_value = min;
-        lv_bar_set_value(obj, bar->cur_value, false);
+        lv_bar_set_value(obj, bar->cur_value, LV_ANIM_OFF);
     }
     lv_obj_invalidate(obj);
 }
@@ -211,7 +215,11 @@ static void lv_bar_constructor(const lv_obj_class_t * class_p, lv_obj_t * obj)
     bar->max_value = 100;
     bar->start_value = 0;
     bar->cur_value = 0;
-    bar->mode         = LV_BAR_MODE_NORMAL;
+    bar->indic_area.x1 = 0;
+    bar->indic_area.x2 = 0;
+    bar->indic_area.y1 = 0;
+    bar->indic_area.y2 = 0;
+    bar->mode = LV_BAR_MODE_NORMAL;
 
     lv_bar_init_anim(obj, &bar->cur_value_anim);
     lv_bar_init_anim(obj, &bar->start_value_anim);
@@ -237,7 +245,7 @@ static void draw_indic(lv_event_t * e)
     lv_obj_t * obj = lv_event_get_target(e);
     lv_bar_t * bar = (lv_bar_t *)obj;
 
-    const lv_area_t * clip_area = lv_event_get_param(e);
+    lv_draw_ctx_t * draw_ctx = lv_event_get_draw_ctx(e);
 
     lv_area_t bar_coords;
     lv_obj_get_coords(obj, &bar_coords);
@@ -310,8 +318,7 @@ static void draw_indic(lv_event_t * e)
 
         anim_start_value_x += anim_start_value_start_x;
     }
-    else
-    {
+    else {
         anim_start_value_x = (int32_t)((int32_t)anim_length * (bar->start_value - bar->min_value)) / range;
     }
 
@@ -325,8 +332,7 @@ static void draw_indic(lv_event_t * e)
                                                       bar->cur_value_anim.anim_state) /
                                                      LV_BAR_ANIM_STATE_END);
     }
-    else
-    {
+    else {
         anim_cur_value_x = (int32_t)((int32_t)anim_length * (bar->cur_value - bar->min_value)) / range;
     }
 
@@ -383,7 +389,7 @@ static void draw_indic(lv_event_t * e)
     if(!sym && indic_length_calc(&bar->indic_area) <= 1) {
 
         lv_obj_draw_part_dsc_t part_draw_dsc;
-        lv_obj_draw_dsc_init(&part_draw_dsc, clip_area);
+        lv_obj_draw_dsc_init(&part_draw_dsc, draw_ctx);
         part_draw_dsc.part = LV_PART_INDICATOR;
         part_draw_dsc.class_p = MY_CLASS;
         part_draw_dsc.type = LV_BAR_DRAW_PART_INDICATOR;
@@ -394,10 +400,6 @@ static void draw_indic(lv_event_t * e)
         return;
     }
 
-    lv_coord_t bg_radius = lv_obj_get_style_radius(obj, LV_PART_MAIN);
-    lv_coord_t short_side = LV_MIN(barw, barh);
-    if(bg_radius > short_side >> 1) bg_radius = short_side >> 1;
-
     lv_area_t indic_area;
     lv_area_copy(&indic_area, &bar->indic_area);
 
@@ -406,20 +408,28 @@ static void draw_indic(lv_event_t * e)
     lv_obj_init_draw_rect_dsc(obj, LV_PART_INDICATOR, &draw_rect_dsc);
 
     lv_obj_draw_part_dsc_t part_draw_dsc;
-    lv_obj_draw_dsc_init(&part_draw_dsc, clip_area);
+    lv_obj_draw_dsc_init(&part_draw_dsc, draw_ctx);
     part_draw_dsc.part = LV_PART_INDICATOR;
     part_draw_dsc.class_p = MY_CLASS;
     part_draw_dsc.type = LV_BAR_DRAW_PART_INDICATOR;
     part_draw_dsc.rect_dsc = &draw_rect_dsc;
-	part_draw_dsc.draw_area = &bar->indic_area;
+    part_draw_dsc.draw_area = &bar->indic_area;
 
-	lv_event_send(obj, LV_EVENT_DRAW_PART_BEGIN, &part_draw_dsc);
+    lv_event_send(obj, LV_EVENT_DRAW_PART_BEGIN, &part_draw_dsc);
 
-    /*Draw only the shadow if the indicator is long enough.
+    lv_coord_t bg_radius = lv_obj_get_style_radius(obj, LV_PART_MAIN);
+    lv_coord_t short_side = LV_MIN(barw, barh);
+    if(bg_radius > short_side >> 1) bg_radius = short_side >> 1;
+
+    lv_coord_t indic_radius = draw_rect_dsc.radius;
+    short_side = LV_MIN(indicw, indich);
+    if(indic_radius > short_side >> 1) indic_radius = short_side >> 1;
+
+    /*Draw only the shadow and outline only if the indicator is long enough.
      *The radius of the bg and the indicator can make a strange shape where
      *it'd be very difficult to draw shadow.*/
-    if((hor && lv_area_get_width(&bar->indic_area) > bg_radius * 2) ||
-       (!hor && lv_area_get_height(&bar->indic_area) > bg_radius * 2)) {
+    if((hor && lv_area_get_width(&bar->indic_area) > indic_radius * 2) ||
+       (!hor && lv_area_get_height(&bar->indic_area) > indic_radius * 2)) {
         lv_opa_t bg_opa = draw_rect_dsc.bg_opa;
         lv_opa_t bg_img_opa = draw_rect_dsc.bg_img_opa;
         lv_opa_t border_opa = draw_rect_dsc.border_opa;
@@ -427,7 +437,7 @@ static void draw_indic(lv_event_t * e)
         draw_rect_dsc.bg_img_opa = LV_OPA_TRANSP;
         draw_rect_dsc.border_opa = LV_OPA_TRANSP;
 
-        lv_draw_rect(&bar->indic_area, clip_area, &draw_rect_dsc);
+        lv_draw_rect(draw_ctx, &draw_rect_dsc, &bar->indic_area);
 
         draw_rect_dsc.bg_opa = bg_opa;
         draw_rect_dsc.bg_img_opa = bg_img_opa;
@@ -475,7 +485,7 @@ static void draw_indic(lv_event_t * e)
     int16_t mask_indic_id = lv_draw_mask_add(&mask_indic_param, NULL);
 #endif
 
-    lv_draw_rect(&mask_indic_max_area, clip_area, &draw_rect_dsc);
+    lv_draw_rect(draw_ctx, &draw_rect_dsc, &mask_indic_max_area);
     draw_rect_dsc.border_opa = border_opa;
     draw_rect_dsc.shadow_opa = shadow_opa;
 
@@ -483,9 +493,11 @@ static void draw_indic(lv_event_t * e)
     draw_rect_dsc.bg_opa = LV_OPA_TRANSP;
     draw_rect_dsc.bg_img_opa = LV_OPA_TRANSP;
     draw_rect_dsc.shadow_opa = LV_OPA_TRANSP;
-    lv_draw_rect(&bar->indic_area, clip_area, &draw_rect_dsc);
+    lv_draw_rect(draw_ctx, &draw_rect_dsc, &bar->indic_area);
 
 #if LV_DRAW_COMPLEX
+    lv_draw_mask_free_param(&mask_indic_param);
+    lv_draw_mask_free_param(&mask_bg_param);
     lv_draw_mask_remove_id(mask_indic_id);
     lv_draw_mask_remove_id(mask_bg_id);
 #endif
@@ -524,10 +536,12 @@ static void lv_bar_event(const lv_obj_class_t * class_p, lv_event_t * e)
         if(pad < 0) {
             *s = LV_MAX(*s, -pad);
         }
-    } else if(code == LV_EVENT_PRESSED || code == LV_EVENT_RELEASED) {
+    }
+    else if(code == LV_EVENT_PRESSED || code == LV_EVENT_RELEASED) {
         lv_bar_t * bar = (lv_bar_t *)obj;
         lv_obj_invalidate_area(obj, &bar->indic_area);
-    } else if(code == LV_EVENT_DRAW_MAIN) {
+    }
+    else if(code == LV_EVENT_DRAW_MAIN) {
         draw_indic(e);
     }
 }
@@ -558,7 +572,7 @@ static void lv_bar_set_value_with_anim(lv_obj_t * obj, int32_t new_value, int32_
 {
     if(en == LV_ANIM_OFF) {
         *value_ptr = new_value;
-        lv_obj_invalidate((lv_obj_t*)obj);
+        lv_obj_invalidate((lv_obj_t *)obj);
     }
     else {
         /*No animation in progress -> simply set the values*/

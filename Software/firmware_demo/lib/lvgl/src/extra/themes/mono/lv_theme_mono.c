@@ -78,7 +78,7 @@ static void style_init(bool dark_bg, const lv_font_t * font)
 {
     style_init_reset(&styles->scrollbar);
     lv_style_set_bg_opa(&styles->scrollbar, LV_OPA_COVER);
-    lv_style_set_bg_color(&styles->scrollbar,COLOR_FG);
+    lv_style_set_bg_color(&styles->scrollbar, COLOR_FG);
     lv_style_set_width(&styles->scrollbar,  PAD_DEF);
 
     style_init_reset(&styles->scr);
@@ -164,13 +164,19 @@ static void style_init(bool dark_bg, const lv_font_t * font)
  *   GLOBAL FUNCTIONS
  **********************/
 
+bool lv_theme_mono_is_inited(void)
+{
+    return  LV_GC_ROOT(_lv_theme_default_styles) == NULL ? false : true;
+}
+
 lv_theme_t * lv_theme_mono_init(lv_disp_t * disp, bool dark_bg, const lv_font_t * font)
 {
 
     /*This trick is required only to avoid the garbage collection of
      *styles' data if LVGL is used in a binding (e.g. Micropython)
      *In a general case styles could be in simple `static lv_style_t my_style...` variables*/
-    if(!inited) {
+    if(!lv_theme_mono_is_inited()) {
+        inited = false;
         LV_GC_ROOT(_lv_theme_default_styles) = lv_mem_alloc(sizeof(my_theme_styles_t));
         styles = (my_theme_styles_t *)LV_GC_ROOT(_lv_theme_default_styles);
     }
@@ -183,9 +189,9 @@ lv_theme_t * lv_theme_mono_init(lv_disp_t * disp, bool dark_bg, const lv_font_t 
 
     style_init(dark_bg, font);
 
-    inited = true;
-
     if(disp == NULL || lv_disp_get_theme(disp) == &theme) lv_obj_report_style_change(NULL);
+
+    inited = true;
 
     return (lv_theme_t *)&theme;
 }
@@ -219,13 +225,13 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj)
 
 #if LV_USE_WIN
         /*Header*/
-        if(lv_obj_get_child_id(obj) == 0 && lv_obj_check_type(lv_obj_get_parent(obj), &lv_win_class)) {
+        if(lv_obj_get_index(obj) == 0 && lv_obj_check_type(lv_obj_get_parent(obj), &lv_win_class)) {
             lv_obj_add_style(obj, &styles->card, 0);
             lv_obj_add_style(obj, &styles->no_radius, 0);
             return;
         }
         /*Content*/
-        else if(lv_obj_get_child_id(obj) == 1 && lv_obj_check_type(lv_obj_get_parent(obj), &lv_win_class)) {
+        else if(lv_obj_get_index(obj) == 1 && lv_obj_check_type(lv_obj_get_parent(obj), &lv_win_class)) {
             lv_obj_add_style(obj, &styles->card, 0);
             lv_obj_add_style(obj, &styles->no_radius, 0);
             lv_obj_add_style(obj, &styles->scrollbar, LV_PART_SCROLLBAR);
@@ -279,7 +285,7 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj)
         lv_obj_add_style(obj, &styles->inv, LV_PART_ITEMS | LV_STATE_CHECKED);
         lv_obj_add_style(obj, &styles->disabled, LV_PART_ITEMS | LV_STATE_DISABLED);
         lv_obj_add_style(obj, &styles->underline, LV_PART_ITEMS | LV_STATE_FOCUS_KEY);
-            lv_obj_add_style(obj, &styles->large_border, LV_PART_ITEMS | LV_STATE_FOCUS_KEY);
+        lv_obj_add_style(obj, &styles->large_border, LV_PART_ITEMS | LV_STATE_FOCUS_KEY);
     }
 #endif
 
@@ -476,8 +482,8 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj)
 
 #if LV_USE_LED
     else if(lv_obj_check_type(obj, &lv_led_class)) {
-            lv_obj_add_style(obj, &styles->card, 0);
-        }
+        lv_obj_add_style(obj, &styles->card, 0);
+    }
 #endif
 }
 
@@ -487,8 +493,12 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj)
 
 static void style_init_reset(lv_style_t * style)
 {
-    if(inited) lv_style_reset(style);
-    else lv_style_init(style);
+    if(inited) {
+        lv_style_reset(style);
+    }
+    else {
+        lv_style_init(style);
+    }
 }
 
 #endif

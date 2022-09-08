@@ -1,12 +1,12 @@
 ```eval_rst
 .. include:: /header.rst 
-:github_url: |github_link_base|/widgets/btnmatrix.md
+:github_url: |github_link_base|/widgets/core/btnmatrix.md
 ```
 # Button matrix (lv_btnmatrix)
 
 ## Overview
 
-The Button Matrix object is a lightweight way to display multiple buttons in rows and columns. Lightweight because the buttons are not actually created but just virtually drawn on the fly. This way, one button use only eight extra bytes of memory instead of the ~100-150 bytes a normal [Button](/widgets/core/btn) object plus the 100 or so bytes for the the [Label](/widgets/core/label) object.
+The Button Matrix object is a lightweight way to display multiple buttons in rows and columns. Lightweight because the buttons are not actually created but just virtually drawn on the fly. This way, one button use only eight extra bytes of memory instead of the ~100-150 bytes a normal [Button](/widgets/core/btn) object plus the 100 or so bytes for the [Label](/widgets/core/label) object.
 
 The Button matrix is added to the default group (if one is set). Besides the Button matrix is an editable object to allow selecting and clicking the buttons with encoder navigation too.
 
@@ -36,26 +36,27 @@ In addition to the width, each button can be customized with the following param
 - `LV_BTNMATRIX_CTRL_NO_REPEAT` Disable repeating when the button is long pressed
 - `LV_BTNMATRIX_CTRL_DISABLED` Makes a button disabled Like `LV_STATE_DISABLED` on normal objects
 - `LV_BTNMATRIX_CTRL_CHECKABLE` Enable toggling of a button. I.e. `LV_STATE_CHECHED` will be added/removed as the button is clicked
-- `LV_BTNMATRIX_CTRL_CHECKED` MAke the button checked. It will use the `LV_STATE_CHECHKED` styles.
-- `LV_BTNMATRIX_CTRL_CLICK_TRIG` Enabled: send LV_EVENT_VALUE_CHANGE on CLICK, Disabled: send LV_EVENT_VALUE_CHANGE on PRESS*/
+- `LV_BTNMATRIX_CTRL_CHECKED` Make the button checked. It will use the `LV_STATE_CHECHKED` styles.
+- `LV_BTNMATRIX_CTRL_CLICK_TRIG` Enabled: send LV_EVENT_VALUE_CHANGE on CLICK, Disabled: send LV_EVENT_VALUE_CHANGE on PRESS
+- `LV_BTNMATRIX_CTRL_POPOVER` Show the button label in a popover when pressing this key
 - `LV_BTNMATRIX_CTRL_RECOLOR` Enable recoloring of button texts with `#`. E.g. `"It's #ff0000 red#"`
 - `LV_BTNMATRIX_CTRL_CUSTOM_1` Custom free to use flag
 - `LV_BTNMATRIX_CTRL_CUSTOM_2` Custom free to use flag
 
-By default all flags are disabled.
+By default, all flags are disabled.
 
 To set or clear a button's control attribute, use `lv_btnmatrix_set_btn_ctrl(btnm, btn_id, LV_BTNM_CTRL_...)` and 
 `lv_btnmatrix_clear_btn_ctrl(btnm, btn_id, LV_BTNMATRIX_CTRL_...)` respectively. More `LV_BTNM_CTRL_...` values can be OR-ed
 
-To set/clear the same control attribute for all buttons of a button matrix, use `lv_btnmatrix_set_btn_ctrl_all(btnm, btn_id, LV_BTNM_CTRL_...)` and 
-`lv_btnmatrix_clear_btn_ctrl_all(btnm, btn_id, LV_BTNMATRIX_CTRL_...)`.
+To set/clear the same control attribute for all buttons of a button matrix, use `lv_btnmatrix_set_btn_ctrl_all(btnm, LV_BTNM_CTRL_...)` and 
+`lv_btnmatrix_clear_btn_ctrl_all(btnm, LV_BTNMATRIX_CTRL_...)`.
 
 The set a control map for a button matrix (similarly to the map for the text), use `lv_btnmatrix_set_ctrl_map(btnm, ctrl_map)`.
 An element of `ctrl_map` should look like `ctrl_map[0] = width | LV_BTNM_CTRL_NO_REPEAT |  LV_BTNM_CTRL_CHECHKABLE`. 
 The number of elements should be equal to the number of buttons (excluding newlines characters).
 
 ### One check
-The "One check" feature can be enabled with `lv_btnmatrix_set_one_check(btnm, true)` to allow only one button to be checked at a time.
+The "One check" feature can be enabled with `lv_btnmatrix_set_one_checked(btnm, true)` to allow only one button to be checked at a time.
 
 ## Events
 - `LV_EVENT_VALUE_CHANGED` Sent when a button is pressed/released or repeated after long press. The event parameter is set to the ID of the pressed/released button.

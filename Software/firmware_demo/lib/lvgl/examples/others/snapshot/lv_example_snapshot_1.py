@@ -21,7 +21,7 @@ try:
     with open('../../assets/img_star.png','rb') as f:
         png_data = f.read()
 except:
-    print("Could not find img_star.png")
+    print("Could not find star.png")
     sys.exit()
 
 img_star = lv.img_dsc_t({

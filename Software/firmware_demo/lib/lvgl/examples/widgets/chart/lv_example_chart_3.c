@@ -8,7 +8,7 @@ static void draw_event_cb(lv_event_t * e)
 
     if(dsc->id == LV_CHART_AXIS_PRIMARY_X && dsc->text) {
         const char * month[] = {"Jan", "Febr", "March", "Apr", "May", "Jun", "July", "Aug", "Sept", "Oct", "Nov", "Dec"};
-        dsc->text = month[dsc->value];
+        lv_snprintf(dsc->text, dsc->text_length, "%s", month[dsc->value]);
     }
 }
 
@@ -54,7 +54,7 @@ void lv_example_chart_3(void)
     lv_chart_set_next_value(chart, ser1, 22);
     lv_chart_set_next_value(chart, ser1, 58);
 
-    lv_coord_t * ser2_array =  lv_chart_get_y_array(chart, ser2);
+    lv_coord_t * ser2_array = lv_chart_get_y_array(chart, ser2);
     /*Directly set points on 'ser2'*/
     ser2_array[0] = 92;
     ser2_array[1] = 71;

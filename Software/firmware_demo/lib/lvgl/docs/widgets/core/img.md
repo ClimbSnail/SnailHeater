@@ -1,6 +1,6 @@
 ```eval_rst
 .. include:: /header.rst 
-:github_url: |github_link_base|/widgets/img.md
+:github_url: |github_link_base|/widgets/core/img.md
 ```
 # Image (lv_img)
 
@@ -94,13 +94,19 @@ Note that the real coordinates of image objects won't change during transformati
 
 ### Size mode
 
-By default if the image is zoom or rotated the real coordinates of the image object are not changed. 
+By default, when the image is zoomed or rotated the real coordinates of the image object are not changed. 
 The larger content simply overflows the object's boundaries. 
 It also means the layouts are not affected the by the transformations. 
 
 If you need the object size to be updated to the transformed size set `lv_img_set_size_mode(img, LV_IMG_SIZE_MODE_REAL)`. (The previous mode is the default and called `LV_IMG_SIZE_MODE_VIRTUAL`).
 In this case if the width/height of the object is set to `LV_SIZE_CONTENT` the object's size will be set to the zoomed and rotated size.
-If an explicit size is set then the overflowing content will be cropped. 
+If an explicit size is set then the overflowing content will be cropped.
+
+### Rounded image
+
+You can use `lv_obj_set_style_radius` to set radius to an image, and enable `lv_obj_set_style_clip_corner` to clip the 
+content to rounded rectangle or circular shape. Please note this will have some negative performance impact to CPU 
+based renderers.
 
 ## Events
 No special events are sent by image objects.

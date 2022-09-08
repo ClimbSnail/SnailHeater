@@ -1,3 +1,44 @@
+FastLED 3.5.0
+=============
+This release incorporates dozens of valuable improvements from FastLED contributors, tested and explored by the world-wide FastLED community of artists, creators, and developers.  Thank you for all of your time, energy, and help!  Here are some of the most significant changes in FastLED 3.5.0: 
+* Greatly improved ESP32 and ESP8266 support
+* Improved board support for Teensy 4, Adafruit MatrixPortal M4, Arduino Nano Every, Partical Photon, and Seeed Wio Terminal
+* Improved and/or sped up: sin8, cos8, blend8, blur2d, scale8, Perlin/simplex noise
+* Improved HSV colors are smoother, richer, and brighter in fill_rainbow and elsewhere
+* Modernized and cleaned up the FastLED examples
+* Added github CI integration to help with automated testing
+* Added a Code of Conduct from https://www.contributor-covenant.org/
+* Released January 2022, with many thanks to FastLED contributors and the FastLED community!  
+
+
+FastLED 3.4.0
+=============
+
+* Improved reliability on ESP32 when wifi is active
+* Merged in contributed support for Adafruit boards: QT Py SAMD21, Circuit Playground Express,  Circuit Playground Bluefruit, and ItsyBitsy nRF52840 Express
+* Merged in contributed support for SparkFun Artemis boards
+* Merged in contributed support for Arduino Nano Every / Arduino Uno Wifi Rev. 2
+* Merged in contributed support for Seeedstudio Odyssey and XIAO boards
+* Merged in contributed support for AVR chips ATmega1284, ATmega4809, and LGT8F328
+* XYMatrix example now supports 90-degree rotated orientation
+* Moved source code files into "src" subdirectory
+* Many small code cleanups and bug fixes
+* Released December 2020, with many thanks to everyone contributing to FastLED!
+
+We also want to note here that in 2020, Github named FastLED one of the 'Greatest Hits' of Open Source software, and preserved an archived copy of FastLED in the Arctic Code Vault, the Bodleian Library at Oxford University, the Bibliotheca Alexandrina (the Library of Alexandria), and the Stanford University Libraries.  https://archiveprogram.github.com/greatest-hits/
+
+
+
+FastLED 3.3.3
+=============
+
+* Improved support for ESP32, Teensy4, ATmega16, nRF52, and ARM STM32.  
+* Added animation examples: "TwinkleFox" holiday lights, "Pride2015" moving rainbows, and "Pacifica" gentle ocean waves 
+* Fixed a few bugs including a rare divide-by-zero crash
+* Cleaned up code and examples a bit
+* Said our sad farwells to FastLED founder Daniel Garcia, who we lost in a tragic accident on September 2nd, 2019.  Dan's beautiful code and warm kindness have been at the heart of the library, and our community, for ten years.  FastLED will continue with help from all across the FastLED world, and Dan's spirit will be with us whenever the lights shine and glow.  Thank you, Dan, for everything.
+
+
 FastLED 3.3.2
 =============
 

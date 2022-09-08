@@ -26,6 +26,12 @@ void PID::set_pid_param(double kp, double ki, double kd, double dt)
     m_dt = dt;
 }
 
+void PID::reset(void)
+{
+    m_previous_error = 0;
+    m_integral = 0;
+}
+
 void PID::set_data(double pre_error, double integral)
 {
     m_previous_error = pre_error;

@@ -40,20 +40,20 @@ typedef struct {
     lv_obj_t * list;                /**< The dropped down list*/
     const char * text;              /**< Text to display on the dropdown's button*/
     const void * symbol;            /**< Arrow or other icon when the drop-down list is closed*/
-    char * options;                 /**< Options in a a '\n' separated list*/
+    char * options;                 /**< Options in a '\n' separated list*/
     uint16_t option_cnt;            /**< Number of options*/
     uint16_t sel_opt_id;            /**< Index of the currently selected option*/
     uint16_t sel_opt_id_orig;       /**< Store the original index on focus*/
     uint16_t pr_opt_id;             /**< Index of the currently pressed option*/
-    lv_dir_t dir              :4;   /**< Direction in which the list should open*/
-    uint8_t static_txt        :1;   /**< 1: Only a pointer is saved in `options`*/
-    uint8_t selected_highlight:1;   /**< 1: Make the selected option highlighted in the list*/
-}lv_dropdown_t;
+    lv_dir_t dir              : 4;  /**< Direction in which the list should open*/
+    uint8_t static_txt        : 1;  /**< 1: Only a pointer is saved in `options`*/
+    uint8_t selected_highlight: 1;  /**< 1: Make the selected option highlighted in the list*/
+} lv_dropdown_t;
 
 typedef struct {
-  lv_obj_t obj;
-  lv_obj_t * dropdown;
-}lv_dropdown_list_t;
+    lv_obj_t obj;
+    lv_obj_t * dropdown;
+} lv_dropdown_list_t;
 
 extern const  lv_obj_class_t lv_dropdown_class;
 extern const  lv_obj_class_t lv_dropdownlist_class;
@@ -63,7 +63,7 @@ extern const  lv_obj_class_t lv_dropdownlist_class;
  **********************/
 
 /**
- * Create a drop-down list objects
+ * Create a drop-down list object
  * @param parent pointer to an object, it will be the parent of the new drop-down list
  * @return pointer to the created drop-down list
  */
@@ -76,9 +76,9 @@ lv_obj_t * lv_dropdown_create(lv_obj_t * parent);
 /**
  * Set text of the drop-down list's button.
  * If set to `NULL` the selected option's text will be displayed on the button.
- * If set to a specific text then that text will be shown regardless the selected option.
+ * If set to a specific text then that text will be shown regardless of the selected option.
  * @param obj       pointer to a drop-down list object
- * @param txt       the text as a string (Only it's pointer is saved)
+ * @param txt       the text as a string (Only its pointer is saved)
  */
 void lv_dropdown_set_text(lv_obj_t * obj, const char * txt);
 
@@ -107,7 +107,7 @@ void lv_dropdown_set_options_static(lv_obj_t * obj, const char * options);
 void lv_dropdown_add_option(lv_obj_t * obj, const char * option, uint32_t pos);
 
 /**
- * Clear all options in a drop-down list.  Works with both static and dynamic optins.
+ * Clear all options in a drop-down list.  Works with both static and dynamic options.
  * @param obj       pointer to drop-down list object
  */
 void lv_dropdown_clear_options(lv_obj_t * obj);
@@ -127,7 +127,7 @@ void lv_dropdown_set_selected(lv_obj_t * obj, uint16_t sel_opt);
 void lv_dropdown_set_dir(lv_obj_t * obj, lv_dir_t dir);
 
 /**
- * Set an arrow or other symbol to display when on drop-down list's button.  Typically a down caret or arrow.
+ * Set an arrow or other symbol to display when on drop-down list's button. Typically a down caret or arrow.
  * @param obj       pointer to drop-down list object
  * @param symbol    a text like `LV_SYMBOL_DOWN`, an image (pointer or path) or NULL to not draw symbol icon
  * @note angle and zoom transformation can be applied if the symbol is an image.
@@ -226,6 +226,12 @@ void lv_dropdown_open(lv_obj_t * dropdown_obj);
  */
 void lv_dropdown_close(lv_obj_t * obj);
 
+/**
+ * Tells whether the list is opened or not
+ * @param obj       pointer to a drop-down list object
+ * @return          true if the list os opened
+ */
+bool lv_dropdown_is_open(lv_obj_t * obj);
 
 /**********************
  *      MACROS

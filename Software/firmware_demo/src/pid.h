@@ -16,6 +16,7 @@ public:
     ~PID();
     void set_pid_param(double kp, double ki, double kd, double dt);
     void set_data(double pre_error, double integral);
+    void reset(void);
     double get_output(double target_value, double now_value);
 };
 

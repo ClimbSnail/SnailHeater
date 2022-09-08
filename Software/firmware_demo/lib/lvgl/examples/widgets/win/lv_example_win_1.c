@@ -5,7 +5,7 @@
 static void event_handler(lv_event_t * e)
 {
     lv_obj_t * obj = lv_event_get_target(e);
-    LV_LOG_USER("Button %d clicked", lv_obj_get_child_id(obj));
+    LV_LOG_USER("Button %d clicked", (int)lv_obj_get_index(obj));
 }
 
 void lv_example_win_1(void)
@@ -23,8 +23,8 @@ void lv_example_win_1(void)
     btn = lv_win_add_btn(win, LV_SYMBOL_CLOSE, 60);
     lv_obj_add_event_cb(btn, event_handler, LV_EVENT_CLICKED, NULL);
 
-    lv_obj_t * cont = lv_win_get_content(win);  /*Content can be aded here*/
-    lv_obj_t * label =  lv_label_create(cont);
+    lv_obj_t * cont = lv_win_get_content(win);  /*Content can be added here*/
+    lv_obj_t * label = lv_label_create(cont);
     lv_label_set_text(label, "This is\n"
                              "a pretty\n"
                              "long text\n"

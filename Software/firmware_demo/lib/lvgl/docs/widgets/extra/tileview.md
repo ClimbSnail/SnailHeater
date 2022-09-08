@@ -1,13 +1,13 @@
 ```eval_rst
 .. include:: /header.rst 
-:github_url: |github_link_base|/widgets/tileview.md
+:github_url: |github_link_base|/widgets/extra/tileview.md
 ```
 # Tile view (lv_tileview)
 
 ## Overview
 
 The Tile view is a container object whose elements (called *tiles*) can be arranged in grid form. 
-By swiping the user can navigate between the tiles. 
+A user can navigate between the tiles by swiping. 
 Any direction of swiping can be disabled on the tiles individually to not allow moving from one tile to another. 
 
 If the Tile view is screen sized, the user interface resembles what you may have seen on smartwatches.

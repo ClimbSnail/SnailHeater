@@ -1,4 +1,5 @@
 #include "knobs.h"
+#include "common.h"
 
 KeyInfo Knobs::m_key_info = {0, 0};
 uint8_t Knobs::m_pinA_num = 0;
@@ -52,13 +53,15 @@ void Knobs::interruter_funcA(void)
         m_pinB_Status = digitalRead(m_pinB_num);
         if (m_pinB_Status == 0 && flag == 1)
         {
-            ++(m_key_info.pulse_count);
+            --(m_key_info.pulse_count);
         }
         if (m_pinB_Status && flag == 0)
         {
-            --(m_key_info.pulse_count);
+            ++(m_key_info.pulse_count);
         }
         m_pinA_Status = 0; //中断计数复位，准备下一次
+        // 蜂鸣器提示
+        buzzer.set_beep_time(50);
     }
 }
 
@@ -94,6 +97,20 @@ KeyInfo Knobs::get_data(void)
     m_key_info.switch_status = 0; // clear
     m_key_info.switch_time = 0;
     return ret_info;
+}
+
+uint16_t Knobs::getDiff(void)
+{
+    uint16_t diff = m_key_info.pulse_count;
+    m_key_info.pulse_count = 0;
+    return diff;
+}
+
+uint8_t Knobs::getState(void)
+{
+    uint8_t state = m_key_info.switch_status;
+    m_key_info.switch_status = 0;
+    return state;
 }
 
 Knobs::~Knobs()

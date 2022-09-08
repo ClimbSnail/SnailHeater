@@ -18,7 +18,7 @@ static void event_cb(lv_event_t * e)
     label_dsc.font = LV_FONT_DEFAULT;
 
     char buf[8];
-    lv_snprintf(buf, sizeof(buf), "%d", lv_bar_get_value(obj));
+    lv_snprintf(buf, sizeof(buf), "%d", (int)lv_bar_get_value(obj));
 
     lv_point_t txt_size;
     lv_txt_get_size(&txt_size, buf, label_dsc.font, label_dsc.letter_space, label_dsc.line_space, LV_COORD_MAX, label_dsc.flag);
@@ -40,7 +40,7 @@ static void event_cb(lv_event_t * e)
     txt_area.y1 = dsc->draw_area->y1 + (lv_area_get_height(dsc->draw_area) - txt_size.y) / 2;
     txt_area.y2 = txt_area.y1 + txt_size.y - 1;
 
-    lv_draw_label(&txt_area, dsc->clip_area, &label_dsc, buf, NULL);
+    lv_draw_label(dsc->draw_ctx, &label_dsc, &txt_area, buf, NULL);
 }
 
 /**

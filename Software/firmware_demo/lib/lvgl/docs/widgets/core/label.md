@@ -1,6 +1,6 @@
 ```eval_rst
 .. include:: /header.rst 
-:github_url: |github_link_base|/widgets/core/label.md
+:github_url: |github_link_base|/widgets/core/core/label.md
 ```
 # Label (lv_label)
 
@@ -31,14 +31,14 @@ Constant strings are safe to use with `lv_label_set_text_static` (except when us
 Newline characters are handled automatically by the label object. You can use `\n` to make a line break. For example: `"line1\nline2\n\nline4"`
 
 ### Long modes
-By default, the width and height of the label is set to `LV_SIZE_CONTENT`. Therefore the size of the label is automatically expanded to the text size. 
-Otherwise, if the width or height are explicitly set (useing  e.g.`lv_obj_set_width` or a layout), the lines wider than the label's width can be manipulated according to several long mode policies. 
-Similary, the policies can be applied if the height of the text is greater than the height of the label.
+By default, the width and height of the label is set to `LV_SIZE_CONTENT`. Therefore, the size of the label is automatically expanded to the text size. 
+Otherwise, if the width or height are explicitly set (using  e.g.`lv_obj_set_width` or a layout), the lines wider than the label's width can be manipulated according to several long mode policies. 
+Similarly, the policies can be applied if the height of the text is greater than the height of the label.
 - `LV_LABEL_LONG_WRAP` Wrap too long lines. If the height is `LV_SIZE_CONTENT` the label's height will be expanded, otherwise the text will be clipped. (Default)
 - `LV_LABEL_LONG_DOT` Replaces the last 3 characters from bottom right corner of the label with dots (`.`) 
 - `LV_LABEL_LONG_SCROLL` If the text is wider than the label scroll it horizontally back and forth. If it's higher, scroll vertically. Only one direction is scrolled and horizontal scrolling has higher precedence.
-- `LV_LABEL_LONG_SCROLL_CIRCULAR` If the text is wider than the label scroll it horizontally continously. If it's higher, scroll vertically. Only one direction is scrolled and horizontal scrolling has higher precedence.
-- `LV_LABEL_LONG_CLIP` Simply clip the parts of the text outside of the label.
+- `LV_LABEL_LONG_SCROLL_CIRCULAR` If the text is wider than the label scroll it horizontally continuously. If it's higher, scroll vertically. Only one direction is scrolled and horizontal scrolling has higher precedence.
+- `LV_LABEL_LONG_CLIP` Simply clip the parts of the text outside the label.
 
 You can specify the long mode with `lv_label_set_long_mode(label, LV_LABEL_LONG_...)`
 
@@ -51,7 +51,7 @@ In the text, you can use commands to recolor parts of the text. For example: `"W
 This feature can be enabled individually for each label by `lv_label_set_recolor()` function. 
 
 ### Text selection
-If enabled by `LV_LABEL_TEXT_SELECTION` part of the text can be selected. It's similar when on PC a you use your mouse to select a text. 
+If enabled by `LV_LABEL_TEXT_SELECTION` part of the text can be selected. It's similar to when you use your mouse on a PC to select a text. 
 The whole mechanism (click and select the text as you drag your finger/mouse) is implemented in [Text area](/widgets/core/textarea) and the Label widget only allows manual text selection with
 `lv_label_get_text_selection_start(label, start_char_index)` and `lv_label_get_text_selection_start(label, end_char_index)`.
  

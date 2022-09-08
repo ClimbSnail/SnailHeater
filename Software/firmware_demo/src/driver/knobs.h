@@ -27,6 +27,8 @@ public:
     Knobs(uint8_t pinA_num, uint8_t pinB_num, uint8_t pinSw_num);
     ~Knobs();
     KeyInfo get_data(void);
+    uint16_t getDiff(void); // 获取旋转的数据
+    uint8_t getState(void); // 0松开 1按下
     ICACHE_RAM_ATTR void static interruter_funcA(void);
     ICACHE_RAM_ATTR void static interruter_funcSW_ON(void);
 };

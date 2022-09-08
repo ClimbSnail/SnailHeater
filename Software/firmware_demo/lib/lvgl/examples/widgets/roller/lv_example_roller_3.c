@@ -41,6 +41,8 @@ static void mask_event_cb(lv_event_t * e)
     } else if (code == LV_EVENT_DRAW_POST_END) {
         lv_draw_mask_fade_param_t * fade_mask_top = lv_draw_mask_remove_id(mask_top_id);
         lv_draw_mask_fade_param_t * fade_mask_bottom = lv_draw_mask_remove_id(mask_bottom_id);
+        lv_draw_mask_free_param(fade_mask_top);
+        lv_draw_mask_free_param(fade_mask_bottom);
         lv_mem_buf_release(fade_mask_top);
         lv_mem_buf_release(fade_mask_bottom);
         mask_top_id = -1;
@@ -49,7 +51,7 @@ static void mask_event_cb(lv_event_t * e)
 }
 
 /**
- * Add an fade mask to roller.
+ * Add a fade mask to roller.
  */
 void lv_example_roller_3(void)
 {

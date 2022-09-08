@@ -1,8 +1,5 @@
-#!/opt/bin/lv_micropython -i
-import utime as time
-import lvgl as lv
-import display_driver
-import usys as sys
+import fs_driver
+import sys
 
 class Lv_Roller_3():
 
@@ -11,9 +8,9 @@ class Lv_Roller_3():
         self.mask_bottom_id = -1
         
         # 
-        # Add an fade mask to roller.
+        # Add a fade mask to roller.
         #
-        style =  lv.style_t()
+        style = lv.style_t()
         style.init()
         style.set_bg_color(lv.color_black())
         style.set_text_color(lv.color_white())
@@ -29,6 +26,15 @@ class Lv_Roller_3():
         #if LV_FONT_MONTSERRAT_22
         #    lv_obj_set_style_text_font(roller1, &lv_font_montserrat_22, LV_PART_SELECTED);
         #endif
+        try:
+            roller1.set_style_text_font(lv.font_montserrat_22,lv.PART.SELECTED)
+        except:
+            fs_drv = lv.fs_drv_t()
+            fs_driver.fs_register(fs_drv, 'S')
+            print("montserrat-22 not enabled in lv_conf.h, dynamically loading the font")
+            font_montserrat_22 = lv.font_load("S:" + "../../assets/font/montserrat-22.fnt")
+            roller1.set_style_text_font(font_montserrat_22,lv.PART.SELECTED)
+           
         roller1.set_options("\n".join([
             "January",
             "February",
@@ -87,7 +93,7 @@ class Lv_Roller_3():
             # Remove the masks
             lv.draw_mask_remove_id(self.mask_top_id)
             lv.draw_mask_remove_id(self.mask_bottom_id)
-            self.mask_top_id = -1;
-            self.mask_bottom_id = -1;        
+            self.mask_top_id = -1
+            self.mask_bottom_id = -1
             
 roller3 = Lv_Roller_3()

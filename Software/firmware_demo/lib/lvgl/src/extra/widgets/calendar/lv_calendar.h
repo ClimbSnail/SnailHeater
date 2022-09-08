@@ -36,11 +36,13 @@ typedef struct {
 
 /*Data of calendar*/
 typedef struct {
-    lv_btnmatrix_t btnm;
+    lv_obj_t obj;
+    lv_obj_t * btnm;
     /*New data for this type*/
     lv_calendar_date_t today;               /*Date of today*/
     lv_calendar_date_t showed_date;         /*Currently visible month (day is ignored)*/
-    lv_calendar_date_t * highlighted_dates; /*Apply different style on these days (pointer to an array defined by the user)*/
+    lv_calendar_date_t *
+    highlighted_dates; /*Apply different style on these days (pointer to an array defined by the user)*/
     uint16_t highlighted_dates_num;          /*Number of elements in `highlighted_days`*/
     const char * map[8 * 7];
     char nums [7 * 6][4];
@@ -80,7 +82,7 @@ void lv_calendar_set_today_date(lv_obj_t * obj, uint32_t year, uint32_t month, u
 void lv_calendar_set_showed_date(lv_obj_t * obj, uint32_t year, uint32_t month);
 
 /**
- * Set the the highlighted dates
+ * Set the highlighted dates
  * @param obj           pointer to a calendar object
  * @param highlighted   pointer to an `lv_calendar_date_t` array containing the dates.
  *                      Only the pointer will be saved so this variable can't be local which will be destroyed later.
@@ -102,6 +104,14 @@ void lv_calendar_set_day_names(lv_obj_t * obj, const char ** day_names);
  *====================*/
 
 /**
+ * Get the button matrix object of the calendar.
+ * It shows the dates and day names.
+ * @param obj   pointer to a calendar object
+ * @return      pointer to a the button matrix
+ */
+lv_obj_t * lv_calendar_get_btnmatrix(const lv_obj_t * obj);
+
+/**
  * Get the today's date
  * @param calendar pointer to a calendar object
  * @return return pointer to an `lv_calendar_date_t` variable containing the date of today.
@@ -116,7 +126,7 @@ const lv_calendar_date_t * lv_calendar_get_today_date(const lv_obj_t * calendar)
 const lv_calendar_date_t * lv_calendar_get_showed_date(const lv_obj_t * calendar);
 
 /**
- * Get the the highlighted dates
+ * Get the highlighted dates
  * @param calendar pointer to a calendar object
  * @return pointer to an `lv_calendar_date_t` array containing the dates.
  */

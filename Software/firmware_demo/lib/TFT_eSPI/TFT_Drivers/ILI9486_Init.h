@@ -8,14 +8,14 @@
 {
 // From https://github.com/notro/fbtft/blob/master/fb_ili9486.c
 
-    //writecommand(0x01); // SW reset
-    //delay(120);
-	
+    writecommand(0x01); // SW reset
+    delay(120);
+
     writecommand(0x11); // Sleep out, also SW reset
     delay(120);
 
     writecommand(0x3A);
-    #if defined (TFT_PARALLEL_8_BIT) || defined (RPI_DISPLAY_TYPE)
+    #if defined (TFT_PARALLEL_8_BIT) || defined (TFT_PARALLEL_16_BIT) || defined (RPI_DISPLAY_TYPE)
       writedata(0x55);           // 16 bit colour interface
     #else
       writedata(0x66);           // 18 bit colour interface
@@ -64,7 +64,7 @@
     writedata(0x20);
     writedata(0x00);
  
-    #if defined (TFT_PARALLEL_8_BIT) || defined (RPI_DISPLAY_TYPE)
+    #if defined (TFT_PARALLEL_8_BIT) || defined (TFT_PARALLEL_16_BIT) || defined (RPI_DISPLAY_TYPE)
       writecommand(TFT_INVOFF);
     #else
       writecommand(TFT_INVON);

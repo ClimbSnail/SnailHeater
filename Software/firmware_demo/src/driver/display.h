@@ -8,7 +8,7 @@ class Display
 public:
     void init();
     void routine();
-    void setBackLight(float);
+    void setBackLight(int);
 };
 
 #endif

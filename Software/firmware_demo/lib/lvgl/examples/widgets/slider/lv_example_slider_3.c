@@ -36,7 +36,7 @@ static void slider_event_cb(lv_event_t * e)
         lv_obj_draw_part_dsc_t * dsc = lv_event_get_param(e);
         if(dsc->part == LV_PART_INDICATOR) {
             char buf[16];
-            lv_snprintf(buf, sizeof(buf), "%d - %d", lv_slider_get_left_value(obj), lv_slider_get_value(obj));
+            lv_snprintf(buf, sizeof(buf), "%d - %d", (int)lv_slider_get_left_value(obj), (int)lv_slider_get_value(obj));
 
             lv_point_t label_size;
             lv_txt_get_size(&label_size, buf, LV_FONT_DEFAULT, 0, 0, LV_COORD_MAX, 0);
@@ -49,7 +49,7 @@ static void slider_event_cb(lv_event_t * e)
             lv_draw_label_dsc_t label_draw_dsc;
             lv_draw_label_dsc_init(&label_draw_dsc);
 
-            lv_draw_label(&label_area, dsc->clip_area, &label_draw_dsc, buf, NULL);
+            lv_draw_label(dsc->draw_ctx, &label_draw_dsc, &label_area, buf, NULL);
         }
     }
 }
