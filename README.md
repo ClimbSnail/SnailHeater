@@ -30,6 +30,7 @@
 
 # PCB展示
 ##### 当前测试图
+![SnailHeater](Images/SnailHeater_main.jpg)
 ![SnailHeater](Images/main.jpg)
 
 ##### 前面板
@@ -42,6 +43,9 @@
 
 ##### 功率板
 ![SnailHeater](Images/SnailHeater_Power.png)
+
+##### 刷机工具
+![SnailHeater](Images/配套刷机工具.png)
 
 ### 加热板
 发热板，为了极致的性能与便捷，设计并定制了专用的铝发热板，细节到材料，后期群里提供批量材料。已就绪，工程模型晚些同步。

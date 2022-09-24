@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 # pip install pyserial -i https://mirrors.aliyun.com/pypi/simple/
 # pip install pyqt5  -i https://mirrors.aliyun.com/pypi/simple/
 # pip install pyqt5-tools -i https://mirrors.aliyun.com/pypi/simple/
@@ -18,6 +20,7 @@ import serial.tools.list_ports
 # from PyQt5.Qt import *
 from PyQt5.Qt import QWidget, QApplication
 from PyQt5 import uic, QtCore
+from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import Qt
 
@@ -28,7 +31,6 @@ import common
 
 COLOR_RED = '<span style=\" color: #ff0000;\">%s</span>'
 BAUD_RATE = 921600
-VERSION = "Ver2.0"
 
 
 class DownloadController(object):
@@ -41,15 +43,19 @@ class DownloadController(object):
         self.download_thread = None
 
     def run(self):
+        """
+        下载页面的主界面生成函数
+        :return:
+        """
         self.app = QApplication(sys.argv)
         self.win_main = QWidget()
         self.form = Ui_SanilHeaterTool()
         self.form.setupUi(self.win_main)
 
-        # 扫描更新串口信息
-        self.scan_com()
-        # 搜索固件
-        self.scan_firmware()
+        _translate = QtCore.QCoreApplication.translate
+        self.win_main.setWindowTitle(_translate("SanilHeaterTool",
+                                                "蜗牛台SnailHeater刷机工具 " + common.VERSION))
+
         # 设置文本可复制
         self.form.LinkInfolabel.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.form.QQInfolabel.setTextInteractionFlags(Qt.TextSelectableByMouse)
@@ -58,7 +64,8 @@ class DownloadController(object):
         self.form.FirmwareComboBox.clicked.connect(self.scan_firmware)
         self.form.UICPushButton.clicked.connect(self.uic_button_click)
         self.form.ActivatePushButton.clicked.connect(self.act_button_click)
-        self.form.UpdatePushButton.clicked.connect(self.update_button_click)
+        # self.form.UpdatePushButton.clicked.connect(self.update_button_click)
+        self.form.UpdatePushButton.clicked.connect(self.show_message)
         self.form.CanclePushButton.clicked.connect(self.cancle_button_click)
 
         # 设置提示信息
@@ -88,7 +95,7 @@ class DownloadController(object):
 
     def scan_firmware(self):
         """
-        搜索串口
+        搜索固件
         """
         self.print_log("搜索同目录下的可用固件...")
         self.form.FirmwareComboBox.clear()
@@ -108,11 +115,19 @@ class DownloadController(object):
         # todo
 
     def uic_button_click(self):
+        """
+        获取用户识别码 显示在用户识别码的信息框里
+        :return: None
+        """
         self.print_log("获取机器码（用户识别码）...")
         self.form.UICLineEdit.setText("功能未开通")
         # todo
 
     def update_button_click(self):
+        """
+        按下 刷机 按键后触发的检查、刷机操作
+        :return: None
+        """
         self.print_log("准备更新固件...")
         self.form.UpdateModeMethodRadioButton.setEnabled(False)
         self.form.ClearModeMethodRadioButton.setEnabled(False)
@@ -125,7 +140,10 @@ class DownloadController(object):
         com_list = [com_obj[0] for com_obj in list(serial.tools.list_ports.comports())]
         # if select_com == "未找到固件" or firmware_path == "":
         if select_com not in com_list or firmware_path == "":
-            self.print_log((COLOR_RED % "错误提示：") + "请检查串口号和固件文件！")
+            if select_com not in com_list:
+                self.print_log((COLOR_RED % "错误提示：") + "无法检测到串口设备，先确认 CH340 驱动是否正常或尝试 typec 调换方向。\n")
+            if firmware_path == "":
+                self.print_log((COLOR_RED % "错误提示：") + "未查询到固件文件！")
             self.form.UpdatePushButton.setEnabled(True)
             self.form.UpdateModeMethodRadioButton.setEnabled(True)
             self.form.ClearModeMethodRadioButton.setEnabled(True)
@@ -144,9 +162,11 @@ class DownloadController(object):
                      "./bootloader.bin",
                      "./partitions.bin",
                      "./tinyuf2.bin",
-                     "./SnailHeater_v1.0.5.bin"]
+                     firmware_path]
         for filepath in file_list:
             all_time = all_time + os.path.getsize(filepath) * 10 / BAUD_RATE
+
+        self.print_log("刷机预计需要：" + str(all_time)[0:5] + "s")
 
         # 进度条进程要在下载进程之前启动（为了在下载失败时可以立即查杀进度条进程）
         self.download_thread = threading.Thread(target=self.down_action,
@@ -157,7 +177,13 @@ class DownloadController(object):
         self.download_thread.start()
 
     def down_action(self, mode, select_com, firmware_path):
-
+        """
+        下载操作主体
+        :param mode:下载模式
+        :param select_com:串口号
+        :param firmware_path:固件文件路径
+        :return:None
+        """
         try:
             self.progress_bar_time_cnt = 1  # 间接启动进度条更新
 
@@ -186,10 +212,9 @@ class DownloadController(object):
             self.esp_reboot()  # 手动复位芯片
             self.print_log("刷机结束！")
             self.print_log("\n\n刷机流程完毕，请保持typec通电等待焊台屏幕将会亮起后才能断电。\n注：更新式刷机一般刷机完成后2s就能亮屏，清空式刷机则需等待20s左右。\n")
-            self.print_log("\n注：若无法刷机成功，先确认 CH340 驱动是否正常或尝试 typec 调换方向后，重新打开软件执行刷机。\n")
 
         except Exception as err:
-            self.print_log(COLOR_RED % "未释放资源，请15s后再试。如无法触发下载，重启本刷机工具再试。")
+            self.print_log(COLOR_RED % "未释放资源，请15s后再试。如无法触发下载，拔插type-c接口再试。")
             print(err)
 
         self.progress_bar_time_cnt = 0  # 复位进度条
@@ -201,7 +226,9 @@ class DownloadController(object):
     def cancle_button_click(self):
         """
         取消下载固件
+        :return: None
         """
+
         self.print_log("手动停止更新固件...")
 
         if self.download_thread != None:
@@ -230,8 +257,10 @@ class DownloadController(object):
 
     def esp_reboot(self):
         """
-        重启芯片
+        重启芯片(控制USB-TLL的rst dst引脚)
+        :return:
         """
+
         select_com = self.form.ComComboBox.currentText().strip()
         port = serial.Serial(select_com, BAUD_RATE, timeout=10)
         port.setRTS(True)  # EN->LOW
@@ -245,6 +274,28 @@ class DownloadController(object):
         if self.progress_bar_time_cnt > 0 and self.progress_bar_time_cnt < 99:
             self.progress_bar_time_cnt += 1
         self.form.progressBar.setValue(self.progress_bar_time_cnt)
+
+    def show_message(self):
+        """
+        警告拔掉AC220V消息框
+        :return: None
+        """
+        # # 最后的Yes表示弹框的按钮显示为Yes，默认按钮显示为OK,不填QMessageBox.Yes即为默认
+        # reply = QMessageBox.warning(self.win_main, "重要提示",
+        #                                COLOR_RED % "刷机一定要拔掉220V电源线！",
+        #                                QMessageBox.Yes | QMessageBox.Cancel,
+        #                                QMessageBox.Cancel)
+
+        # 创建自定义消息框
+        self.mbox = QMessageBox(QMessageBox.Warning, "重要提示",
+                                COLOR_RED % "刷机一定要拔掉220V电源线！")
+        # 添加自定义按钮
+        do = self.mbox.addButton('确定', QMessageBox.YesRole)
+        cancle = self.mbox.addButton('取消', QMessageBox.NoRole)
+        # 设置消息框中内容前面的图标
+        self.mbox.setIcon(2)
+        do.clicked.connect(self.update_button_click)
+        self.mbox.show()
 
 
 def main():

@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 # pip install pyserial -i https://mirrors.aliyun.com/pypi/simple/
 import sys
 import os

@@ -14,7 +14,7 @@ import inspect
 import traceback
 import re
 
-VERSION = "Ver1.4.6"
+VERSION = "Ver2.1"
 ROOT_PATH = "OutFile"
 CACHE_PATH = "Cache"
 
