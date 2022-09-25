@@ -88,7 +88,14 @@ class DownloadController(object):
         self.print_log("搜索串口号...")
         self.form.ComComboBox.clear()
         com_obj_list = list(serial.tools.list_ports.comports())
-        com_list = [com_obj[0] for com_obj in com_obj_list]
+        print(com_obj_list[0][1])
+        com_list = []
+        for com_obj in com_obj_list:
+            com_num = com_obj[0]
+            info = com_obj[1].split("(")
+            com_info = com_obj[1].split("(")[0].strip()
+            com_list.append(com_num + " -> " + com_info)
+
         if com_list == []:
             com_list = ["未识别到"]
         self.form.ComComboBox.addItems(com_list)
@@ -133,7 +140,7 @@ class DownloadController(object):
         self.form.ClearModeMethodRadioButton.setEnabled(False)
         self.form.UpdatePushButton.setEnabled(False)
 
-        select_com = self.form.ComComboBox.currentText().strip()
+        select_com = self.form.ComComboBox.currentText().split(" -> ")[0].strip()
         firmware_path = self.form.FirmwareComboBox.currentText().strip()
         mode = "更新式" if self.form.UpdateModeMethodRadioButton.isChecked() else "清空式"
 

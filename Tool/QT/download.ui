@@ -23,8 +23,8 @@
     <rect>
      <x>84</x>
      <y>60</y>
-     <width>81</width>
-     <height>22</height>
+     <width>161</width>
+     <height>25</height>
     </rect>
    </property>
    <property name="layoutDirection">
@@ -112,35 +112,6 @@
     <bool>false</bool>
    </property>
   </widget>
-  <widget class="QTextBrowser" name="LogInfoTextBrowser">
-   <property name="geometry">
-    <rect>
-     <x>8</x>
-     <y>96</y>
-     <width>285</width>
-     <height>299</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QLabel" name="LogInfoNamelabel">
-   <property name="geometry">
-    <rect>
-     <x>216</x>
-     <y>82</y>
-     <width>67</width>
-     <height>29</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <family>微软雅黑</family>
-     <pointsize>12</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>操作日志</string>
-   </property>
-  </widget>
   <widget class="QLabel" name="LinkInfolabel">
    <property name="geometry">
     <rect>
@@ -172,7 +143,7 @@
     <bool>true</bool>
    </property>
   </widget>
-  <widget class="QGroupBox" name="groupBox">
+  <widget class="QGroupBox" name="UpdateGroupBox">
    <property name="geometry">
     <rect>
      <x>318</x>
@@ -196,7 +167,7 @@
       <x>120</x>
       <y>32</y>
       <width>287</width>
-      <height>22</height>
+      <height>25</height>
      </rect>
     </property>
    </widget>
@@ -340,7 +311,7 @@
     </property>
    </widget>
   </widget>
-  <widget class="QGroupBox" name="groupBox_2">
+  <widget class="QGroupBox" name="ActivateGroupBox">
    <property name="geometry">
     <rect>
      <x>318</x>
@@ -405,6 +376,32 @@
     </property>
     <property name="text">
      <string>激活</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QGroupBox" name="LogInfoGroupBox">
+   <property name="geometry">
+    <rect>
+     <x>6</x>
+     <y>84</y>
+     <width>305</width>
+     <height>316</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>操作日志</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+   </property>
+   <widget class="QTextBrowser" name="LogInfoTextBrowser">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>18</y>
+      <width>295</width>
+      <height>290</height>
+     </rect>
     </property>
    </widget>
   </widget>
