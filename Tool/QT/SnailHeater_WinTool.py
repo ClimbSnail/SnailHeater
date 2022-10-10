@@ -88,7 +88,6 @@ class DownloadController(object):
         self.print_log("搜索串口号...")
         self.form.ComComboBox.clear()
         com_obj_list = list(serial.tools.list_ports.comports())
-        print(com_obj_list[0][1])
         com_list = []
         for com_obj in com_obj_list:
             com_num = com_obj[0]
@@ -96,6 +95,7 @@ class DownloadController(object):
             com_info = com_obj[1].split("(")[0].strip()
             com_list.append(com_num + " -> " + com_info)
 
+        # print(com_obj_list[0][1])
         if com_list == []:
             com_list = ["未识别到"]
         self.form.ComComboBox.addItems(com_list)
@@ -268,11 +268,11 @@ class DownloadController(object):
         :return:
         """
 
-        select_com = self.form.ComComboBox.currentText().strip()
+        select_com = self.form.ComComboBox.currentText().split(" -> ")[0].strip()
         port = serial.Serial(select_com, BAUD_RATE, timeout=10)
         port.setRTS(True)  # EN->LOW
         port.setDTR(port.dtr)
-        time.sleep(0.05)
+        time.sleep(0.2)
         port.setRTS(False)
         port.setDTR(port.dtr)
         port.close()  # 关闭串口
@@ -307,6 +307,7 @@ class DownloadController(object):
 
 def main():
     # QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)  # 和designer设计的窗口比例一致
+    QtCore.QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
     app = QApplication([])
     download_ui = uic.loadUi("download.ui")
     # download_ui.ComComboBox.
