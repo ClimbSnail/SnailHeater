@@ -78,6 +78,8 @@ JBC245 | 可接GND（或空脚） | 发热芯正极 | 振动开关正极 | 振�
 
 platformIO模拟器 https://github.com/lvgl/lv_platformio
 
+应用图标(128*128)：可以下载阿里矢量图 https://www.iconfont.cn/
+
 
 
 ### 致谢
