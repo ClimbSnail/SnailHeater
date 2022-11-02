@@ -1,4 +1,5 @@
 # SnailHeater蜗牛台模拟器
+![SnailHeater](../../Images/SnailHeaterUI_Simulator.png)
 #### 程序运行在vscode下的platformIO
 
 编译后如果发现"电源"界面显示数值不正常（无法显示浮点数），请修改`SnailHeaterUI_64bits\lvgl\src\lv_conf_internal.h`中的
