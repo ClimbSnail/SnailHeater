@@ -1,0 +1,7 @@
+.pio
+.pioenvs
+.vscode
+.VSCodeCounter
+.piolibdeps
+.clang_complete
+.gcc-flags.json
