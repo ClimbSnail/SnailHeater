@@ -4,7 +4,7 @@
 // #include <Arduino.h>
 #include <stdint.h>
 
-enum KNOBS_DIR : unsigned char
+enum KNOBS_DIR
 {
     KNOBS_DIR_POS = 0, // 正向
     KNOBS_DIR_NEG      // 反向
