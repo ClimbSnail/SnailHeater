@@ -58,7 +58,7 @@ void Obj2ObjAnimX(lv_anim_t *a, lv_obj_t *fromObj, int32_t dx)
     lv_anim_set_values(a, lv_obj_get_x(fromObj), dx);
 
     // lv_anim_set_path_cb(a, lv_anim_path_overshoot); //设置一个动画的路径
-    lv_anim_set_path_cb(a, lv_anim_path_linear); //设置一个动画的路径
+    lv_anim_set_path_cb(a, lv_anim_path_linear); // 设置一个动画的路径
     // /* 可选设置
     //  *------------------*/
     // /* 开始动画之前的等待时间[ms] */
@@ -102,7 +102,7 @@ void Obj2ObjAnimY(lv_anim_t *a, lv_obj_t *fromObj, int32_t dy)
     lv_anim_set_values(a, lv_obj_get_y(fromObj), dy);
 
     // lv_anim_set_path_cb(a, lv_anim_path_overshoot); //设置一个动画的路径
-    lv_anim_set_path_cb(a, lv_anim_path_linear); //设置一个动画的路径
+    lv_anim_set_path_cb(a, lv_anim_path_linear); // 设置一个动画的路径
     // /* 可选设置
     //  *------------------*/
     // /* 开始动画之前的等待时间[ms] */
@@ -198,7 +198,7 @@ void ui_event_Button_1(lv_event_t *e)
             // Obj2ObjAnimY(&a2_y, ui_Button[(lastMiddlePos + UI_OBJ_NUM + 1) % UI_OBJ_NUM], btnPosXY[0][1]);
         }
         btn_anim_lock = false; // 解锁
-        // Serial0.println("btn_anim_lock = false");
+                               // Serial0.println("btn_anim_lock = false");
 
 #if OPNEN_ANIM == 1
         /* true（默认）：立即应用开始值，false：延迟设置动画后再应用开始值。真正开始。 */
@@ -300,6 +300,7 @@ void main_screen_init(lv_indev_t *indev)
     lv_style_set_border_color(&focused_style, lv_color_hex(0xA90730)); // 边框颜色
     lv_style_set_border_opa(&focused_style, 255);                      // 透明度
     lv_style_set_border_width(&focused_style, 2);                      // 边框宽度
+    lv_style_set_radius(&focused_style, 6);                            // 设置控件圆角半径
 
     // ui_PanelMain
     ui_PanelMain = lv_obj_create(desktop_screen);

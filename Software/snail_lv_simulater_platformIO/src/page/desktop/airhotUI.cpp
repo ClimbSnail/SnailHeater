@@ -74,7 +74,7 @@ static bool airhotPageUI_init(lv_obj_t *father)
     lv_obj_set_style_text_opa(ui_curTempLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     // lv_obj_set_style_text_font(ui_curTempLabel, &lv_font_montserrat_36, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_curTempLabel, &sh_number_50, LV_PART_MAIN | LV_STATE_DEFAULT);
-    
+
     // 温度调节
     ui_setTempButton = lv_btn_create(ui_ButtonTmp);
     lv_obj_set_size(ui_setTempButton, 65, 20);
@@ -254,7 +254,7 @@ void ui_updateAirhotCurTempAndPowerDuty(void)
     if (airhotModel.curTemp > DISCONNCT_TEMP)
     {
         // 未连接
-        lv_label_set_text_fmt(ui_curTempLabel, "XX");
+        lv_label_set_text_fmt(ui_curTempLabel, "xxx");
     }
     else
     {
@@ -348,11 +348,12 @@ static void ui_set_temp_btn_pressed(lv_event_t *e)
             lv_obj_clean(ui_setTempArc);
         }
         ui_setTempArc = lv_arc_create(ui_setTempButton);
-        lv_obj_set_size(ui_setTempArc, 100, 100);
+        lv_obj_set_size(ui_setTempArc, 30, 30);
         lv_obj_set_pos(ui_setTempArc, 0, 0);
         lv_obj_set_align(ui_setTempArc, LV_ALIGN_CENTER);
         lv_arc_set_range(ui_setTempArc, 0, 500);
         lv_arc_set_value(ui_setTempArc, airhotModel.targetTemp);
+        lv_obj_set_style_opa(ui_setTempArc, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
         lv_group_add_obj(setTempArcGroup, ui_setTempArc);
         lv_indev_set_group(knobs_indev, setTempArcGroup);
@@ -410,11 +411,12 @@ static void ui_set_air_btn_pressed(lv_event_t *e)
             lv_obj_clean(ui_setAirArc);
         }
         ui_setAirArc = lv_arc_create(ui_setAirDutyButton);
-        lv_obj_set_size(ui_setAirArc, 100, 100);
+        lv_obj_set_size(ui_setAirArc, 30, 30);
         lv_obj_set_pos(ui_setAirArc, 0, 0);
         lv_obj_set_align(ui_setAirArc, LV_ALIGN_CENTER);
         lv_arc_set_range(ui_setAirArc, 5, 100);
         lv_arc_set_value(ui_setAirArc, airhotModel.workAirSpeed);
+        lv_obj_set_style_opa(ui_setAirArc, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
         lv_group_add_obj(setAirArcGroup, ui_setAirArc);
         lv_indev_set_group(knobs_indev, setAirArcGroup);
