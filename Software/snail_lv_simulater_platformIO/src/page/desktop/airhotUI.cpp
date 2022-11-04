@@ -353,6 +353,7 @@ static void ui_set_temp_btn_pressed(lv_event_t *e)
         lv_obj_set_align(ui_setTempArc, LV_ALIGN_CENTER);
         lv_arc_set_range(ui_setTempArc, 0, 500);
         lv_arc_set_value(ui_setTempArc, airhotModel.targetTemp);
+        // 设置隐藏
         lv_obj_set_style_opa(ui_setTempArc, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
         lv_group_add_obj(setTempArcGroup, ui_setTempArc);
@@ -416,6 +417,7 @@ static void ui_set_air_btn_pressed(lv_event_t *e)
         lv_obj_set_align(ui_setAirArc, LV_ALIGN_CENTER);
         lv_arc_set_range(ui_setAirArc, 5, 100);
         lv_arc_set_value(ui_setAirArc, airhotModel.workAirSpeed);
+        // 设置隐藏
         lv_obj_set_style_opa(ui_setAirArc, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
         lv_group_add_obj(setAirArcGroup, ui_setAirArc);

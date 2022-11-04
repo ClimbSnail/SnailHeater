@@ -452,6 +452,7 @@ static void ui_set_temp_btn_pressed(lv_event_t *e)
         lv_obj_set_align(ui_setTempArc, LV_ALIGN_CENTER);
         lv_arc_set_range(ui_setTempArc, 0, 500);
         lv_arc_set_value(ui_setTempArc, solderModel.targetTemp);
+        // 设置隐藏
         lv_obj_set_style_opa(ui_setTempArc, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
         lv_group_add_obj(setTempArcGroup, ui_setTempArc);
