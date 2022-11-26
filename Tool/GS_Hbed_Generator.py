@@ -1,7 +1,9 @@
-#  希尔伯特曲线绘制代码来源
+#  希尔伯特曲线绘制代码来源 https://github.com/tujinhao/GS_Hbed_Generator
 
 # 版权声明：本文为博主原创文章，遵循 CC 4.0 BY-SA 版权协议，转载请附上原文出处链接和本声明。
 # 本文链接：https://blog.csdn.net/ranjuese/article/details/115552972
+# 铜导线电阻计算 https://murata.eetrend.com/article/2019-04/1002732.html
+
 
 import matplotlib.pyplot as plt
 import json
