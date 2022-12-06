@@ -31,7 +31,8 @@
 # PCB展示
 ##### 当前测试图
 ![SnailHeater](Images/SnailHeater_main.jpg)
-![SnailHeater](Images/main.jpg)
+![SnailHeater](Images/SnailHeater_back.jpg)
+![SnailHeater](Images/size_consult.jpg)
 
 ##### 前面板
 ![SnailHeater](Images/SnailHeater.png)
