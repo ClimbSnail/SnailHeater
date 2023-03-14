@@ -1,6 +1,8 @@
 #include "ui.h"
 #include "desktop_model.h"
 
+#ifndef NEW_UI
+
 #define FONT_DEBUG 1
 
 static lv_obj_t *adjPowerPageUI = NULL;
@@ -9,9 +11,8 @@ static lv_obj_t *ui_voltSlider;
 static lv_obj_t *ui_currentLabel;
 static lv_obj_t *ui_capacityLabel;
 static lv_obj_t *ui_enableSwitch;
-static lv_obj_t *ui_heatplatformTypeDropdown;
-static lv_obj_t *ui_heatplatformNumLabel;
-static lv_obj_t *ui_heatplatformDropdown;
+static lv_obj_t *ui_modeButton;
+static lv_obj_t *ui_modeLable;
 static lv_obj_t *ui_moreButton;
 static lv_obj_t *ui_moreButtonLabel;
 static lv_obj_t *ui_backButton;
@@ -25,6 +26,7 @@ static lv_group_t *setTempArcGroup;
 
 static void ui_set_slider_changed(lv_event_t *e);
 static void ui_back_btn_pressed(lv_event_t *e);
+static void ui_mode_bnt_pressed(lv_event_t *e);
 static void ui_enable_switch_pressed(lv_event_t *e);
 
 static bool adjPowerPageUI_init(lv_obj_t *father)
@@ -37,8 +39,7 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     adjPowerPageUI = lv_btn_create(father); // 紫色
     adjPowerUIObj.mainButtonUI = adjPowerPageUI;
 
-    lv_obj_set_size(adjPowerPageUI, 110, 200);
-    // lv_obj_set_pos(adjPowerPageUI, btnPosXY[2][0], btnPosXY[2][1]);
+    lv_obj_set_size(adjPowerPageUI, EACH_PAGE_SIZE_X, EACH_PAGE_SIZE_Y);
     lv_obj_set_pos(adjPowerPageUI, START_UI_OBJ_X, 0);
     lv_obj_set_align(adjPowerPageUI, LV_ALIGN_CENTER);
     lv_obj_add_flag(adjPowerPageUI, LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
@@ -71,9 +72,19 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     lv_obj_set_size(ui_voltSlider, 80, 6);
     lv_obj_set_pos(ui_voltSlider, 0, -30);
     lv_slider_set_range(ui_voltSlider, 0, DAC_DEFAULT_RESOLUTION);
-    lv_slider_set_value(ui_voltSlider,
-                        DAC_DEFAULT_RESOLUTION - adjPowerModel.adcValue,
-                        LV_ANIM_OFF);
+
+    if (ADJ_POWER_MODE_CV == adjPowerModel.mode)
+    {
+        lv_slider_set_value(ui_voltSlider,
+                            DAC_DEFAULT_RESOLUTION - adjPowerModel.volAdcValue,
+                            LV_ANIM_OFF);
+    }
+    else if (ADJ_POWER_MODE_CC == adjPowerModel.mode)
+    {
+        lv_slider_set_value(ui_voltSlider,
+                            DAC_DEFAULT_RESOLUTION - adjPowerModel.curAdcValue,
+                            LV_ANIM_OFF);
+    }
     lv_obj_set_align(ui_voltSlider, LV_ALIGN_CENTER);
     // lv_obj_add_flag(ui_voltSlider, LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
     // lv_obj_clear_flag(ui_voltSlider, LV_OBJ_FLAG_SCROLLABLE);    /// Flags
@@ -81,10 +92,36 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     lv_obj_set_style_bg_opa(ui_voltSlider, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_style(ui_voltSlider, &focused_style, LV_STATE_FOCUSED);
 
+    // 模式按钮
+    ui_modeButton = lv_btn_create(ui_ButtonTmp); // 紫色
+    lv_obj_set_size(ui_modeButton, 30, 25);
+    lv_obj_set_pos(ui_modeButton, -30, 0);
+    lv_obj_set_align(ui_modeButton, LV_ALIGN_CENTER);
+    lv_obj_set_style_bg_color(ui_modeButton, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_modeButton, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_add_style(ui_modeButton, &focused_style, LV_STATE_FOCUSED);
+
+    // 模式标签
+    ui_modeLable = lv_label_create(ui_modeButton);
+    lv_obj_set_size(ui_modeLable, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+    lv_obj_set_pos(ui_modeLable, 0, 0);
+    lv_obj_set_align(ui_modeLable, LV_ALIGN_CENTER);
+    if (ADJ_POWER_MODE_CV == adjPowerModel.mode)
+    {
+        lv_label_set_text_fmt(ui_modeLable, "CV");
+    }
+    else if (ADJ_POWER_MODE_CC == adjPowerModel.mode)
+    {
+        lv_label_set_text_fmt(ui_modeLable, "CC");
+    }
+    lv_obj_set_style_text_color(ui_modeLable, lv_color_hex(0xFF0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_modeLable, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_modeLable, &lv_font_montserrat_16, LV_PART_MAIN | LV_STATE_DEFAULT);
+
     // 电流
     ui_currentLabel = lv_label_create(ui_ButtonTmp);
     lv_obj_set_size(ui_currentLabel, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-    lv_obj_set_pos(ui_currentLabel, 0, 0);
+    lv_obj_set_pos(ui_currentLabel, 20, 0);
     lv_obj_set_align(ui_currentLabel, LV_ALIGN_CENTER);
     lv_label_set_text_fmt(ui_currentLabel, "%dmA", adjPowerModel.current);
     lv_obj_set_style_text_color(ui_currentLabel, lv_color_hex(0xFF0000), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -94,7 +131,7 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     // 功率
     ui_capacityLabel = lv_label_create(ui_ButtonTmp);
     lv_obj_set_size(ui_capacityLabel, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-    lv_obj_set_pos(ui_capacityLabel, 0, 25);
+    lv_obj_set_pos(ui_capacityLabel, 20, 25);
     lv_obj_set_align(ui_capacityLabel, LV_ALIGN_CENTER);
     lv_label_set_text_fmt(ui_capacityLabel, "%.2lfW", adjPowerModel.capacity / 1000000.0);
     lv_obj_set_style_text_color(ui_capacityLabel, lv_color_hex(0xFF0000), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -171,6 +208,7 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
 
     lv_obj_add_event_cb(ui_backButton, ui_back_btn_pressed, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(ui_voltSlider, ui_set_slider_changed, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_add_event_cb(ui_modeButton, ui_mode_bnt_pressed, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(ui_enableSwitch, ui_enable_switch_pressed, LV_EVENT_VALUE_CHANGED, NULL);
 
     setTempArcGroup = lv_group_create();
@@ -200,12 +238,38 @@ static void adjPowerPageUI_pressed(lv_event_t *e)
     // 创建操作的组
     btn_group = lv_group_create();
     lv_group_add_obj(btn_group, ui_voltSlider);
+    lv_group_add_obj(btn_group, ui_modeButton);
     lv_group_add_obj(btn_group, ui_enableSwitch);
     lv_group_add_obj(btn_group, ui_moreButton);
     lv_group_add_obj(btn_group, ui_backButton);
     lv_group_focus_obj(ui_backButton); // 聚焦到退出按键
 
     lv_indev_set_group(knobs_indev, btn_group);
+}
+
+static void ui_mode_bnt_pressed(lv_event_t *e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t *target = lv_event_get_target(e);
+
+    if (event_code == LV_EVENT_PRESSED)
+    {
+        adjPowerModel.mode = (adjPowerModel.mode + 1) % ADJ_POWER_MODE_MAX_NUM;
+        if (ADJ_POWER_MODE_CV == adjPowerModel.mode)
+        {
+            lv_label_set_text_fmt(ui_modeLable, "CV");
+            lv_slider_set_value(ui_voltSlider,
+                                DAC_DEFAULT_RESOLUTION - adjPowerModel.volAdcValue,
+                                LV_ANIM_OFF);
+        }
+        else if (ADJ_POWER_MODE_CC == adjPowerModel.mode)
+        {
+            lv_label_set_text_fmt(ui_modeLable, "CC");
+            lv_slider_set_value(ui_voltSlider,
+                                DAC_DEFAULT_RESOLUTION - adjPowerModel.curAdcValue,
+                                LV_ANIM_OFF);
+        }
+    }
 }
 
 static void ui_enable_switch_pressed(lv_event_t *e)
@@ -257,9 +321,20 @@ static void ui_set_slider_changed(lv_event_t *e)
 
     if (LV_EVENT_VALUE_CHANGED == event_code)
     {
-        adjPowerModel.adcValue = DAC_DEFAULT_RESOLUTION - (int)lv_slider_get_value(ui_voltSlider);
+        if (ADJ_POWER_MODE_CV == adjPowerModel.mode)
+        {
+            adjPowerModel.volAdcValue =
+                DAC_DEFAULT_RESOLUTION - (int)lv_slider_get_value(ui_voltSlider);
+        }
+        else if (ADJ_POWER_MODE_CC == adjPowerModel.mode)
+        {
+            adjPowerModel.curAdcValue =
+                DAC_DEFAULT_RESOLUTION - (int)lv_slider_get_value(ui_voltSlider);
+        }
     }
 }
 
 FE_UI_OBJ adjPowerUIObj = {adjPowerPageUI, adjPowerPageUI_init,
                            adjPowerPageUI_release, adjPowerPageUI_pressed};
+
+#endif

@@ -30,7 +30,6 @@ enum HP_AIR_MODE
     HP_AIR_MODE_FULL, // 全速控制
 };
 
-
 enum HOTAIR_STATE
 {
     HOTAIR_STATE_SLEEP = 0,   // 休眠状态
@@ -62,11 +61,11 @@ enum ADJ_POWER_OPEN_STATE
 
 enum ADJ_POWER_MODE
 {
-    ADJ_POWER_MODE_NONE = 0,
-    ADJ_POWER_MODE_VOL, // 恒压模式
-    ADJ_POWER_MODE_CUR, // 恒流模式
-};
+    ADJ_POWER_MODE_CV = 0, // 恒压模式
+    ADJ_POWER_MODE_CC,     // 恒流模式
 
+    ADJ_POWER_MODE_MAX_NUM
+};
 
 enum SOLDER_SHAKE_TYPE
 {
@@ -97,5 +96,18 @@ enum HEATING_MODE
     HEATING_MODE_FULL, // 全速加热
 };
 
+enum SPOTWELDER_MODE
+{
+    SPOTWELDER_MODE_SINGLE = 0, // 单脉冲
+    SPOTWELDER_MODE_DOUBLE,     // 双脉冲
+    SPOTWELDER_MODE_MAX,        //
+};
+
+enum SPOTWELDER_STATE
+{
+    SPOTWELDER_STATE_NONE = 0,
+    SPOTWELDER_STATE_TRIGGERING, // 触发中
+    SPOTWELDER_STATE_WAIT,       // 等待中
+};
 
 #endif

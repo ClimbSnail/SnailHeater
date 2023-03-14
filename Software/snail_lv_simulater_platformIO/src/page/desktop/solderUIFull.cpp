@@ -3,7 +3,7 @@
 #include "ui.h"
 #include "desktop_model.h"
 
-#ifndef NEW_UI
+#ifdef NEW_UI
 
 #define FONT_DEBUG 1
 
@@ -107,8 +107,10 @@ static bool solderPageUI_init(lv_obj_t *father)
     solderUIObj.mainButtonUI = solderPageUI;
 
     lv_obj_set_size(solderPageUI, EACH_PAGE_SIZE_X, EACH_PAGE_SIZE_Y);
-    lv_obj_set_pos(solderPageUI, START_UI_OBJ_X, 0);
-    lv_obj_set_align(solderPageUI, LV_ALIGN_CENTER);
+    // lv_obj_set_pos(solderPageUI, btnPosXY[0][0], btnPosXY[0][1]);
+    // lv_obj_set_pos(solderPageUI, START_UI_OBJ_X, 0);
+    // lv_obj_set_align(solderPageUI, LV_ALIGN_CENTER);
+    lv_obj_align(solderPageUI, LV_ALIGN_CENTER, 0, 0);
     lv_obj_add_flag(solderPageUI, LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
     lv_obj_clear_flag(solderPageUI, LV_OBJ_FLAG_SCROLLABLE);    /// Flags
     lv_obj_set_style_bg_color(solderPageUI, lv_color_hex(0xDFD338), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -131,7 +133,7 @@ static bool solderPageUI_init(lv_obj_t *father)
     lv_label_set_text_fmt(ui_curTempLabel, "%d", solderModel.curTemp);
     lv_obj_set_style_text_color(ui_curTempLabel, lv_color_hex(0x8168F7), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_curTempLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_curTempLabel, &sh_number_50, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_curTempLabel, &sh_number_90, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     // 温度调节
     ui_setTempButton = lv_btn_create(ui_ButtonTmp);
@@ -262,7 +264,7 @@ static bool solderPageUI_init(lv_obj_t *father)
 
     ui_moreButton = lv_btn_create(ui_ButtonTmp);
     lv_obj_set_size(ui_moreButton, 32, 18);
-    lv_obj_set_pos(ui_moreButton, -35, 78);
+    lv_obj_set_pos(ui_moreButton, -100, 95);
     lv_obj_set_align(ui_moreButton, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_moreButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
     lv_obj_clear_flag(ui_moreButton, LV_OBJ_FLAG_SCROLLABLE);    /// Flags
@@ -285,7 +287,7 @@ static bool solderPageUI_init(lv_obj_t *father)
     // lv_imgbtn_set_src(ui_backButton, LV_IMGBTN_STATE_PRESSED, &back_16, NULL, NULL);
     // lv_obj_set_size(ui_backButton, back_16.header.w, back_16.header.h);
     lv_obj_set_size(ui_backButton, 32, 18);
-    lv_obj_set_pos(ui_backButton, 35, 78);
+    lv_obj_set_pos(ui_backButton, 100, 95);
     lv_obj_set_align(ui_backButton, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_backButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
     lv_obj_clear_flag(ui_backButton, LV_OBJ_FLAG_SCROLLABLE);    /// Flags

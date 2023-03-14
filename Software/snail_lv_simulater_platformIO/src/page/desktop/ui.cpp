@@ -6,6 +6,8 @@
 #include "ui.h"
 #include "desktop_model.h"
 
+#ifndef NEW_UI
+
 int16_t btnPosXY[WIN_INFO_SIZE][2] = {{-10 - 110, 0}, {0, 0}, {10 + 110, 0}};
 
 ///////////////////// VARIABLES ////////////////////
@@ -409,3 +411,5 @@ void ui_init(lv_indev_t *indev)
     main_screen_init(knobs_indev);
     lv_disp_load_scr(desktop_screen);
 }
+
+#endif

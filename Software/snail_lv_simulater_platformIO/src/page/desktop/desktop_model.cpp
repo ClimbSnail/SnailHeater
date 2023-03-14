@@ -1,11 +1,19 @@
 
 #include "desktop_model.h"
 
-struct SolderModel solderModel = {SOLDER_TYPE_T12, 0, 0, SOLDER_STATE_DEEP_SLEEP, 0};
-struct AirhotModel airhotModel = {0, 0, 20, HOTAIR_STATE_SLEEP, 0};
-struct HeatplatformModel heatplatformModel = {0, 0, HOTAIR_STATE_SLEEP, 0};
-struct AdjPowerModel adjPowerModel = {0, 0, 0, 0, ADJ_POWER_OPEN_STATE_CLOSE};
-struct SysInfoModel sysInfoModel = {"", "", "", "", "", KNOBS_DIR_POS};
+struct SolderModel solderModel = {SOLDER_TYPE_T12, 0, 0,
+                                  SOLDER_STATE_DEEP_SLEEP, 0};
+struct AirhotModel airhotModel = {0, 0, 20,
+                                  HOTAIR_STATE_SLEEP, 0};
+struct HeatplatformModel heatplatformModel = {0, 0,
+                                              HOTAIR_STATE_SLEEP, 0};
+struct AdjPowerModel adjPowerModel = {0, 0, 0,
+                                      0, 0, ADJ_POWER_OPEN_STATE_CLOSE};
+struct StopWelderModel stopWelderModel = {SPOTWELDER_MODE_DOUBLE, 5, 1000,
+                                          2, 2700, 2000,
+                                          2700, SPOTWELDER_STATE_WAIT};
+struct SysInfoModel sysInfoModel = {"", "", "",
+                                    "", "", KNOBS_DIR_POS};
 
 /*
  *   电烙铁
@@ -97,39 +105,73 @@ int setHeatplatformEnable(unsigned char enable)
  *   可调电源
  *
  */
-int setAdjPowerInfo(int adcValue, int32_t voltage,
-                    int32_t current, int32_t capacity,
-                    unsigned char workState)
+int setAdjPowerInfo(int volAdcValue, int curAdcValue, unsigned char mode,
+                    int32_t voltage, int32_t current,
+                    int32_t capacity, unsigned char workState)
 {
-    adjPowerModel.adcValue = adcValue;
+    adjPowerModel.volAdcValue = volAdcValue;
+    adjPowerModel.curAdcValue = curAdcValue;
+    adjPowerModel.mode = mode;
     adjPowerModel.voltage = voltage;
     adjPowerModel.current = current;
-    adjPowerModel.capacity = capacity;
+    adjPowerModel.capacity = capacity; // 功率
     adjPowerModel.workState = workState;
     return 0;
 }
 
-int setVoltage(int32_t voltage)
+int setAdjPowerVoltage(int32_t voltage)
 {
     adjPowerModel.voltage = voltage;
     return 0;
 }
 
-int setCurrent(int32_t current)
+int setAdjPowerCurrent(int32_t current)
 {
     adjPowerModel.current = current;
     return 0;
 }
 
-int setCapacity(int32_t capacity)
+int setAdjPowerCapacity(int32_t capacity)
 {
     adjPowerModel.capacity = capacity;
     return 0;
 }
 
-int setWorkState(unsigned char workState)
+int setAdjPowerWorkState(unsigned char workState)
 {
     adjPowerModel.workState = workState;
+    return 0;
+}
+
+/*
+ *   点焊机设置
+ *
+ */
+int setStopWelderInfo(uint8_t mode, uint16_t pulseWidth, uint16_t interval,
+                      uint8_t capNumber, uint16_t singleCapVol,
+                      uint16_t alarmVol, uint16_t voltage,
+                      unsigned char workState)
+{
+    stopWelderModel.mode = mode;
+    stopWelderModel.pulseWidth = pulseWidth;
+    stopWelderModel.interval = interval;
+    stopWelderModel.capNumber = capNumber;
+    stopWelderModel.singleCapVol = singleCapVol;
+    stopWelderModel.alarmVol = alarmVol;
+    stopWelderModel.voltage = voltage;
+    stopWelderModel.workState = workState;
+    return 0;
+}
+
+int setStopWelderVoltage(uint16_t voltage)
+{
+    stopWelderModel.voltage = voltage;
+    return 0;
+}
+
+int setStopWelderWorkState(unsigned char workState)
+{
+    stopWelderModel.workState = workState;
     return 0;
 }
 

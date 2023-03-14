@@ -3,6 +3,8 @@
 #include "ui.h"
 #include "desktop_model.h"
 
+#ifndef NEW_UI
+
 #define FONT_DEBUG 1
 
 static lv_obj_t *hpPageUI = NULL;
@@ -42,8 +44,7 @@ static bool hpPageUI_init(lv_obj_t *father)
     hpPageUI = lv_btn_create(father); // 紫色
     hpUIObj.mainButtonUI = hpPageUI;
 
-    lv_obj_set_size(hpPageUI, 110, 200);
-    // lv_obj_set_pos(hpPageUI, btnPosXY[2][0], btnPosXY[2][1]);
+    lv_obj_set_size(hpPageUI, EACH_PAGE_SIZE_X, EACH_PAGE_SIZE_Y);
     lv_obj_set_pos(hpPageUI, START_UI_OBJ_X, 0);
     lv_obj_set_align(hpPageUI, LV_ALIGN_CENTER);
     lv_obj_add_flag(hpPageUI, LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
@@ -252,7 +253,17 @@ void ui_updateHeatplatformCurTempAndPowerDuty(void)
     {
         return;
     }
-    lv_label_set_text_fmt(ui_curTempLabel, "%d", heatplatformModel.curTemp);
+
+    if (heatplatformModel.curTemp >= DISCONNCT_TEMP)
+    {
+        // 未连接
+        lv_label_set_text_fmt(ui_curTempLabel, "xxx");
+    }
+    else
+    {
+        lv_label_set_text_fmt(ui_curTempLabel, "%d", heatplatformModel.curTemp);
+    }
+
     lv_bar_set_value(ui_powerBar, heatplatformModel.powerRatio, LV_ANIM_ON);
 }
 
@@ -322,3 +333,5 @@ static void ui_set_temp_btn_pressed(lv_event_t *e)
 
 FE_UI_OBJ hpUIObj = {hpPageUI, hpPageUI_init,
                      hpPageUI_release, hpPageUI_pressed};
+
+#endif

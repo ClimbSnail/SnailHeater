@@ -3,6 +3,8 @@
 #include "ui.h"
 #include "desktop_model.h"
 
+#ifndef NEW_UI
+
 #define FONT_DEBUG 1
 
 static lv_obj_t *sysInfoPageUI = NULL;
@@ -58,8 +60,7 @@ static bool sysInfoPageUI_init(lv_obj_t *father)
     sysInfoPageUI = lv_btn_create(father); // 黄色
     sysInfoUIObj.mainButtonUI = sysInfoPageUI;
 
-    lv_obj_set_size(sysInfoPageUI, 110, 200);
-    // lv_obj_set_pos(sysInfoPageUI, btnPosXY[0][0], btnPosXY[0][1]);
+    lv_obj_set_size(sysInfoPageUI, EACH_PAGE_SIZE_X, EACH_PAGE_SIZE_Y);
     lv_obj_set_pos(sysInfoPageUI, START_UI_OBJ_X, 0);
     lv_obj_set_align(sysInfoPageUI, LV_ALIGN_CENTER);
     lv_obj_add_flag(sysInfoPageUI, LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
@@ -239,3 +240,5 @@ static void ui_knobs_dir_pressed(lv_event_t *e)
 
 FE_UI_OBJ sysInfoUIObj = {sysInfoPageUI, sysInfoPageUI_init,
                           sysInfoPageUI_release, sysInfoPageUI_pressed};
+
+#endif

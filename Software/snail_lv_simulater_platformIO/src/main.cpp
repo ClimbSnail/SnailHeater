@@ -20,7 +20,7 @@
 #include <SDL2/SDL_timer.h>
 #include "demos/lv_demos.h"
 
-#define SNAILHEATER_VERSION "1.3.3"
+#define SNAILHEATER_VERSION "1.3.7"
 
 void SnailHeater_UI()
 {
@@ -40,9 +40,13 @@ void SnailHeater_UI()
                   SOLDER_SHAKE_TYPE_CHANGE, 320,
                   300, SOLDER_STATE_NORMAL,
                   50);
-    setAdjPowerInfo(3099, 5000,
+    setAdjPowerInfo(3099, 5000, ADJ_POWER_MODE_CV,
                     0, 0,
-                    true);
+                    0, ADJ_POWER_OPEN_STATE_CLOSE);
+    setStopWelderInfo(SPOTWELDER_MODE_DOUBLE, 5, 1000,
+                      2, 2700, 2000,
+                      2700, SPOTWELDER_STATE_WAIT);
+
     setSysInfo("E3F6FAB", "V2.0",
                "V2.0", "V2.0",
                SNAILHEATER_VERSION, KNOBS_DIR_POS);

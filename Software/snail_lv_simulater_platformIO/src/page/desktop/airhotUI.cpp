@@ -3,6 +3,8 @@
 #include "ui.h"
 #include "desktop_model.h"
 
+#ifndef NEW_UI
+
 #define FONT_DEBUG 1
 
 static lv_obj_t *airhotPageUI = NULL;
@@ -46,8 +48,7 @@ static bool airhotPageUI_init(lv_obj_t *father)
     airhotPageUI = lv_btn_create(father); // 绿色
     airhotUIObj.mainButtonUI = airhotPageUI;
 
-    lv_obj_set_size(airhotPageUI, 110, 200);
-    // lv_obj_set_pos(airhotPageUI, btnPosXY[1][0], btnPosXY[1][1]);
+    lv_obj_set_size(airhotPageUI, EACH_PAGE_SIZE_X, EACH_PAGE_SIZE_Y);
     lv_obj_set_pos(airhotPageUI, START_UI_OBJ_X, 0);
     lv_obj_set_align(airhotPageUI, LV_ALIGN_CENTER);
     lv_obj_add_flag(airhotPageUI, LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
@@ -74,7 +75,7 @@ static bool airhotPageUI_init(lv_obj_t *father)
     lv_obj_set_style_text_opa(ui_curTempLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     // lv_obj_set_style_text_font(ui_curTempLabel, &lv_font_montserrat_36, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_curTempLabel, &sh_number_50, LV_PART_MAIN | LV_STATE_DEFAULT);
-
+    
     // 温度调节
     ui_setTempButton = lv_btn_create(ui_ButtonTmp);
     lv_obj_set_size(ui_setTempButton, 65, 20);
@@ -251,7 +252,7 @@ void ui_updateAirhotCurTempAndPowerDuty(void)
         return;
     }
 
-    if (airhotModel.curTemp > DISCONNCT_TEMP)
+    if (airhotModel.curTemp >= DISCONNCT_TEMP)
     {
         // 未连接
         lv_label_set_text_fmt(ui_curTempLabel, "xxx");
@@ -431,3 +432,5 @@ static void ui_set_air_btn_pressed(lv_event_t *e)
 
 FE_UI_OBJ airhotUIObj = {airhotPageUI, airhotPageUI_init,
                          airhotPageUI_release, airhotPageUI_pressed};
+
+#endif
