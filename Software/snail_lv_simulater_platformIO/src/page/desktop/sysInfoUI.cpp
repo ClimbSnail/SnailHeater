@@ -14,6 +14,9 @@ static lv_obj_t *ui_knobsDirLabel;
 static lv_obj_t *ui_knobsImage;
 static lv_obj_t *ui_knobsDirDropdown;
 
+static lv_obj_t *ui_hardVerImage;
+static lv_obj_t *ui_hardVerDropdown;
+
 static lv_obj_t *ui_swVerLabel; // 软件版本
 
 static lv_obj_t *ui_moreButton;
@@ -27,6 +30,7 @@ static lv_style_t chFontStyle;
 static lv_group_t *btn_group;
 
 static void ui_knobs_dir_pressed(lv_event_t *e);
+static void ui_hw_ver_pressed(lv_event_t *e);
 static void ui_back_btn_pressed(lv_event_t *e);
 
 static void setknobsDir(lv_obj_t *obj, KNOBS_DIR dir)
@@ -48,6 +52,32 @@ static void setknobsDir(lv_obj_t *obj, KNOBS_DIR dir)
         break;
     }
     lv_dropdown_set_selected(obj, dirInd);
+}
+
+static void setHwVer(lv_obj_t *obj, VERSION_INFO ver)
+{
+    uint8_t verInd;
+    switch (ver)
+    {
+    case VERSION_INFO_OUT_BOARD_V20:
+    {
+        verInd = 0;
+    }
+    break;
+    case VERSION_INFO_OUT_BOARD_V21:
+    {
+        verInd = 1;
+    }
+    break;
+    case VERSION_INFO_OUT_BOARD_V25:
+    {
+        verInd = 2;
+    }
+    break;
+    defualt:
+        break;
+    }
+    lv_dropdown_set_selected(obj, verInd);
 }
 
 static bool sysInfoPageUI_init(lv_obj_t *father)
@@ -100,7 +130,7 @@ static bool sysInfoPageUI_init(lv_obj_t *father)
     ui_knobsImage = lv_img_create(ui_ButtonTmp);
     lv_img_set_src(ui_knobsImage, &knobs_16);
     // lv_obj_set_size(ui_knobsImage, 16, 16);
-    lv_obj_set_pos(ui_knobsImage, -30, -8);
+    lv_obj_set_pos(ui_knobsImage, -30, -23);
     lv_obj_set_align(ui_knobsImage, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_knobsImage, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
     lv_obj_clear_flag(ui_knobsImage, LV_OBJ_FLAG_SCROLLABLE); /// Flags
@@ -111,19 +141,47 @@ static bool sysInfoPageUI_init(lv_obj_t *father)
     lv_dropdown_set_options_static(ui_knobsDirDropdown, knobsDir);
     setknobsDir(ui_knobsDirDropdown, sysInfoModel.knobDir);
     lv_obj_set_size(ui_knobsDirDropdown, 55, LV_SIZE_CONTENT);
-    lv_obj_set_pos(ui_knobsDirDropdown, 20, -10);
+    lv_obj_set_pos(ui_knobsDirDropdown, 20, -25);
     lv_obj_set_align(ui_knobsDirDropdown, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_knobsDirDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
     // lv_obj_set_style_text_font(ui_knobsDirDropdown, &lv_font_montserrat_10, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_knobsDirDropdown, &sh_ch_font_14, LV_PART_MAIN | LV_STATE_DEFAULT);
     // lv_dropdown_set_dir(ui_knobsDirDropdown, LV_DROPDOWN_DIR_DOWN);
     // 注意：如果使用自定义的字库，并且你的字库中没有这些symbol符号，那么下拉列表的符号就不会显示了
-    // lv_dropdown_set_symbol(ui_knobsDirDropdown, LV_SYMBOL_LEFT); 
+    // lv_dropdown_set_symbol(ui_knobsDirDropdown, LV_SYMBOL_LEFT);
     lv_dropdown_set_symbol(ui_knobsDirDropdown, "V");
     lv_obj_add_style(ui_knobsDirDropdown, &focused_style, LV_STATE_FOCUSED);
     // 下拉框重新定义字体（中文字体必须此操作）
     lv_obj_t *ui_knobsDirDropdown_list = lv_dropdown_get_list(ui_knobsDirDropdown);
     lv_obj_set_style_text_font(ui_knobsDirDropdown_list, &sh_ch_font_18, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    // 硬件版本图标
+    ui_hardVerImage = lv_img_create(ui_ButtonTmp);
+    lv_img_set_src(ui_hardVerImage, &hardware_16);
+    lv_obj_set_pos(ui_hardVerImage, -30, 17);
+    lv_obj_set_align(ui_hardVerImage, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_hardVerImage, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
+    lv_obj_clear_flag(ui_hardVerImage, LV_OBJ_FLAG_SCROLLABLE); /// Flags
+
+    static char hwVer[] = SHL_HW_VER;
+    ui_hardVerDropdown = lv_dropdown_create(ui_ButtonTmp);
+    // lv_dropdown_set_options(ui_hardVerDropdown, SHL_HW_VER);
+    lv_dropdown_set_options_static(ui_hardVerDropdown, hwVer);
+    setHwVer(ui_hardVerDropdown, sysInfoModel.outBoardVersion);
+    lv_obj_set_size(ui_hardVerDropdown, 55, LV_SIZE_CONTENT);
+    lv_obj_set_pos(ui_hardVerDropdown, 20, 15);
+    lv_obj_set_align(ui_hardVerDropdown, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_hardVerDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
+    // lv_obj_set_style_text_font(ui_hardVerDropdown, &lv_font_montserrat_10, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_hardVerDropdown, &sh_ch_font_14, LV_PART_MAIN | LV_STATE_DEFAULT);
+    // lv_dropdown_set_dir(ui_hardVerDropdown, LV_DROPDOWN_DIR_DOWN);
+    // 注意：如果使用自定义的字库，并且你的字库中没有这些symbol符号，那么下拉列表的符号就不会显示了
+    // lv_dropdown_set_symbol(ui_hardVerDropdown, LV_SYMBOL_LEFT);
+    lv_dropdown_set_symbol(ui_hardVerDropdown, "V");
+    lv_obj_add_style(ui_hardVerDropdown, &focused_style, LV_STATE_FOCUSED);
+    // 下拉框重新定义字体（中文字体必须此操作）
+    lv_obj_t *ui_hardVerDropdown_list = lv_dropdown_get_list(ui_hardVerDropdown);
+    lv_obj_set_style_text_font(ui_hardVerDropdown_list, &sh_ch_font_18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     // 软件版本信息
     ui_swVerLabel = lv_label_create(ui_ButtonTmp);
@@ -190,6 +248,7 @@ static bool sysInfoPageUI_init(lv_obj_t *father)
 
     lv_obj_add_event_cb(ui_backButton, ui_back_btn_pressed, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(ui_knobsDirDropdown, ui_knobs_dir_pressed, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_add_event_cb(ui_hardVerDropdown, ui_hw_ver_pressed, LV_EVENT_VALUE_CHANGED, NULL);
 
     return true;
 }
@@ -219,6 +278,7 @@ static void sysInfoPageUI_pressed(lv_event_t *e)
     // 创建操作的组
     btn_group = lv_group_create();
     lv_group_add_obj(btn_group, ui_knobsDirDropdown);
+    lv_group_add_obj(btn_group, ui_hardVerDropdown);
     lv_group_add_obj(btn_group, ui_moreButton);
     lv_group_add_obj(btn_group, ui_backButton);
     lv_group_focus_obj(ui_backButton); // 聚焦到退出按键
@@ -235,6 +295,40 @@ static void ui_knobs_dir_pressed(lv_event_t *e)
     {
         uint16_t index = lv_dropdown_get_selected(ui_knobsDirDropdown); // 获取索引
         sysInfoModel.knobDir = (KNOBS_DIR)index;
+    }
+}
+
+static void ui_hw_ver_pressed(lv_event_t *e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t *target = lv_event_get_target(e);
+
+    if (LV_EVENT_VALUE_CHANGED == event_code)
+    {
+        uint16_t index = lv_dropdown_get_selected(ui_hardVerDropdown); // 获取索引
+        // 计算方法由 VERSION_INFO 功率板的顺序规则得到
+        sysInfoModel.outBoardVersion = (VERSION_INFO)(index * 3 + 2);
+        // 或者
+        // switch (index)
+        // {
+        // case 0:
+        // {
+        //     sysInfoModel.outBoardVersion = VERSION_INFO_OUT_BOARD_V20;
+        // }
+        // break;
+        // case 1:
+        // {
+        //     sysInfoModel.outBoardVersion = VERSION_INFO_OUT_BOARD_V21;
+        // }
+        // break;
+        // case 2:
+        // {
+        //     sysInfoModel.outBoardVersion = VERSION_INFO_OUT_BOARD_V25;
+        // }
+        // break;
+        // defualt:
+        //     break;
+        // }
     }
 }
 

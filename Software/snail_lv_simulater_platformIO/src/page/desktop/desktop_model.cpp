@@ -12,8 +12,9 @@ struct AdjPowerModel adjPowerModel = {0, 0, 0,
 struct StopWelderModel stopWelderModel = {SPOTWELDER_MODE_DOUBLE, 5, 1000,
                                           2, 2700, 2000,
                                           2700, SPOTWELDER_STATE_WAIT};
-struct SysInfoModel sysInfoModel = {"", "", "",
-                                    "", "", KNOBS_DIR_POS};
+struct SysInfoModel sysInfoModel = {"", VERSION_INFO_SRCEEN_V20,
+                                    VERSION_INFO_CORE_V20, VERSION_INFO_OUT_BOARD_V20,
+                                    "", KNOBS_DIR_POS};
 
 /*
  *   电烙铁
@@ -179,14 +180,14 @@ int setStopWelderWorkState(unsigned char workState)
  *   系统设置
  *
  */
-int setSysInfo(const char *sn, const char *srceenVersion,
-               const char *coreVersion, const char *outBoardVersion,
+int setSysInfo(const char *sn, VERSION_INFO srceenVersion,
+               VERSION_INFO coreVersion, VERSION_INFO outBoardVersion,
                const char *softwareVersion, KNOBS_DIR knobDir)
 {
     snprintf(sysInfoModel.sn, 32, "%s", sn);
-    snprintf(sysInfoModel.srceenVersion, 16, "%s", srceenVersion);
-    snprintf(sysInfoModel.coreVersion, 16, "%s", coreVersion);
-    snprintf(sysInfoModel.outBoardVersion, 16, "%s", outBoardVersion);
+    sysInfoModel.srceenVersion = srceenVersion;
+    sysInfoModel.coreVersion = coreVersion;
+    sysInfoModel.outBoardVersion = outBoardVersion;
     snprintf(sysInfoModel.softwareVersion, 16, "%s", softwareVersion);
     sysInfoModel.knobDir = knobDir;
 

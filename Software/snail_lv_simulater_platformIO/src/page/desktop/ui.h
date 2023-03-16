@@ -24,7 +24,7 @@ extern "C"
 #define START_UI_OBJ_X 140 // 280/2=140
 #define WIN_INFO_SIZE 3
 #define UI_OBJ_NUM 5
-// #define NEW_UI
+    // #define NEW_UI
 
 #ifdef NEW_UI
 #define EACH_PAGE_SIZE_X 260
@@ -61,16 +61,21 @@ extern "C"
     extern int16_t btnPosXY[WIN_INFO_SIZE][2];
 
     extern FE_UI_OBJ solderUIObj;
+
+#ifndef NEW_UI
     extern FE_UI_OBJ airhotUIObj;
     extern FE_UI_OBJ hpUIObj;
     extern FE_UI_OBJ adjPowerUIObj;
     extern FE_UI_OBJ sysInfoUIObj;
+#endif
 
     void ui_updateSolderCurTempAndPowerDuty(void);
+#ifndef NEW_UI
     void ui_updateAirhotCurTempAndPowerDuty(void);
     void ui_updateHeatplatformCurTempAndPowerDuty(void);
     void ui_updateAdjPowerCurVoltage(void);
     void ui_updateAdjPowerWorkState(void);
+#endif
 
 #ifdef __cplusplus
 } /*extern "C"*/

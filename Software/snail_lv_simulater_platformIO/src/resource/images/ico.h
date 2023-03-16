@@ -22,6 +22,7 @@ extern "C"
     extern const lv_img_dsc_t wake_16;
     extern const lv_img_dsc_t heat_platform_48;
     extern const lv_img_dsc_t knobs_16;
+    extern const lv_img_dsc_t hardware_16;
     
     
 #ifdef __cplusplus

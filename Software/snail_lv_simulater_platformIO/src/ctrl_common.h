@@ -7,6 +7,29 @@
 #define DISCONNCT_TEMP 600
 #define DAC_DEFAULT_RESOLUTION 4096
 
+// 版本信息
+enum VERSION_INFO
+{
+    VERSION_INFO_SRCEEN_V20 = 0,
+    VERSION_INFO_CORE_V20,
+    VERSION_INFO_OUT_BOARD_V20,
+
+    VERSION_INFO_SRCEEN_V21,
+    VERSION_INFO_CORE_V21,
+    VERSION_INFO_OUT_BOARD_V21,
+
+    VERSION_INFO_SRCEEN_V25,
+    VERSION_INFO_CORE_V25,
+    VERSION_INFO_OUT_BOARD_V25,
+
+    VERSION_INFO_MAX
+};
+
+const char version_info[VERSION_INFO_MAX][8] = {
+    "v2.0", "v2.0", "v2.0",
+    "v2.1", "v2.1", "v2.1",
+    "v2.5", "v2.5", "v2.5"};
+
 enum HEAT_PLATFORM_STATE
 {
     HP_STATE_SLEEP = 0,   // 休眠状态

@@ -4,6 +4,8 @@
 // #include <Arduino.h>
 #include <stdint.h>
 
+#define SIMULATOR
+
 enum KNOBS_DIR
 {
     KNOBS_DIR_POS = 0, // 正向

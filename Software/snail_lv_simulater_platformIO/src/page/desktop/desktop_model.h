@@ -2,13 +2,16 @@
 #define DESKTOP_MODEL_H
 
 #include "driver/knobs.h"
-#include "ctrl_common.h"
 
-// #include "controller/solder/solder.h"
-// #include "controller/hot_air/hot_air.h"
-// #include "controller/heat_platform/heat_platform.h"
-// #include "controller/power/adjustable_power.h"
-// #include "controller/spot_welder/spot_welder.h"
+#ifdef SIMULATOR
+#include "ctrl_common.h"
+#else
+#include "controller/solder/solder.h"
+#include "controller/hot_air/hot_air.h"
+#include "controller/heat_platform/heat_platform.h"
+#include "controller/power/adjustable_power.h"
+#include "controller/spot_welder/spot_welder.h"
+#endif
 
 struct SolderModel
 {
@@ -73,9 +76,9 @@ extern struct StopWelderModel stopWelderModel;
 struct SysInfoModel
 {
     char sn[32];
-    char srceenVersion[16];
-    char coreVersion[16];
-    char outBoardVersion[16];
+    VERSION_INFO srceenVersion;
+    VERSION_INFO coreVersion;
+    VERSION_INFO outBoardVersion;
     char softwareVersion[16]; // 软件版本
     KNOBS_DIR knobDir;        // 旋钮方向
 };
@@ -120,8 +123,8 @@ int setStopWelderVoltage(uint16_t voltage);
 int setStopWelderWorkState(unsigned char workState);
 
 // 系统给设置
-int setSysInfo(const char *sn, const char *srceenVersion,
-               const char *coreVersion, const char *outBoardVersion,
+int setSysInfo(const char *sn, VERSION_INFO srceenVersion,
+               VERSION_INFO coreVersion, VERSION_INFO outBoardVersion,
                const char *softwareVersion, KNOBS_DIR knobDir);
 int setKnobsDir(KNOBS_DIR knobDir);
 

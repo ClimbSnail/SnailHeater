@@ -101,13 +101,13 @@ bool SnailManager::initController(void)
     if (NULL != ctrl_obj.hotAir_0)
     {
         ctrl_obj.hotAir_0->setAirDuty(20);
-        // ctrl_obj.hotAir_0->setTargetTemp(250);
+        ctrl_obj.hotAir_0->setTargetTemp(240);
     }
 
     if (NULL != ctrl_obj.hotAir_1)
     {
         ctrl_obj.hotAir_1->setAirDuty(20);
-        // ctrl_obj.hotAir_1->setTargetTemp(250);
+        // ctrl_obj.hotAir_1->setTargetTemp(240);
     }
 
     // 使能定时器
@@ -121,16 +121,14 @@ bool SnailManager::initController(void)
 
 bool SnailManager::loadWindows(void)
 {
-    tft->fillRect(0, 0, 280, 240, TFT_GOLD);
-    tft->fillRect(40, 50, 80, 140, TFT_BLUE);
-    tft->fillRect(160, 50, 80, 140, TFT_DARKCYAN);
+    tft->fillRect(0, 0, 280, 240, TFT_WHITE);
 
     tft->setTextColor(TFT_RED); //设置字体颜色
     tft->setTextSize(2);        //设置字体大小(默认1号)
     tft->setCursor(20, 10, 2);  //设置行号
-    tft->startWrite();
-    tft->drawString("SnailHeater", 80, 10); //显示USB
-    tft->endWrite();
+    // tft->startWrite();
+    // tft->drawString("SnailHeater", 80, 10); //显示USB
+    // tft->endWrite();
     tft->setTextColor(TFT_WHITE); //设置字体颜色
     tft->setTextSize(1);          //设置字体大小(默认1号)
 
@@ -200,36 +198,36 @@ int SnailManager::ui_process(KeyInfo *ret_info)
         tft->drawString(String("Time: ") + ctrl_obj.solder->getInterval() / 1000 + "s", 60, 20);
 
         tft->setTextColor(TFT_WHITE); //设置字体颜色
-        tft->fillRect(40, 40, 80, 160, TFT_DARKCYAN);
-        tft->drawString(String(ctrl_obj.solder->m_name), 45, 40);
-        tft->drawString(String("Set: ") + ctrl_obj.solder->getTargetTemp() + "C", 45, 60);
-        tft->drawFloat(ctrl_obj.solder->getCurTemperature(false), 1, 45, 90);
-        tft->drawString(String("AdjP: ") + ctrl_obj.adj_power->getVolt(), 45, 120);
-        tft->drawString(String("Pwr: ") + ctrl_obj.solder->getPowerDuty() + "%", 45, 150);
-        tft->drawString(String("Osc2: ") + ctrl_obj.oscilloscope->getChanne0(), 45, 180);
-    }
-
-    if (NULL != ctrl_obj.hotAir_0 && NULL != ctrl_obj.oscilloscope)
-    {
-        // tft->fillRect(160, 40, 80, 160, TFT_BLUE);
-        // tft->drawString(String(ctrl_obj.hotAir_0->m_name), 165, 40);
-        // tft->drawString(String("Set: ") + ctrl_obj.hotAir_0->getTargetTemp() + "C", 165, 60);
-        // tft->drawFloat(ctrl_obj.hotAir_0->getCurTemperature(), 1, 165, 90);
-        // tft->drawString(String("Air: ") + ctrl_obj.hotAir_0->getAirDuty() + "%", 165, 120);
-        // tft->drawString(String("Pwr: ") + ctrl_obj.hotAir_0->getPowerDuty() + "%", 165, 150);
-        // tft->drawString(String("Osc1: ") + ctrl_obj.oscilloscope->getChanne1(), 165, 180);
+        tft->fillRect(10, 40, 80, 160, TFT_DARKCYAN);
+        tft->drawString(String(ctrl_obj.solder->m_name), 15, 40);
+        tft->drawString(String("Set: ") + ctrl_obj.solder->getTargetTemp() + "C", 15, 60);
+        tft->drawFloat(ctrl_obj.solder->getCurTemperature(false), 1, 15, 90);
+        tft->drawString(String("AdjP: ") + ctrl_obj.adj_power->getVolt(), 15, 120);
+        tft->drawString(String("Pwr: ") + ctrl_obj.solder->getPowerDuty() + "%", 15, 150);
+        tft->drawString(String("Osc2: ") + ctrl_obj.oscilloscope->getChanne0(), 15, 180);
     }
 
     if (NULL != ctrl_obj.hotAir_1 && NULL != ctrl_obj.oscilloscope)
     {
         tft->setTextColor(TFT_WHITE); //设置字体颜色
-        tft->fillRect(160, 40, 80, 160, TFT_BLUE);
-        tft->drawString(String(ctrl_obj.hotAir_1->m_name), 165, 40);
-        tft->drawString(String("Set: ") + ctrl_obj.hotAir_1->getTargetTemp() + "C", 165, 60);
-        tft->drawFloat(ctrl_obj.hotAir_1->getCurTemperature(), 1, 165, 90);
-        tft->drawString(String("Air: ") + ctrl_obj.hotAir_1->getAirDuty() + "%", 165, 120);
-        tft->drawString(String("Pwr: ") + ctrl_obj.hotAir_1->getPowerDuty() + "%", 165, 150);
-        tft->drawString(String("Osc1: ") + ctrl_obj.oscilloscope->getChanne1(), 165, 180);
+        tft->fillRect(105, 40, 80, 160, TFT_BLUE);
+        tft->drawString(String(ctrl_obj.hotAir_1->m_name), 110, 40);
+        tft->drawString(String("Set: ") + ctrl_obj.hotAir_1->getTargetTemp() + "C", 110, 60);
+        tft->drawFloat(ctrl_obj.hotAir_1->getCurTemperature(), 1, 110, 90);
+        tft->drawString(String("Air: ") + ctrl_obj.hotAir_1->getAirDuty() + "%", 110, 120);
+        tft->drawString(String("Pwr: ") + ctrl_obj.hotAir_1->getPowerDuty() + "%", 110, 150);
+        tft->drawString(String("Osc1: ") + ctrl_obj.oscilloscope->getChanne1(), 110, 180);
+    }
+
+    if (NULL != ctrl_obj.hotAir_0 && NULL != ctrl_obj.oscilloscope)
+    {
+        tft->fillRect(200, 40, 80, 160, TFT_GOLD);
+        tft->drawString(String(ctrl_obj.hotAir_0->m_name), 205, 40);
+        tft->drawString(String("Set: ") + ctrl_obj.hotAir_0->getTargetTemp() + "C", 205, 60);
+        tft->drawFloat(ctrl_obj.hotAir_0->getCurTemperature(), 1, 205, 90);
+        tft->drawString(String("Air: ") + ctrl_obj.hotAir_0->getAirDuty() + "%", 205, 120);
+        tft->drawString(String("Pwr: ") + ctrl_obj.hotAir_0->getPowerDuty() + "%", 205, 150);
+        tft->drawString(String("Osc1: ") + ctrl_obj.oscilloscope->getChanne1(), 205, 180);
     }
     return 0;
 }

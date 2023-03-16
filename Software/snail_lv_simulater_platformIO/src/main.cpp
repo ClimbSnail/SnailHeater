@@ -47,8 +47,8 @@ void SnailHeater_UI()
                       2, 2700, 2000,
                       2700, SPOTWELDER_STATE_WAIT);
 
-    setSysInfo("E3F6FAB", "V2.0",
-               "V2.0", "V2.0",
+    setSysInfo("E3F6FAB", VERSION_INFO_SRCEEN_V20,
+               VERSION_INFO_CORE_V20, VERSION_INFO_OUT_BOARD_V20,
                SNAILHEATER_VERSION, KNOBS_DIR_POS);
 
     // 绘制页面UI
