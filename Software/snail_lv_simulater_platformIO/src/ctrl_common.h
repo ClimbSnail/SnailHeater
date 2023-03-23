@@ -30,6 +30,24 @@ const char version_info[VERSION_INFO_MAX][8] = {
     "v2.1", "v2.1", "v2.1",
     "v2.5", "v2.5", "v2.5"};
 
+enum ENABLE_STATE
+{
+    ENABLE_STATE_CLOSE = 0, // 关闭
+    ENABLE_STATE_OPEN,      // 开启
+    ENABLE_STATE_NONE
+};
+
+struct UI_PARAM_INFO
+{
+    // ENABLE_STATE_CLOSE or ENABLE_STATE_OPEN
+    unsigned char solderGridEnable : 1;   // 是否开启烙铁页面曲线图网格
+    unsigned char airhotGridEnable : 1;   // 是否开启风枪页面曲线图网格
+    unsigned char heatplatGridEnable : 1; // 是否开启加热台页面曲线图网格
+    unsigned char : 3;                    // 预留 实现内存对齐
+    unsigned char hpAutoHeatEnable : 1;   // 加热台是否自动加热
+    unsigned char whiteThemeEnable : 1;   // 白色主题是否有效
+};
+
 enum HEAT_PLATFORM_STATE
 {
     HP_STATE_SLEEP = 0,   // 休眠状态
@@ -74,12 +92,6 @@ enum HA_AIR_MODE
     AIR_MODE_NONE = 0,
     AIR_MODE_PWM,  // pwm空速
     AIR_MODE_FULL, // 全速控制
-};
-
-enum ADJ_POWER_OPEN_STATE
-{
-    ADJ_POWER_OPEN_STATE_CLOSE = 0, // 自动状态关闭
-    ADJ_POWER_OPEN_STATE_OPEN,      // 自动状态开启
 };
 
 enum ADJ_POWER_MODE

@@ -1,17 +1,25 @@
 
 #include "desktop_model.h"
 
-struct SolderModel solderModel = {SOLDER_TYPE_T12, 0, 0,
-                                  SOLDER_STATE_DEEP_SLEEP, 0};
-struct AirhotModel airhotModel = {0, 0, 20,
-                                  HOTAIR_STATE_SLEEP, 0};
-struct HeatplatformModel heatplatformModel = {0, 0,
-                                              HOTAIR_STATE_SLEEP, 0};
-struct AdjPowerModel adjPowerModel = {0, 0, 0,
-                                      0, 0, ADJ_POWER_OPEN_STATE_CLOSE};
-struct StopWelderModel stopWelderModel = {SPOTWELDER_MODE_DOUBLE, 5, 1000,
-                                          2, 2700, 2000,
-                                          2700, SPOTWELDER_STATE_WAIT};
+struct SolderModel solderModel = {SOLDER_STATE_DEEP_SLEEP, SOLDER_TYPE_T12,
+                                  SOLDER_SHAKE_TYPE_CHANGE, 1, 270, 360, 400, 300,
+                                  0, 0, 0};
+
+struct AirhotModel airhotModel = {HOTAIR_STATE_SLEEP, 0,
+                                  250, 350, 400, 350,
+                                  0, 0, 30, 0};
+
+struct HeatplatformModel heatplatformModel = {HP_STATE_SLEEP, ENABLE_STATE_CLOSE, 1,
+                                              180, 245, 270, 230,
+                                              0, 0, 0};
+
+struct AdjPowerModel adjPowerModel = {ENABLE_STATE_CLOSE, 0, 0,
+                                      0, 0, 0, 0};
+
+struct StopWelderModel stopWelderModel = {SPOTWELDER_STATE_WAIT, SPOTWELDER_MODE_DOUBLE,
+                                          5, 1000, 2,
+                                          2700, 2000, 2700};
+
 struct SysInfoModel sysInfoModel = {"", VERSION_INFO_SRCEEN_V20,
                                     VERSION_INFO_CORE_V20, VERSION_INFO_OUT_BOARD_V20,
                                     "", KNOBS_DIR_POS};
@@ -20,16 +28,9 @@ struct SysInfoModel sysInfoModel = {"", VERSION_INFO_SRCEEN_V20,
  *   电烙铁
  *
  */
-int setSolderInfo(unsigned char type, unsigned char wakeType,
-                  int targetTemp, int curTemp,
-                  unsigned char workState, uint16_t powerRatio)
+int setSolderInfo(SolderModel *model)
 {
-    solderModel.type = type;
-    solderModel.wakeType = wakeType;
-    solderModel.targetTemp = targetTemp;
-    solderModel.curTemp = curTemp;
-    solderModel.workState = workState;
-    solderModel.powerRatio = powerRatio;
+    solderModel = *model;
     return 0;
 }
 
@@ -50,15 +51,9 @@ int setSolderWorkState(unsigned char workState)
  *   热风枪
  *
  */
-int setAirhotInfo(int targetTemp, int curTemp,
-                  unsigned int workAirSpeed, unsigned char workState,
-                  uint16_t powerRatio)
+int setAirhotInfo(AirhotModel *model)
 {
-    airhotModel.targetTemp = targetTemp;
-    airhotModel.curTemp = curTemp;
-    airhotModel.workAirSpeed = workAirSpeed;
-    airhotModel.workState = workState;
-    airhotModel.powerRatio = powerRatio;
+    airhotModel = *model;
     return 0;
 }
 
@@ -79,13 +74,9 @@ int setAirhotWorkState(unsigned char workState)
  *   加热台
  *
  */
-int setHeatplatformInfo(int targetTemp, int curTemp,
-                        unsigned char enable, uint16_t powerRatio)
+int setHeatplatformInfo(HeatplatformModel *model)
 {
-    heatplatformModel.targetTemp = targetTemp;
-    heatplatformModel.curTemp = curTemp;
-    heatplatformModel.enable = enable;
-    heatplatformModel.powerRatio = powerRatio;
+    heatplatformModel = *model;
     return 0;
 }
 
@@ -106,17 +97,9 @@ int setHeatplatformEnable(unsigned char enable)
  *   可调电源
  *
  */
-int setAdjPowerInfo(int volAdcValue, int curAdcValue, unsigned char mode,
-                    int32_t voltage, int32_t current,
-                    int32_t capacity, unsigned char workState)
+int setAdjPowerInfo(AdjPowerModel *model)
 {
-    adjPowerModel.volAdcValue = volAdcValue;
-    adjPowerModel.curAdcValue = curAdcValue;
-    adjPowerModel.mode = mode;
-    adjPowerModel.voltage = voltage;
-    adjPowerModel.current = current;
-    adjPowerModel.capacity = capacity; // 功率
-    adjPowerModel.workState = workState;
+    adjPowerModel = *model;
     return 0;
 }
 
@@ -148,19 +131,9 @@ int setAdjPowerWorkState(unsigned char workState)
  *   点焊机设置
  *
  */
-int setStopWelderInfo(uint8_t mode, uint16_t pulseWidth, uint16_t interval,
-                      uint8_t capNumber, uint16_t singleCapVol,
-                      uint16_t alarmVol, uint16_t voltage,
-                      unsigned char workState)
+int setStopWelderInfo(StopWelderModel mode)
 {
-    stopWelderModel.mode = mode;
-    stopWelderModel.pulseWidth = pulseWidth;
-    stopWelderModel.interval = interval;
-    stopWelderModel.capNumber = capNumber;
-    stopWelderModel.singleCapVol = singleCapVol;
-    stopWelderModel.alarmVol = alarmVol;
-    stopWelderModel.voltage = voltage;
-    stopWelderModel.workState = workState;
+    stopWelderModel = mode;
     return 0;
 }
 
@@ -180,17 +153,9 @@ int setStopWelderWorkState(unsigned char workState)
  *   系统设置
  *
  */
-int setSysInfo(const char *sn, VERSION_INFO srceenVersion,
-               VERSION_INFO coreVersion, VERSION_INFO outBoardVersion,
-               const char *softwareVersion, KNOBS_DIR knobDir)
+int setSysInfo(SysInfoModel *model)
 {
-    snprintf(sysInfoModel.sn, 32, "%s", sn);
-    sysInfoModel.srceenVersion = srceenVersion;
-    sysInfoModel.coreVersion = coreVersion;
-    sysInfoModel.outBoardVersion = outBoardVersion;
-    snprintf(sysInfoModel.softwareVersion, 16, "%s", softwareVersion);
-    sysInfoModel.knobDir = knobDir;
-
+    sysInfoModel = *model;
     return 0;
 }
 

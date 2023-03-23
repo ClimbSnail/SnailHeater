@@ -91,8 +91,12 @@ static bool sysInfoPageUI_init(lv_obj_t *father)
     sysInfoUIObj.mainButtonUI = sysInfoPageUI;
 
     lv_obj_set_size(sysInfoPageUI, EACH_PAGE_SIZE_X, EACH_PAGE_SIZE_Y);
+#ifdef NEW_UI
+    lv_obj_set_align(sysInfoPageUI, LV_ALIGN_LEFT_MID);
+#else
     lv_obj_set_pos(sysInfoPageUI, START_UI_OBJ_X, 0);
     lv_obj_set_align(sysInfoPageUI, LV_ALIGN_CENTER);
+#endif
     lv_obj_add_flag(sysInfoPageUI, LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
     lv_obj_clear_flag(sysInfoPageUI, LV_OBJ_FLAG_SCROLLABLE);    /// Flags
     lv_obj_set_style_bg_color(sysInfoPageUI, lv_color_hex(0xB8860B), LV_PART_MAIN | LV_STATE_DEFAULT);

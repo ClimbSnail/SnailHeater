@@ -107,14 +107,23 @@ static bool solderPageUI_init(lv_obj_t *father)
     solderUIObj.mainButtonUI = solderPageUI;
 
     lv_obj_set_size(solderPageUI, EACH_PAGE_SIZE_X, EACH_PAGE_SIZE_Y);
+    
+
+#ifdef NEW_UI
+    lv_obj_set_align(solderPageUI, LV_ALIGN_LEFT_MID);
+#else
     lv_obj_set_pos(solderPageUI, START_UI_OBJ_X, 0);
     lv_obj_set_align(solderPageUI, LV_ALIGN_CENTER);
+#endif
+
+
+
     lv_obj_add_flag(solderPageUI, LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
     lv_obj_clear_flag(solderPageUI, LV_OBJ_FLAG_SCROLLABLE);    /// Flags
     lv_obj_set_style_bg_color(solderPageUI, lv_color_hex(0xDFD338), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(solderPageUI, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_color(solderPageUI, lv_color_hex(0xFF0000), LV_PART_MAIN | LV_STATE_CHECKED | LV_STATE_PRESSED);
-    lv_obj_set_style_border_opa(solderPageUI, 255, LV_PART_MAIN | LV_STATE_CHECKED | LV_STATE_PRESSED);
+    //lv_obj_set_style_border_color(solderPageUI, lv_color_hex(0xFF0000), LV_PART_MAIN | LV_STATE_CHECKED | LV_STATE_PRESSED);
+    //lv_obj_set_style_border_opa(solderPageUI, 255, LV_PART_MAIN | LV_STATE_CHECKED | LV_STATE_PRESSED);
 
     lv_obj_t *ui_ButtonTmp = solderPageUI;
 
@@ -371,7 +380,7 @@ static void ui_back_btn_pressed(lv_event_t *e)
 static void solderPageUI_pressed(lv_event_t *e)
 {
     // 烙铁项被按下
-
+    
     // 创建操作的组
     btn_group = lv_group_create();
     lv_group_add_obj(btn_group, ui_setTempButton);

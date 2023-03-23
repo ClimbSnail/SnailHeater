@@ -259,7 +259,7 @@ void ui_event_Button(lv_event_t *e)
     lastMiddlePos = curMiddlePos;
 }
 
-void ui_Button_move_center(int middleIndex)
+void ui_page_move_center_by_ind(int index)
 {
     if (main_btn_group == NULL || knobs_indev->group != main_btn_group)
     {
@@ -267,20 +267,20 @@ void ui_Button_move_center(int middleIndex)
         return;
     }
 
-    lastMiddlePos = middleIndex;
+    lastMiddlePos = index;
     // initUIObj(index);
 
-    lv_obj_set_pos(ui_Button[(middleIndex + UI_OBJ_NUM - 1) % UI_OBJ_NUM]->mainButtonUI,
+    lv_obj_set_pos(ui_Button[(index + UI_OBJ_NUM - 1) % UI_OBJ_NUM]->mainButtonUI,
                    btnPosXY[0][0], btnPosXY[0][1]);
 
-    lv_obj_set_pos(ui_Button[middleIndex]->mainButtonUI,
+    lv_obj_set_pos(ui_Button[index]->mainButtonUI,
                    btnPosXY[1][0], btnPosXY[1][1]);
 
-    lv_obj_set_pos(ui_Button[(middleIndex + 1) % UI_OBJ_NUM]->mainButtonUI,
+    lv_obj_set_pos(ui_Button[(index + 1) % UI_OBJ_NUM]->mainButtonUI,
                    btnPosXY[2][0], btnPosXY[2][1]);
 
     // 页面居中
-    lv_group_focus_obj(ui_Button[middleIndex]->mainButtonUI);
+    lv_group_focus_obj(ui_Button[index]->mainButtonUI);
     lv_scr_load(desktop_screen);
 }
 
@@ -294,6 +294,7 @@ void main_screen_init(lv_indev_t *indev)
     lv_obj_set_style_bg_grad_color(desktop_screen, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_style_init(&focused_style);
+
     lv_style_set_outline_color(&focused_style,
                                lv_palette_main(LV_PALETTE_RED)); // 边框颜色
     lv_style_set_outline_width(&focused_style, 2);               // 边框宽度
@@ -302,8 +303,8 @@ void main_screen_init(lv_indev_t *indev)
     lv_style_set_border_color(&focused_style, lv_color_hex(0xA90730)); // 边框颜色
     lv_style_set_border_opa(&focused_style, 255);                      // 透明度
     lv_style_set_border_width(&focused_style, 2);                      // 边框宽度
-    lv_style_set_radius(&focused_style, 6);                            // 设置控件圆角半径
-
+    lv_style_set_radius(&focused_style, 6);
+    // 设置控件圆角半径
     // ui_PanelMain
     ui_PanelMain = lv_obj_create(desktop_screen);
     lv_obj_set_size(ui_PanelMain, 280, 240);

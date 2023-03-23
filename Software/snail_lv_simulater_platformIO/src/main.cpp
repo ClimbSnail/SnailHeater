@@ -31,25 +31,86 @@ void SnailHeater_UI()
     startupDel();
 
     // 设置必要的预显示参数
-    setAirhotInfo(300, 250,
-                  20, 0,
-                  50);
-    setHeatplatformInfo(230, 220,
-                        true, 20);
-    setSolderInfo(SOLDER_TYPE_T12,
-                  SOLDER_SHAKE_TYPE_CHANGE, 320,
-                  300, SOLDER_STATE_NORMAL,
-                  50);
-    setAdjPowerInfo(3099, 5000, ADJ_POWER_MODE_CV,
-                    0, 0,
-                    0, ADJ_POWER_OPEN_STATE_CLOSE);
-    setStopWelderInfo(SPOTWELDER_MODE_DOUBLE, 5, 1000,
-                      2, 2700, 2000,
-                      2700, SPOTWELDER_STATE_WAIT);
+    if (true)
+    {
+        AirhotModel model;
+        model.workState = HOTAIR_STATE_SLEEP;
+        model.tempEnable.allValue = 0x01;
+        model.predefinedTemp_0 = 270;
+        model.predefinedTemp_1 = 360;
+        model.predefinedTemp_2 = 400;
+        model.refinement = 300;
+        model.targetTemp = 0;
+        model.curTemp = 0;
+        model.powerRatio = 0;
+        model.workAirSpeed = 30;
+        model.powerRatio = 0;
+        setAirhotInfo(&model);
+    }
 
-    setSysInfo("E3F6FAB", VERSION_INFO_SRCEEN_V20,
-               VERSION_INFO_CORE_V20, VERSION_INFO_OUT_BOARD_V20,
-               SNAILHEATER_VERSION, KNOBS_DIR_POS);
+    if (true)
+    {
+        HeatplatformModel model;
+        // model.workState = ;
+        model.enable = HP_STATE_SLEEP;
+        model.tempEnable.allValue = 0x01;
+        model.predefinedTemp_0 = 270;
+        model.predefinedTemp_1 = 360;
+        model.predefinedTemp_2 = 400;
+        model.refinement = 300;
+        model.targetTemp = 0;
+        model.curTemp = 0;
+        model.powerRatio = 0;
+        setHeatplatformInfo(&model);
+    }
+
+    if (true)
+    {
+        SolderModel model;
+        model.workState = SOLDER_STATE_DEEP_SLEEP;
+        model.type = SOLDER_TYPE_T12;
+        model.wakeType = SOLDER_SHAKE_TYPE_CHANGE;
+        model.tempEnable.allValue = 0x01;
+        model.predefinedTemp_0 = 270;
+        model.predefinedTemp_1 = 360;
+        model.predefinedTemp_2 = 400;
+        model.refinement = 300;
+        model.targetTemp = 0;
+        model.curTemp = 0;
+        model.powerRatio = 0;
+        setSolderInfo(&model);
+    }
+
+    if (true)
+    {
+        AdjPowerModel model;
+        model.workState = ENABLE_STATE_CLOSE;
+        model.volDacValue = 0;
+        model.curDacValue = 0;
+        model.mode = 0;
+        model.voltage = 0;
+        model.current = 0;
+        model.capacity = 0;
+        setAdjPowerInfo(&model);
+    }
+
+    // setStopWelderInfo(SPOTWELDER_MODE_DOUBLE, 5, 1000,
+    //                   2, 2700, 2000,
+    //                   2700, SPOTWELDER_STATE_WAIT);
+
+    if (true)
+    {
+        // 系统信息
+        SysInfoModel model;
+        snprintf(model.sn, 32, "%s", "");
+        model.srceenVersion = VERSION_INFO_SRCEEN_V20;
+        model.coreVersion = VERSION_INFO_CORE_V20;
+        model.outBoardVersion = VERSION_INFO_OUT_BOARD_V20;
+        snprintf(model.softwareVersion, 16, "%s", SNAILHEATER_VERSION);
+        model.knobDir = KNOBS_DIR_POS;
+        model.uiGlobalParam = {0, 0, 1, 0, 1};
+        setSysInfo(&model);
+    }
 
     // 绘制页面UI
     ui_init(indev_drv_p);

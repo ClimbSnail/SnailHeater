@@ -6,6 +6,7 @@
 #ifdef SIMULATOR
 #include "ctrl_common.h"
 #else
+#include "sys/snail_manager.h"
 #include "controller/solder/solder.h"
 #include "controller/hot_air/hot_air.h"
 #include "controller/heat_platform/heat_platform.h"
@@ -15,52 +16,157 @@
 
 struct SolderModel
 {
-    unsigned char type;      // 烙铁
-    unsigned char wakeType;  // 唤醒类型（震动开关）
-    int targetTemp;          // 设定的温度
-    int curTemp;             // 当前的温度
     unsigned char workState; // 工作状态
-    uint16_t powerRatio;     // 供电能量占比
+
+    unsigned char type;     // 烙铁
+    unsigned char wakeType; // 唤醒类型（震动开关）
+
+    // 使能标志位 + 三组预设温度 + 一组精调温度
+    union TempEnable
+    {
+        // 用于批量操作
+        unsigned char allValue; // 用于批量操作， 比如所有位清空 all=0 重新设置前必须清空
+
+        // 用于独立操作 注：重新设置前必须清空（allValue=0）
+        struct BitValue
+        {
+            unsigned char predefinedTempEnable_0 : 1; // 温度有效标志位 预定义 0 默认 ENABLE_STATE_CLOSE
+            unsigned char predefinedTempEnable_1 : 1; // 温度有效标志位 预定义 1
+            unsigned char predefinedTempEnable_2 : 1; // 温度有效标志位 预定义 2
+            unsigned char refinementEnable : 1;       // 温度有效标志位 精调
+            unsigned char : 4;                        // 预留 实现内存对齐
+        } bitValue;
+    } tempEnable;
+    // unsigned char predefinedTempEnable_0 : 1; // 温度有效标志位 预定义 0 默认 ENABLE_STATE_CLOSE
+    // unsigned char predefinedTempEnable_1 : 1; // 温度有效标志位 预定义 1
+    // unsigned char predefinedTempEnable_2 : 1; // 温度有效标志位 预定义 2
+    // unsigned char refinementEnable : 1;       // 温度有效标志位 精调
+    // unsigned char : 4;                        // 预留 实现内存对齐
+    int predefinedTemp_0; // 预定义温度0
+    int predefinedTemp_1; // 预定义温度1
+    int predefinedTemp_2; // 预定义温度2
+    int refinement;       // 精调温度
+
+    int targetTemp;      // 设定的温度
+    int curTemp;         // 当前的温度
+    uint16_t powerRatio; // 供电能量占比
+
+    int16_t easySleepTemp;      // 浅度休眠的温度
+    int32_t enterEasySleepTime; // 进入浅休眠的时间
+    int32_t enterDeepSleepTime; // 进入深度休眠的时间
+    int16_t alarmValue;         // 超温报警阈值
+    int16_t heaterCnt;          // 烙铁芯数量
+    int16_t curID;              // 当前选择的烙铁芯ID
 };
 
 extern struct SolderModel solderModel;
 
 struct AirhotModel
 {
+    unsigned char workState; // 工作状态
+
+    // 使能标志位 + 三组预设温度 + 一组精调温度
+    union TempEnable
+    {
+        // 用于批量操作
+        unsigned char allValue; // 用于批量操作， 比如所有位清空 all=0 重新设置前必须清空
+
+        // 用于独立操作 注：重新设置前必须清空（allValue=0）
+        struct BitValue
+        {
+            unsigned char predefinedTempEnable_0 : 1; // 温度有效标志位 预定义 0 默认 ENABLE_STATE_CLOSE
+            unsigned char predefinedTempEnable_1 : 1; // 温度有效标志位 预定义 1
+            unsigned char predefinedTempEnable_2 : 1; // 温度有效标志位 预定义 2
+            unsigned char refinementEnable : 1;       // 温度有效标志位 精调
+            unsigned char : 4;                        // 预留 实现内存对齐
+        } bitValue;
+    } tempEnable;
+    int predefinedTemp_0; // 预定义温度0
+    int predefinedTemp_1; // 预定义温度1
+    int predefinedTemp_2; // 预定义温度2
+    int refinement;       // 精调温度
+
     int targetTemp;            // 设定的目标温度
     int curTemp;               // 当前的温度
     unsigned int workAirSpeed; // 工作状态下的风速
-    unsigned char workState;   // 工作状态
     uint16_t powerRatio;       // 供电能量占比
+
+    unsigned int coolingAirSpeed;     // 冷却时的风速
+    int16_t coolingFinishTemp;        // 冷却结束的温度
+    int16_t alarmValue;               // 超温报警阈值
+    unsigned int kp;                  // PID参数
+    unsigned int ki;                  // PID参数
+    unsigned int kd;                  // PID参数
+    unsigned int kt;                  // PID参数
+    unsigned int pid_start_value_low; // PID调控的最低值
+    unsigned int pid_end_value_high;  // PID调控的最高值
 };
 
 extern struct AirhotModel airhotModel;
 
 struct HeatplatformModel
 {
-    int targetTemp;       // 设定的温度
-    int curTemp;          // 当前的温度
-    unsigned char enable; // 使能状态
-    uint16_t powerRatio;  // 供电能量占比
+    unsigned char workState; // 工作状态
+    unsigned char enable;    // 使能状态
+
+    // 使能标志位 + 三组预设温度 + 一组精调温度
+    union TempEnable
+    {
+        // 用于批量操作
+        unsigned char allValue; // 用于批量操作， 比如所有位清空 all=0 重新设置前必须清空
+
+        // 用于独立操作 注：重新设置前必须清空（allValue=0）
+        struct BitValue
+        {
+            unsigned char predefinedTempEnable_0 : 1; // 温度有效标志位 预定义 0 默认 ENABLE_STATE_CLOSE
+            unsigned char predefinedTempEnable_1 : 1; // 温度有效标志位 预定义 1
+            unsigned char predefinedTempEnable_2 : 1; // 温度有效标志位 预定义 2
+            unsigned char refinementEnable : 1;       // 温度有效标志位 精调
+            unsigned char : 4;                        // 预留 实现内存对齐
+        } bitValue;
+    } tempEnable;
+    int predefinedTemp_0; // 预定义温度0
+    int predefinedTemp_1; // 预定义温度1
+    int predefinedTemp_2; // 预定义温度2
+    int refinement;       // 精调温度
+
+    int targetTemp;      // 设定的温度
+    int curTemp;         // 当前的温度
+    uint16_t powerRatio; // 供电能量占比
+
+    unsigned int coolingAirSpeed;     // 冷却时的风速
+    int16_t coolingFinishTemp;        // 冷却结束的温度
+    int16_t alarmValue;               // 超温报警阈值
+    unsigned int kp;                  // PID参数
+    unsigned int ki;                  // PID参数
+    unsigned int kd;                  // PID参数
+    unsigned int kt;                  // PID参数
+    unsigned int pid_start_value_low; // PID调控的差值(开始值)
+    unsigned int pid_end_value_high;  // PID调控的差值（结束值）
 };
 
 extern struct HeatplatformModel heatplatformModel;
 
 struct AdjPowerModel
 {
-    int volAdcValue;         // 控制电压的ADC值
-    int curAdcValue;         // 控制电流的ADC值
-    uint8_t mode;            // 模式
-    int32_t voltage;         // 当前电压
-    int32_t current;         // 当前的电流
-    int32_t capacity;        // 功率
     unsigned char workState; // 工作状态
+
+    int volDacValue;  // 控制电压的DAC值
+    int curDacValue;  // 控制电流的DAC值
+    uint8_t mode;     // 模式
+    int32_t voltage;  // 当前电压
+    int32_t current;  // 当前的电流
+    int32_t capacity; // 功率
+
+    uint8_t autoOpen;    // 开机自动开启输出
+    uint32_t stepByStep; // 调节的不进（mV/mA）
 };
 
 extern struct AdjPowerModel adjPowerModel;
 
 struct StopWelderModel
 {
+    unsigned char workState; // 工作状态
     uint8_t mode;            // 点焊模式
     uint16_t pulseWidth;     // 脉宽 ms
     uint16_t interval;       // 触发最小间隔 ms
@@ -68,7 +174,6 @@ struct StopWelderModel
     uint16_t singleCapVol;   // 单电容额定电压 mv
     uint16_t alarmVol;       // 总电压报警值
     uint16_t voltage;        // 当前电容电压
-    unsigned char workState; // 工作状态
 };
 
 extern struct StopWelderModel stopWelderModel;
@@ -79,53 +184,42 @@ struct SysInfoModel
     VERSION_INFO srceenVersion;
     VERSION_INFO coreVersion;
     VERSION_INFO outBoardVersion;
-    char softwareVersion[16]; // 软件版本
-    KNOBS_DIR knobDir;        // 旋钮方向
+    char softwareVersion[16];    // 软件版本
+    KNOBS_DIR knobDir;           // 旋钮方向
+    UI_PARAM_INFO uiGlobalParam; // 关于UI的全局配置参数，会持久化保存
 };
 
 extern struct SysInfoModel sysInfoModel;
 
 // 电烙铁
-int setSolderInfo(unsigned char type, unsigned char wakeType,
-                  int targetTemp, int curTemp,
-                  unsigned char workState, uint16_t powerRatio);
+int setSolderInfo(SolderModel *model);
 int setSolderCurTempAndPowerDuty(int curTemp, uint16_t powerRatio);
 int setSolderWorkState(unsigned char workState);
 
 // 热风枪
-int setAirhotInfo(int targetTemp, int curTemp,
-                  unsigned int workAirSpeed, unsigned char workState,
-                  uint16_t powerRatio);
+int setAirhotInfo(AirhotModel *model);
 int setAirhotCurTempAndPowerDuty(int curTemp, uint16_t powerRatio);
 int setAirhotWorkState(unsigned char workState);
 
 // 加热台
-int setHeatplatformInfo(int targetTemp, int curTemp,
-                        unsigned char enable, uint16_t powerRatio);
+int setHeatplatformInfo(HeatplatformModel *model);
 int setHeatplatformCurTempAndPowerDuty(int curTemp, uint16_t powerRatio);
 int setHeatplatformEnable(unsigned char enable);
 
 // 可调电源
-int setAdjPowerInfo(int volAdcValue, int curAdcValue, unsigned char mode,
-                    int32_t voltage, int32_t current,
-                    int32_t capacity, unsigned char workState);
+int setAdjPowerInfo(AdjPowerModel *model);
 int setAdjPowerVoltage(int32_t voltage);
 int setAdjPowerCurrent(int32_t current);
 int setAdjPowerCapacity(int32_t capacity);
 int setAdjPowerWorkState(unsigned char workState);
 
 // 点焊机
-int setStopWelderInfo(uint8_t mode, uint16_t pulseWidth, uint16_t interval,
-                      uint8_t capNumber, uint16_t singleCapVol,
-                      uint16_t alarmVol, uint16_t voltage,
-                      unsigned char workState);
+int setStopWelderInfo(StopWelderModel *mode);
 int setStopWelderVoltage(uint16_t voltage);
 int setStopWelderWorkState(unsigned char workState);
 
 // 系统给设置
-int setSysInfo(const char *sn, VERSION_INFO srceenVersion,
-               VERSION_INFO coreVersion, VERSION_INFO outBoardVersion,
-               const char *softwareVersion, KNOBS_DIR knobDir);
+int setSysInfo(SysInfoModel *model);
 int setKnobsDir(KNOBS_DIR knobDir);
 
 #endif
