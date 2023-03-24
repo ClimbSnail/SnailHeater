@@ -157,11 +157,32 @@ static void ui_white_theme_pressed(lv_event_t *e)
     if (event_code == LV_EVENT_VALUE_CHANGED)
     {
         if (lv_obj_has_state(target, LV_STATE_CHECKED))
-            // SET_BIT(cfgKey1,CFG_KEY1_WHITE_THEME);
+        // SET_BIT(cfgKey1,CFG_KEY1_WHITE_THEME);
+        {
             sysInfoModel.uiGlobalParam.whiteThemeEnable = ENABLE_STATE_OPEN;
+            lv_style_set_bg_color(&black_white_theme_style, lv_color_white());
+            lv_img_set_src(ui_PanelTopBgImg, &img_top_bar_white);
+            lv_style_set_text_color(&label_text_style, lv_color_hex(0x666666));
+#ifdef USE_NEW_MENU
+            lv_obj_set_style_bg_color(rollerMenu, lv_color_hex(0xf0f0f0), LV_PART_MAIN);
+            lv_obj_set_style_text_color(rollerMenu, lv_color_hex(0x666666), LV_PART_MAIN);
+#endif
+        }
+
         else
-            // CLR_BIT(cfgKey1,CFG_KEY1_WHITE_THEME);
+        {
             sysInfoModel.uiGlobalParam.whiteThemeEnable = ENABLE_STATE_CLOSE;
+            lv_style_set_bg_color(&black_white_theme_style, lv_color_black());
+            lv_img_set_src(ui_PanelTopBgImg, &img_top_bar_black);
+            lv_style_set_text_color(&label_text_style, lv_color_hex(0xc0c0c0));
+#ifdef USE_NEW_MENU
+            lv_obj_set_style_bg_color(rollerMenu, lv_color_hex(0x444444), LV_PART_MAIN);
+            lv_obj_set_style_text_color(rollerMenu, lv_color_hex(0xa7a8a9), LV_PART_MAIN);
+#endif
+        }
+        // CLR_BIT(cfgKey1,CFG_KEY1_WHITE_THEME);
+        // 直接在这里切换
+        lv_obj_invalidate(lv_scr_act());
     }
 }
 
@@ -262,7 +283,7 @@ static bool settingPageUI_init(lv_obj_t *father)
     {
         settingPageUI = NULL;
     }
-    top_layer_init();
+    top_layer_set_name();
     theme_color_init();
 
     settingPageUI = lv_btn_create(father);
@@ -273,8 +294,8 @@ static bool settingPageUI_init(lv_obj_t *father)
     lv_obj_center(settingPageUI);
     lv_obj_add_flag(settingPageUI, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_clear_flag(settingPageUI, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_bg_color(settingPageUI, isWhiteTheme ? lv_color_white() : lv_color_black(), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(settingPageUI, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    // lv_obj_set_style_bg_color(settingPageUI, isWhiteTheme ? lv_color_white() : lv_color_black(), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(settingPageUI, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_t *ui_ButtonTmp = settingPageUI;
 
@@ -479,11 +500,10 @@ static bool settingPageUI_init(lv_obj_t *father)
     // 返回图标
     ui_backButton = lv_btn_create(ui_PanelTop);
     lv_obj_remove_style_all(ui_backButton);
-    lv_obj_set_size(ui_backButton, 32, 23);
-    lv_obj_align(ui_backButton, LV_ALIGN_TOP_RIGHT, 0, 0);
+    lv_obj_align(ui_backButton, LV_ALIGN_TOP_RIGHT, -10, 0);
     lv_obj_add_flag(ui_backButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_clear_flag(ui_backButton, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_text_color(ui_backButton, lv_color_hex(0xa5a5a5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_add_style(ui_backButton, &back_btn_style, LV_STATE_DEFAULT);
     lv_obj_add_style(ui_backButton, &back_btn_focused_style, LV_STATE_FOCUSED);
 
     ui_backButtonLabel = lv_label_create(ui_backButton);

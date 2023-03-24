@@ -57,7 +57,7 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     {
         adjPowerPageUI = NULL;
     }
-    top_layer_init();
+    top_layer_set_name();
     theme_color_init();
 
     adjPowerPageUI = lv_btn_create(father);
@@ -68,8 +68,8 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     lv_obj_center(adjPowerPageUI);
     lv_obj_add_flag(adjPowerPageUI, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_clear_flag(adjPowerPageUI, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_bg_color(adjPowerPageUI, IS_WHITE_THEME ? lv_color_white() : lv_color_black(), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(adjPowerPageUI, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    //lv_obj_set_style_bg_color(adjPowerPageUI, IS_WHITE_THEME ? lv_color_white() : lv_color_black(), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(adjPowerPageUI, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_t *ui_ButtonTmp = adjPowerPageUI;
 
@@ -192,12 +192,12 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     // 返回图标
     ui_backButton = lv_btn_create(ui_PanelTop);
     lv_obj_remove_style_all(ui_backButton);
-    lv_obj_set_size(ui_backButton, 32, 23);
-    lv_obj_align(ui_backButton, LV_ALIGN_TOP_RIGHT, 0, 0);
+    lv_obj_align(ui_backButton, LV_ALIGN_TOP_RIGHT, -10, 0);
     lv_obj_add_flag(ui_backButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_clear_flag(ui_backButton, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_text_color(ui_backButton, lv_color_hex(0xa5a5a5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_add_style(ui_backButton, &back_btn_style, LV_STATE_DEFAULT);
     lv_obj_add_style(ui_backButton, &back_btn_focused_style, LV_STATE_FOCUSED);
+
 
     ui_backButtonLabel = lv_label_create(ui_backButton);
     lv_obj_center(ui_backButtonLabel);

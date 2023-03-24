@@ -1,6 +1,8 @@
 # 字体获取网站
 https://www.zitijia.com/
 
+# 本工程使用的字体都在 Doc/font 目录下
+
 # 字体转换教程
 https://blog.csdn.net/sinat_36568888/article/details/125180743
 

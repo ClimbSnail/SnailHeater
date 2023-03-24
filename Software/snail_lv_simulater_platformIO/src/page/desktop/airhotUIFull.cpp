@@ -92,42 +92,17 @@ static void draw_event_cb(lv_event_t *e)
         lv_draw_mask_line_points_init(&line_mask_param, dsc->p1->x, dsc->p1->y, dsc->p2->x, dsc->p2->y, LV_DRAW_MASK_LINE_SIDE_BOTTOM);
         int16_t line_mask_id = lv_draw_mask_add(&line_mask_param, NULL);
 
-        // if (GET_BIT(cfgKey1, CFG_KEY1_AIR_HOT_GRID))
-        if (ENABLE_STATE_OPEN == sysInfoModel.uiGlobalParam.airhotGridEnable)
-        {
-            lv_draw_rect_dsc_t draw_rect_dsc;
-            lv_draw_rect_dsc_init(&draw_rect_dsc);
-            draw_rect_dsc.bg_opa = LV_OPA_70;
-            draw_rect_dsc.bg_color = dsc->line_dsc->color;
+        lv_draw_rect_dsc_t draw_rect_dsc;
+        lv_draw_rect_dsc_init(&draw_rect_dsc);
+        draw_rect_dsc.bg_opa = LV_OPA_70;
+        draw_rect_dsc.bg_color = dsc->line_dsc->color;
 
-            lv_area_t a;
-            a.x1 = dsc->p1->x;
-            a.x2 = dsc->p2->x - 1;
-            a.y1 = LV_MIN(dsc->p1->y, dsc->p2->y);
-            a.y2 = obj->coords.y2;
-            lv_draw_rect(dsc->draw_ctx, &draw_rect_dsc, &a);
-        }
-        else
-        {
-            lv_draw_mask_fade_param_t fade_mask_param;
-            lv_draw_mask_fade_init(&fade_mask_param, &obj->coords, LV_OPA_COVER, obj->coords.y1 + 30, LV_OPA_50, obj->coords.y2);
-            int16_t fade_mask_id = lv_draw_mask_add(&fade_mask_param, NULL);
-
-            lv_draw_rect_dsc_t draw_rect_dsc;
-            lv_draw_rect_dsc_init(&draw_rect_dsc);
-            draw_rect_dsc.bg_opa = LV_OPA_70;
-            draw_rect_dsc.bg_color = dsc->line_dsc->color;
-
-            lv_area_t a;
-            a.x1 = dsc->p1->x;
-            a.x2 = dsc->p2->x - 1;
-            a.y1 = LV_MIN(dsc->p1->y, dsc->p2->y);
-            a.y2 = obj->coords.y2;
-            lv_draw_rect(dsc->draw_ctx, &draw_rect_dsc, &a);
-
-            lv_draw_mask_free_param(&fade_mask_param);
-            lv_draw_mask_remove_id(fade_mask_id);
-        }
+        lv_area_t a;
+        a.x1 = dsc->p1->x;
+        a.x2 = dsc->p2->x - 1;
+        a.y1 = LV_MIN(dsc->p1->y, dsc->p2->y);
+        a.y2 = obj->coords.y2;
+        lv_draw_rect(dsc->draw_ctx, &draw_rect_dsc, &a);
 
         lv_draw_mask_free_param(&line_mask_param);
         lv_draw_mask_remove_id(line_mask_id);
@@ -187,7 +162,7 @@ static bool airhotPageUI_init(lv_obj_t *father)
     {
         airhotPageUI = NULL;
     }
-    top_layer_init();
+    top_layer_set_name();
     theme_color_init();
 
     airhotPageUI = lv_btn_create(father);
@@ -198,8 +173,8 @@ static bool airhotPageUI_init(lv_obj_t *father)
     lv_obj_center(airhotPageUI);
     lv_obj_add_flag(airhotPageUI, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_clear_flag(airhotPageUI, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_bg_color(airhotPageUI, IS_WHITE_THEME ? lv_color_white() : lv_color_black(), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(airhotPageUI, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    //lv_obj_set_style_bg_color(airhotPageUI, IS_WHITE_THEME ? lv_color_white() : lv_color_black(), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(airhotPageUI, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_t *ui_ButtonTmp = airhotPageUI;
 
@@ -323,11 +298,10 @@ static bool airhotPageUI_init(lv_obj_t *father)
     // 返回图标
     ui_backButton = lv_btn_create(ui_PanelTop);
     lv_obj_remove_style_all(ui_backButton);
-    lv_obj_set_size(ui_backButton, 32, 23);
-    lv_obj_align(ui_backButton, LV_ALIGN_TOP_RIGHT, 0, 0);
+    lv_obj_align(ui_backButton, LV_ALIGN_TOP_RIGHT, -10, 0);
     lv_obj_add_flag(ui_backButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_clear_flag(ui_backButton, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_text_color(ui_backButton, lv_color_hex(0xa5a5a5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_add_style(ui_backButton, &back_btn_style, LV_STATE_DEFAULT);
     lv_obj_add_style(ui_backButton, &back_btn_focused_style, LV_STATE_FOCUSED);
 
     ui_backButtonLabel = lv_label_create(ui_backButton);
@@ -419,9 +393,9 @@ void ui_updateAirhotCurTempAndPowerDuty(void)
     else
     {
         lv_label_set_text_fmt(ui_curTempLabel, "%3d", airhotModel.curTemp);
+        lv_bar_set_value(ui_powerBar, airhotModel.powerRatio, LV_ANIM_ON);
+        lv_chart_set_next_value(chartTemp, chartSer1, airhotModel.curTemp / 4);
     }
-    lv_bar_set_value(ui_powerBar, airhotModel.powerRatio, LV_ANIM_ON);
-    lv_chart_set_next_value(chartTemp, chartSer1, airhotModel.curTemp / 4);
 }
 
 static void ui_back_btn_pressed(lv_event_t *e)

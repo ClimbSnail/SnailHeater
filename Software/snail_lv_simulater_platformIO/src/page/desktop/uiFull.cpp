@@ -8,9 +8,6 @@
 
 #ifdef NEW_UI
 
-// 如果需要启用新的菜单样式，定义这个
-#define USE_NEW_MENU
-
 uint8_t currPageIndex = PAGE_INDEX_SOLDER;
 
 // 存放一些布尔参数值，会写入nvs
@@ -27,10 +24,13 @@ uint8_t currPageIndex = PAGE_INDEX_SOLDER;
 uint8_t cfgKey1 = 0b10111100;
 
 ///////////////////// VARIABLES ////////////////////
-lv_style_t back_btn_focused_style; // 只用在返回按钮上
+lv_style_t back_btn_style;          // 只用在返回按钮上
+lv_style_t back_btn_focused_style;  // 只用在返回按钮上
+lv_style_t black_white_theme_style; // 全局黑白样式
 lv_obj_t *desktop_screen;
 lv_obj_t *ui_PanelMain;
 lv_obj_t *ui_PanelTop;
+lv_obj_t *ui_PanelTopBgImg;
 
 #ifdef USE_NEW_MENU
 lv_obj_t *rollerMenu;
@@ -54,10 +54,9 @@ lv_style_t label_text_style; // 用于各种默认标签的样式
 lv_style_t bar_style_bg;
 lv_style_t bar_style_indic;
 
-lv_obj_t *ui_airHotLabel = NULL;
-lv_obj_t *ui_heatPlatLabel = NULL;
-lv_obj_t *ui_adjPowerLabel = NULL;
-lv_obj_t *ui_solderingLabel = NULL;
+lv_obj_t *ui_topLabel1 = NULL;
+lv_obj_t *ui_topLabel2 = NULL;
+lv_obj_t *ui_topLabel3 = NULL;
 
 static lv_timer_t *topLayerTimer = NULL;
 lv_obj_t *ui_topLogoLabel;
@@ -79,8 +78,6 @@ static lv_anim_t menu_anim;
 #if LV_COLOR_16_SWAP != 0
 #error "#error LV_COLOR_16_SWAP should be 0 to match SquareLine Studio's settings"
 #endif
-
-void top_layer_release(void);
 
 ///////////////////// SCREENS ////////////////////
 // 测试用
@@ -284,134 +281,74 @@ static void ui_menu_btn_setting_pressed(lv_event_t *e)
 
 void theme_color_init()
 {
-    if (IS_WHITE_THEME)
-    {
-        lv_style_set_text_color(&label_text_style, lv_color_hex(0x666666));
 #ifdef USE_NEW_MENU
-        lv_obj_set_style_bg_color(rollerMenu, lv_color_hex(0xf0f0f0), LV_PART_MAIN);
-        lv_obj_set_style_text_color(rollerMenu, lv_color_hex(0x666666), LV_PART_MAIN);
+    lv_obj_set_style_bg_color(rollerMenu, theme_color1[currPageIndex], LV_PART_SELECTED);
+#else
+    lv_style_set_bg_color(&menu_button_focus_style, theme_color1[currPageIndex]);
 #endif
-    }
-    else
-    {
-        lv_style_set_text_color(&label_text_style, lv_color_hex(0xa7a8a9));
-#ifdef USE_NEW_MENU
-        lv_obj_set_style_bg_color(rollerMenu, lv_color_hex(0x444444), LV_PART_MAIN);
-        lv_obj_set_style_text_color(rollerMenu, lv_color_hex(0xa7a8a9), LV_PART_MAIN);
-#endif
-    }
+    lv_style_set_bg_color(&back_btn_focused_style, theme_color1[currPageIndex]);
+    lv_style_set_border_color(&btn_type1_focused_style, theme_color1[currPageIndex]);
+    lv_style_set_text_color(&btn_type1_focused_style, theme_color1[currPageIndex]);
+    lv_style_set_border_color(&btn_type1_pressed_style, theme_color1[currPageIndex]);
+    lv_style_set_text_color(&btn_type1_pressed_style, theme_color1[currPageIndex]);
+}
 
-    switch (currPageIndex)
-    {
-    case PAGE_INDEX_SOLDER:
-#ifdef USE_NEW_MENU
-        lv_obj_set_style_bg_color(rollerMenu, SOLDER_THEME_COLOR1, LV_PART_SELECTED);
-#else
-        lv_style_set_bg_color(&menu_button_focus_style, SOLDER_THEME_COLOR1);
-#endif
-        lv_style_set_bg_color(&back_btn_focused_style, SOLDER_THEME_COLOR1);
-        lv_style_set_border_color(&btn_type1_focused_style, SOLDER_THEME_COLOR1);
-        lv_style_set_text_color(&btn_type1_focused_style, SOLDER_THEME_COLOR1);
-        lv_style_set_border_color(&btn_type1_pressed_style, SOLDER_THEME_COLOR1);
-        lv_style_set_text_color(&btn_type1_pressed_style, SOLDER_THEME_COLOR1);
-        break;
-    case PAGE_INDEX_AIR_HOT:
-#ifdef USE_NEW_MENU
-        lv_obj_set_style_bg_color(rollerMenu, AIR_HOT_THEME_COLOR1, LV_PART_SELECTED);
-#else
-        lv_style_set_bg_color(&menu_button_focus_style, AIR_HOT_THEME_COLOR1);
-#endif
-        lv_style_set_bg_color(&back_btn_focused_style, AIR_HOT_THEME_COLOR1);
-        lv_style_set_border_color(&btn_type1_focused_style, AIR_HOT_THEME_COLOR1);
-        lv_style_set_text_color(&btn_type1_focused_style, AIR_HOT_THEME_COLOR1);
-        lv_style_set_border_color(&btn_type1_pressed_style, AIR_HOT_THEME_COLOR1);
-        lv_style_set_text_color(&btn_type1_pressed_style, AIR_HOT_THEME_COLOR1);
-        break;
-    case PAGE_INDEX_HEAT_PLAT:
-#ifdef USE_NEW_MENU
-        lv_obj_set_style_bg_color(rollerMenu, HEAT_PLAT_THEME_COLOR1, LV_PART_SELECTED);
-#else
-        lv_style_set_bg_color(&menu_button_focus_style, HEAT_PLAT_THEME_COLOR1);
-#endif
-        lv_style_set_bg_color(&back_btn_focused_style, HEAT_PLAT_THEME_COLOR1);
-        lv_style_set_border_color(&btn_type1_focused_style, HEAT_PLAT_THEME_COLOR1);
-        lv_style_set_text_color(&btn_type1_focused_style, HEAT_PLAT_THEME_COLOR1);
-        lv_style_set_border_color(&btn_type1_pressed_style, HEAT_PLAT_THEME_COLOR1);
-        lv_style_set_text_color(&btn_type1_pressed_style, HEAT_PLAT_THEME_COLOR1);
-        break;
-    case PAGE_INDEX_ADJ_POWER:
-#ifdef USE_NEW_MENU
-        lv_obj_set_style_bg_color(rollerMenu, ADJ_POWER_THEME_COLOR1, LV_PART_SELECTED);
-#else
-        lv_style_set_bg_color(&menu_button_focus_style, ADJ_POWER_THEME_COLOR1);
-#endif
-        lv_style_set_bg_color(&back_btn_focused_style, ADJ_POWER_THEME_COLOR1);
-        lv_style_set_border_color(&btn_type1_focused_style, ADJ_POWER_THEME_COLOR1);
-        lv_style_set_text_color(&btn_type1_focused_style, ADJ_POWER_THEME_COLOR1);
-        lv_style_set_border_color(&btn_type1_pressed_style, ADJ_POWER_THEME_COLOR1);
-        lv_style_set_text_color(&btn_type1_pressed_style, ADJ_POWER_THEME_COLOR1);
-        break;
-    case PAGE_INDEX_SETTING:
-#ifdef USE_NEW_MENU
-        lv_obj_set_style_bg_color(rollerMenu, SETTING_THEME_COLOR1, LV_PART_SELECTED);
-#else
-        lv_style_set_bg_color(&menu_button_focus_style, SETTING_THEME_COLOR1);
-#endif
-        lv_style_set_bg_color(&back_btn_focused_style, SETTING_THEME_COLOR1);
-        lv_style_set_border_color(&btn_type1_focused_style, SETTING_THEME_COLOR1);
-        lv_style_set_text_color(&btn_type1_focused_style, SETTING_THEME_COLOR1);
-        lv_style_set_border_color(&btn_type1_pressed_style, SETTING_THEME_COLOR1);
-        lv_style_set_text_color(&btn_type1_pressed_style, SETTING_THEME_COLOR1);
-        break;
-    default:
-        // 默认用烙铁的
-#ifdef USE_NEW_MENU
-        lv_obj_set_style_bg_color(rollerMenu, SOLDER_THEME_COLOR1, LV_PART_SELECTED);
-#else
-        lv_style_set_bg_color(&menu_button_focus_style, SOLDER_THEME_COLOR1);
-#endif
-        lv_style_set_bg_color(&back_btn_focused_style, SOLDER_THEME_COLOR1);
-        lv_style_set_border_color(&btn_type1_focused_style, SOLDER_THEME_COLOR1);
-        lv_style_set_text_color(&btn_type1_focused_style, SOLDER_THEME_COLOR1);
-        lv_style_set_border_color(&btn_type1_pressed_style, SOLDER_THEME_COLOR1);
-        lv_style_set_text_color(&btn_type1_pressed_style, SOLDER_THEME_COLOR1);
-        break;
-    }
+// 设置温度标签文本(批量处理未连接的情况)
+void set_temp_label_text(lv_obj_t *lb, int temp)
+{
+    if (temp < DISCONNCT_TEMP)
+        lv_label_set_text_fmt(lb, "%3d", temp);
+    else
+        lv_label_set_text(lb, "NA");
 }
 
 void update_top_info()
 {
-    if (currPageIndex == PAGE_INDEX_SETTING)
-        return;
     // 顶部状态栏
-    uint8_t x_pos = 70;
-    bool isWhiteTheme = IS_WHITE_THEME;
+    // 测试数据，到时候删除
+    solderModel.curTemp = lv_rand(250, 380);
+    airhotModel.curTemp = lv_rand(280, 360);
+    heatplatformModel.curTemp = lv_rand(150, 250);
+    adjPowerModel.voltage = lv_rand(8000, 24000);
 
-    for (uint8_t ind = 0; ind < UI_OBJ_NUM; ind++)
+    switch (currPageIndex)
     {
-        if (ind != currPageIndex)
-        {
-            switch (ind)
-            {
-            case PAGE_INDEX_SOLDER:
-                lv_label_set_text_fmt(ui_solderingLabel, "%3d", solderModel.curTemp);
-                break;
-            case PAGE_INDEX_AIR_HOT:
-                lv_label_set_text_fmt(ui_airHotLabel, "%3d", airhotModel.curTemp);
-                break;
-            case PAGE_INDEX_HEAT_PLAT:
-                lv_label_set_text_fmt(ui_heatPlatLabel, "%3d", heatplatformModel.curTemp);
-                break;
-            case PAGE_INDEX_ADJ_POWER:
-                lv_label_set_text_fmt(ui_adjPowerLabel, "%.1lf", adjPowerModel.voltage / 1000.0);
-                break;
-            case PAGE_INDEX_SETTING:
-                break;
-            default:
-                break;
-            }
-            x_pos += 50;
-        }
+    case PAGE_INDEX_SOLDER:
+        set_temp_label_text(ui_topLabel1, airhotModel.curTemp);
+        lv_obj_set_style_text_color(ui_topLabel1, AIR_HOT_THEME_COLOR1, 0);
+        set_temp_label_text(ui_topLabel2, heatplatformModel.curTemp);
+        lv_obj_set_style_text_color(ui_topLabel2, HEAT_PLAT_THEME_COLOR1, 0);
+        lv_label_set_text_fmt(ui_topLabel3, "%.1lf", adjPowerModel.voltage / 1000.0);
+        lv_obj_set_style_text_color(ui_topLabel3, ADJ_POWER_THEME_COLOR1, 0);
+        break;
+    case PAGE_INDEX_AIR_HOT:
+        set_temp_label_text(ui_topLabel1, solderModel.curTemp);
+        lv_obj_set_style_text_color(ui_topLabel1, SOLDER_THEME_COLOR1, 0);
+        set_temp_label_text(ui_topLabel2, heatplatformModel.curTemp);
+        lv_obj_set_style_text_color(ui_topLabel2, HEAT_PLAT_THEME_COLOR1, 0);
+        lv_label_set_text_fmt(ui_topLabel3, "%.1lf", adjPowerModel.voltage / 1000.0);
+        lv_obj_set_style_text_color(ui_topLabel3, ADJ_POWER_THEME_COLOR1, 0);
+        break;
+    case PAGE_INDEX_HEAT_PLAT:
+        set_temp_label_text(ui_topLabel1, solderModel.curTemp);
+        lv_obj_set_style_text_color(ui_topLabel1, SOLDER_THEME_COLOR1, 0);
+        set_temp_label_text(ui_topLabel2, airhotModel.curTemp);
+        lv_obj_set_style_text_color(ui_topLabel2, AIR_HOT_THEME_COLOR1, 0);
+        lv_label_set_text_fmt(ui_topLabel3, "%.1lf", adjPowerModel.voltage / 1000.0);
+        lv_obj_set_style_text_color(ui_topLabel3, ADJ_POWER_THEME_COLOR1, 0);
+        break;
+    case PAGE_INDEX_ADJ_POWER:
+        set_temp_label_text(ui_topLabel1, solderModel.curTemp);
+        lv_obj_set_style_text_color(ui_topLabel1, SOLDER_THEME_COLOR1, 0);
+        set_temp_label_text(ui_topLabel2, airhotModel.curTemp);
+        lv_obj_set_style_text_color(ui_topLabel2, AIR_HOT_THEME_COLOR1, 0);
+        set_temp_label_text(ui_topLabel3, heatplatformModel.curTemp);
+        lv_obj_set_style_text_color(ui_topLabel3, HEAT_PLAT_THEME_COLOR1, 0);
+        break;
+    case PAGE_INDEX_SETTING:
+        break;
+    default:
+        break;
     }
 }
 
@@ -421,149 +358,84 @@ static void toplayTimer_timeout(lv_timer_t *timer)
     update_top_info(); // 更新数据
 }
 
+void top_layer_set_name()
+{
+    // 进入不同的页面的时候更新文本
+    lv_label_set_text(ui_topLogoLabel, modeName[currPageIndex]);
+    lv_obj_set_style_text_color(ui_topLogoLabel, theme_color1[currPageIndex], LV_PART_MAIN | LV_STATE_DEFAULT);
+    if (currPageIndex == PAGE_INDEX_SETTING)
+    {
+        lv_obj_add_flag(ui_PanelTopBgImg, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_topLabel1, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_topLabel2, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_topLabel3, LV_OBJ_FLAG_HIDDEN);
+    }
+    else
+    {
+        lv_obj_clear_flag(ui_PanelTopBgImg, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_topLabel1, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_topLabel2, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_topLabel3, LV_OBJ_FLAG_HIDDEN);
+    }
+}
+
 void top_layer_init()
 {
-    top_layer_release();
-    bool isWhiteTheme = IS_WHITE_THEME;
-    lv_obj_set_style_bg_color(ui_PanelTop, isWhiteTheme ? lv_color_hex(0xf9f9f9) : lv_color_hex(0x222222), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_clean(ui_PanelTop);
+    // 只在第一次调用
+    //  顶部状态栏
     ui_topLogoLabel = lv_label_create(ui_PanelTop);
-    lv_obj_set_size(ui_topLogoLabel, 50, 24);
-    lv_label_set_text(ui_topLogoLabel, modeName[currPageIndex]);
-    lv_obj_align(ui_topLogoLabel, LV_ALIGN_TOP_LEFT, 10, 0);
-    lv_obj_set_style_text_color(ui_topLogoLabel, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_topLogoLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_size(ui_topLogoLabel, 40, 24);
+    lv_obj_align(ui_topLogoLabel, LV_ALIGN_TOP_LEFT, 22, 0);
+    lv_obj_set_style_radius(ui_topLogoLabel, 10, 0);
     lv_obj_set_style_text_font(ui_topLogoLabel, &FontDeyi_16, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_color_t theme_color;
-    switch (currPageIndex)
-    {
-    case PAGE_INDEX_SOLDER:
-        theme_color = SOLDER_THEME_COLOR1;
-        break;
-    case PAGE_INDEX_AIR_HOT:
-        theme_color = AIR_HOT_THEME_COLOR1;
-        break;
-    case PAGE_INDEX_HEAT_PLAT:
-        theme_color = HEAT_PLAT_THEME_COLOR1;
-        break;
-    case PAGE_INDEX_ADJ_POWER:
-        theme_color = ADJ_POWER_THEME_COLOR1;
-        break;
-    case PAGE_INDEX_SETTING:
-        theme_color = SETTING_THEME_COLOR1;
-        break;
-    default:
-        theme_color = SOLDER_THEME_COLOR1;
-        break;
-    }
-    lv_obj_set_style_bg_color(ui_topLogoLabel, theme_color, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_topLogoLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_top(ui_topLogoLabel, 3, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_align(ui_topLogoLabel, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_style_bg_opa(ui_topLogoLabel, 0, 0);
 
-    if (currPageIndex == PAGE_INDEX_SETTING)
-        return;
-    // 顶部状态栏
+    ui_PanelTopBgImg = lv_img_create(ui_PanelTop);
+    lv_img_set_src(ui_PanelTopBgImg, IS_WHITE_THEME ? &img_top_bar_white : &img_top_bar_black);
+    lv_obj_center(ui_PanelTopBgImg);
+
     uint8_t x_pos = 70;
+    ui_topLabel1 = lv_label_create(ui_PanelTop);
+    lv_obj_set_size(ui_topLabel1, 47, 24);
+    lv_obj_align(ui_topLabel1, LV_ALIGN_TOP_LEFT, x_pos, 0);
+    lv_obj_set_style_pad_top(ui_topLabel1, 4, 0);
+    lv_obj_set_style_text_align(ui_topLabel1, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_style_text_opa(ui_topLabel1, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_topLabel1, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    for (uint8_t i = 0; i < UI_OBJ_NUM; i++)
-    {
-        if (i != currPageIndex)
-        {
-            switch (i)
-            {
-            case PAGE_INDEX_SOLDER:
-                ui_solderingLabel = lv_label_create(ui_PanelTop);
-                lv_obj_set_size(ui_solderingLabel, 40, 24);
-                lv_label_set_text_fmt(ui_solderingLabel, "%3d", solderModel.curTemp);
-                lv_obj_align(ui_solderingLabel, LV_ALIGN_TOP_LEFT, x_pos, 0);
-                lv_obj_set_style_pad_top(ui_solderingLabel, 5, 0);
-                lv_obj_set_style_text_align(ui_solderingLabel, LV_TEXT_ALIGN_CENTER, 0);
-                lv_obj_set_style_text_color(ui_solderingLabel, SOLDER_THEME_COLOR1, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_text_opa(ui_solderingLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_text_font(ui_solderingLabel, &FontJost_14, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_bg_color(ui_solderingLabel, isWhiteTheme ? lv_color_hex(0xeeeeee) : BLACK_THEME_CHART_COLOR2, 0);
-                lv_obj_set_style_bg_opa(ui_solderingLabel, 255, 0);
-                break;
-            case PAGE_INDEX_AIR_HOT:
-                ui_airHotLabel = lv_label_create(ui_PanelTop);
-                lv_obj_set_size(ui_airHotLabel, 40, 24);
-                lv_label_set_text_fmt(ui_airHotLabel, "%3d", airhotModel.curTemp);
-                lv_obj_align(ui_airHotLabel, LV_ALIGN_TOP_LEFT, x_pos, 0);
-                lv_obj_set_style_pad_top(ui_airHotLabel, 5, 0);
-                lv_obj_set_style_text_align(ui_airHotLabel, LV_TEXT_ALIGN_CENTER, 0);
-                lv_obj_set_style_text_color(ui_airHotLabel, AIR_HOT_THEME_COLOR1, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_text_opa(ui_airHotLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_text_font(ui_airHotLabel, &FontJost_14, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_bg_color(ui_airHotLabel, isWhiteTheme ? lv_color_hex(0xeeeeee) : BLACK_THEME_CHART_COLOR2, 0);
-                lv_obj_set_style_bg_opa(ui_airHotLabel, 255, 0);
-                break;
-            case PAGE_INDEX_HEAT_PLAT:
-                ui_heatPlatLabel = lv_label_create(ui_PanelTop);
-                lv_obj_set_size(ui_heatPlatLabel, 40, 24);
-                lv_label_set_text_fmt(ui_heatPlatLabel, "%3d", heatplatformModel.curTemp);
-                lv_obj_align(ui_heatPlatLabel, LV_ALIGN_TOP_LEFT, x_pos, 0);
-                lv_obj_set_style_pad_top(ui_heatPlatLabel, 5, 0);
-                lv_obj_set_style_text_align(ui_heatPlatLabel, LV_TEXT_ALIGN_CENTER, 0);
-                lv_obj_set_style_text_color(ui_heatPlatLabel, HEAT_PLAT_THEME_COLOR1, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_text_opa(ui_heatPlatLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_text_font(ui_heatPlatLabel, &FontJost_14, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_bg_color(ui_heatPlatLabel, isWhiteTheme ? lv_color_hex(0xeeeeee) : BLACK_THEME_CHART_COLOR2, 0);
-                lv_obj_set_style_bg_opa(ui_heatPlatLabel, 255, 0);
-                break;
-            case PAGE_INDEX_ADJ_POWER:
-                ui_adjPowerLabel = lv_label_create(ui_PanelTop);
-                lv_obj_set_size(ui_adjPowerLabel, 40, 24);
-                lv_label_set_text_fmt(ui_adjPowerLabel, "%.1lf", adjPowerModel.voltage / 1000.0);
-                lv_obj_align(ui_adjPowerLabel, LV_ALIGN_TOP_LEFT, x_pos, 0);
-                lv_obj_set_style_pad_top(ui_adjPowerLabel, 5, 0);
-                lv_obj_set_style_text_align(ui_adjPowerLabel, LV_TEXT_ALIGN_CENTER, 0);
-                lv_obj_set_style_text_color(ui_adjPowerLabel, ADJ_POWER_THEME_COLOR1, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_text_opa(ui_adjPowerLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_text_font(ui_adjPowerLabel, &FontJost_14, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_bg_color(ui_adjPowerLabel, isWhiteTheme ? lv_color_hex(0xeeeeee) : BLACK_THEME_CHART_COLOR2, 0);
-                lv_obj_set_style_bg_opa(ui_adjPowerLabel, 255, 0);
-                break;
-            case PAGE_INDEX_SETTING:
-                break;
-            default:
-                break;
-            }
-            x_pos += 50;
-        }
-    }
+    // 顶上的分割线，实测好像不太好看，取消了
+    // lv_obj_set_style_border_width(ui_topLabel1,1,0);
+    // lv_obj_set_style_border_side(ui_topLabel1,LV_BORDER_SIDE_RIGHT,0);
+    // lv_obj_set_style_border_color(ui_topLabel1,isWhiteTheme ? lv_color_hex(0xe0e0e0) : lv_color_hex(0x666666),0);
+
+    x_pos += 48;
+
+    ui_topLabel2 = lv_label_create(ui_PanelTop);
+    lv_obj_set_size(ui_topLabel2, 47, 24);
+    lv_obj_align(ui_topLabel2, LV_ALIGN_TOP_LEFT, x_pos, 0);
+    lv_obj_set_style_pad_top(ui_topLabel2, 4, 0);
+    lv_obj_set_style_text_align(ui_topLabel2, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_style_text_opa(ui_topLabel2, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_topLabel2, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    // 顶上的分割线，实测好像不太好看，取消了
+    // lv_obj_set_style_border_width(ui_topLabel2,1,0);
+    // lv_obj_set_style_border_side(ui_topLabel2,LV_BORDER_SIDE_RIGHT,0);
+    // lv_obj_set_style_border_color(ui_topLabel2,isWhiteTheme ? lv_color_hex(0xe0e0e0) : lv_color_hex(0x666666),0);
+    x_pos += 48;
+
+    ui_topLabel3 = lv_label_create(ui_PanelTop);
+    lv_obj_set_size(ui_topLabel3, 47, 24);
+    lv_obj_align(ui_topLabel3, LV_ALIGN_TOP_LEFT, x_pos, 0);
+    lv_obj_set_style_pad_top(ui_topLabel3, 4, 0);
+    lv_obj_set_style_text_align(ui_topLabel3, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_style_text_opa(ui_topLabel3, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_topLabel3, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     topLayerTimer = lv_timer_create(toplayTimer_timeout, 1000, NULL);
     lv_timer_set_repeat_count(topLayerTimer, -1);
-}
-
-void top_layer_release(void)
-{
-    if (NULL != ui_solderingLabel)
-    {
-        lv_obj_del(ui_solderingLabel);
-        ui_solderingLabel = NULL;
-    }
-    if (NULL != ui_airHotLabel)
-    {
-        lv_obj_del(ui_airHotLabel);
-        ui_airHotLabel = NULL;
-    }
-    if (NULL != ui_heatPlatLabel)
-    {
-        lv_obj_del(ui_heatPlatLabel);
-        ui_heatPlatLabel = NULL;
-    }
-    if (NULL != ui_adjPowerLabel)
-    {
-        lv_obj_del(ui_adjPowerLabel);
-        ui_adjPowerLabel = NULL;
-    }
-    if (NULL != topLayerTimer)
-    {
-        lv_timer_del(topLayerTimer);
-        topLayerTimer = NULL;
-    }
 }
 
 #ifdef USE_NEW_MENU
@@ -714,7 +586,17 @@ void main_screen_init(lv_indev_t *indev)
     bool isWhiteTheme = IS_WHITE_THEME;
     desktop_screen = lv_obj_create(NULL);
     lv_obj_clear_flag(desktop_screen, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_bg_color(desktop_screen, isWhiteTheme ? lv_color_white() : lv_color_black(), LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    lv_style_init(&black_white_theme_style);
+    lv_style_set_bg_color(&black_white_theme_style, isWhiteTheme ? lv_color_white() : lv_color_black());
+    lv_obj_add_style(desktop_screen, &black_white_theme_style, 0);
+
+    lv_style_init(&back_btn_style);
+    lv_style_set_width(&back_btn_style, 46);
+    lv_style_set_height(&back_btn_style, 24);
+    lv_style_set_text_color(&back_btn_style, lv_color_hex(0xa5a5a5));
+    lv_style_set_radius(&back_btn_style, 10);
+    lv_style_set_bg_opa(&back_btn_style, 0);
 
     lv_style_init(&back_btn_focused_style);
     lv_style_set_text_color(&back_btn_focused_style, lv_color_white());
@@ -754,7 +636,7 @@ void main_screen_init(lv_indev_t *indev)
 
     lv_style_init(&label_text_style);
     lv_style_set_text_font(&label_text_style, &FontDeyi_16);
-    lv_style_set_text_color(&label_text_style, isWhiteTheme ? lv_color_hex(0x666666) : lv_color_hex(0xa7a8a9));
+    lv_style_set_text_color(&label_text_style, isWhiteTheme ? lv_color_hex(0x666666) : lv_color_hex(0xc0c0c0));
 
     ui_PanelMain = lv_obj_create(desktop_screen);
     lv_obj_remove_style_all(ui_PanelMain);
@@ -764,7 +646,8 @@ void main_screen_init(lv_indev_t *indev)
     lv_obj_set_style_pad_left(ui_PanelMain, 0, 0);
     lv_obj_set_style_border_width(ui_PanelMain, 0, LV_STATE_DEFAULT);
     lv_obj_clear_flag(ui_PanelMain, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_bg_color(ui_PanelMain, isWhiteTheme ? lv_color_white() : lv_color_black(), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_PanelMain, 0, 0);
+    // lv_obj_set_style_bg_color(ui_PanelMain, isWhiteTheme ? lv_color_white() : lv_color_black(), LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Page[0] = &solderUIObj;
     ui_Page[1] = &airhotUIObj;
@@ -777,9 +660,8 @@ void main_screen_init(lv_indev_t *indev)
     lv_obj_clear_flag(ui_PanelTop, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_size(ui_PanelTop, 280, 24);
     lv_obj_align(ui_PanelTop, LV_ALIGN_TOP_LEFT, 0, 0);
-
-    lv_obj_set_style_bg_color(ui_PanelTop, isWhiteTheme ? lv_color_hex(0xf9f9f9) : lv_color_hex(0x222222), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_PanelTop, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_PanelTop, 0, 0);
+    top_layer_init();
 
 #ifdef USE_NEW_MENU
     roller_menu_init();
@@ -807,7 +689,6 @@ void ui_init(lv_indev_t *indev)
 
 void ui_release()
 {
-    top_layer_release();
 }
 
 void ui_page_move_center_by_ind(int index)

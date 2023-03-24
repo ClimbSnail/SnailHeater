@@ -107,6 +107,8 @@ LV_IMG_DECLARE(img_text_c245);
 LV_IMG_DECLARE(img_text_c210);
 LV_IMG_DECLARE(img_text_t12);
 LV_IMG_DECLARE(img_text_noc);
+LV_IMG_DECLARE(img_top_bar_white);
+LV_IMG_DECLARE(img_top_bar_black);
 
 void show_menu();
 void hide_menu();
@@ -149,7 +151,7 @@ typedef enum
 } CONFIG_KEY1_ENUM;
 
 extern uint8_t currPageIndex; // 当前页所在的页面索引，对应上面的枚举 PAGE_INDEX
-const char modeName[5][20] = {"电烙铁", "热风枪", "加热台", "电源", "设置"};
+const char modeName[5][20] = {"烙铁", "风枪", "热台", "电源", "设置"};
 
 #define SOLDER_THEME_COLOR1 lv_color_hex(0xdb3156)
 #define SOLDER_THEME_COLOR2 lv_color_hex(0x851e34)
@@ -157,9 +159,16 @@ const char modeName[5][20] = {"电烙铁", "热风枪", "加热台", "电源", "
 #define HEAT_PLAT_THEME_COLOR2 lv_color_hex(0x006799)
 #define AIR_HOT_THEME_COLOR1 lv_color_hex(0xffcc33)
 #define AIR_HOT_THEME_COLOR2 lv_color_hex(0xd4aa2a)
-#define ADJ_POWER_THEME_COLOR1 lv_color_hex(0x93e629)
+#define ADJ_POWER_THEME_COLOR1 lv_color_hex(0x4ed438)
 #define SETTING_THEME_COLOR1 lv_color_hex(0x999999)
 #define SETTING_THEME_COLOR2 lv_color_hex(0x666666)
+
+const lv_color_t theme_color1[UI_OBJ_NUM] = {
+    SOLDER_THEME_COLOR1,
+    AIR_HOT_THEME_COLOR1,
+    HEAT_PLAT_THEME_COLOR1,
+    ADJ_POWER_THEME_COLOR1,
+    SETTING_THEME_COLOR1};
 
 // 位操作宏
 #define SET_BIT(x, y) x |= (1 << y)  // 将x右起第y位置1，y从0开始，0表示第一位置1
@@ -180,10 +189,20 @@ const char modeName[5][20] = {"电烙铁", "热风枪", "加热台", "电源", "
 void top_layer_init();   // 绘制顶层状态栏
 void theme_color_init(); // 根据模式设置主题色
 
+extern lv_style_t label_text_style; // 用于各种默认标签的样式
+extern lv_style_t black_white_theme_style; // 全局黑白样式
+extern lv_obj_t *ui_PanelTopBgImg;
+extern lv_style_t back_btn_style;
 extern lv_style_t back_btn_focused_style;
 extern lv_obj_t *desktop_screen;
 extern lv_obj_t *ui_PanelMain; // 主容器
 extern lv_obj_t *ui_PanelTop;  // 顶部状态容器
+
+// 如果需要启用新的菜单样式，定义这个
+#define USE_NEW_MENU
+#ifdef USE_NEW_MENU
+extern lv_obj_t *rollerMenu;  // 菜单
+#endif
 extern lv_style_t btn_type1_style;
 extern lv_style_t btn_type1_focused_style;
 extern lv_style_t btn_type1_pressed_style;
@@ -206,6 +225,7 @@ void ui_updateHeatplatformCurTempAndPowerDuty(void);
 void ui_updateAirhotCurTempAndPowerDuty(void);
 void ui_updateAdjPowerCurVoltage(void);
 void ui_updateAdjPowerWorkState(void);
+void top_layer_set_name();
 
 #endif
 
