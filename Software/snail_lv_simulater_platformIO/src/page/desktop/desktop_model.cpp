@@ -11,7 +11,7 @@ struct AirhotModel airhotModel = {HOTAIR_STATE_SLEEP, 0,
 
 struct HeatplatformModel heatplatformModel = {HP_STATE_SLEEP, ENABLE_STATE_CLOSE, 1,
                                               180, 245, 270, 230,
-                                              0, 0, 0};
+                                              0, 0, 30, 0};
 
 struct AdjPowerModel adjPowerModel = {ENABLE_STATE_CLOSE, 0, 0,
                                       0, 0, 0, 0};

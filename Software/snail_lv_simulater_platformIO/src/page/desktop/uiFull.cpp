@@ -59,6 +59,8 @@ lv_obj_t *ui_topLabel2 = NULL;
 lv_obj_t *ui_topLabel3 = NULL;
 
 static lv_timer_t *topLayerTimer = NULL;
+static lv_timer_t *autoChangePageTimer = NULL;
+static uint8_t targerChangePageInd = PAGE_INDEX_MAXSIZE;
 lv_obj_t *ui_topLogoLabel;
 lv_obj_t *chartTemp;
 lv_chart_series_t *chartSer1;
@@ -306,10 +308,10 @@ void update_top_info()
 {
     // 顶部状态栏
     // 测试数据，到时候删除
-    solderModel.curTemp = lv_rand(250, 380);
-    airhotModel.curTemp = lv_rand(280, 360);
-    heatplatformModel.curTemp = lv_rand(150, 250);
-    adjPowerModel.voltage = lv_rand(8000, 24000);
+    // solderModel.curTemp = lv_rand(250, 380);
+    // airhotModel.curTemp = lv_rand(280, 360);
+    // heatplatformModel.curTemp = lv_rand(150, 250);
+    // adjPowerModel.voltage = lv_rand(8000, 24000);
 
     switch (currPageIndex)
     {
@@ -581,6 +583,21 @@ void menu_init()
 }
 #endif
 
+static void autoChangePage_timeout(lv_timer_t *timer)
+{
+    LV_UNUSED(timer);
+    if (targerChangePageInd != PAGE_INDEX_MAXSIZE)
+    {
+        if (currPageIndex != targerChangePageInd)
+        {
+            ui_Page[currPageIndex]->ui_release();
+            currPageIndex = targerChangePageInd;
+            ui_Page[currPageIndex]->ui_init(ui_PanelMain);
+        }
+        targerChangePageInd = PAGE_INDEX_MAXSIZE; // 清楚标志
+    }
+}
+
 void main_screen_init(lv_indev_t *indev)
 {
     bool isWhiteTheme = IS_WHITE_THEME;
@@ -672,6 +689,10 @@ void main_screen_init(lv_indev_t *indev)
     bool ret_code = ui_Page[currPageIndex]->ui_init(ui_PanelMain);
     // 页面初始化后直接焦点，不再多按一次
     ui_Page[currPageIndex]->ui_btn_group_init();
+
+    autoChangePageTimer = lv_timer_create(autoChangePage_timeout, 1000, NULL);
+    lv_timer_set_repeat_count(autoChangePageTimer, -1);
+
     lv_scr_load(desktop_screen);
 }
 
@@ -701,6 +722,7 @@ void ui_page_move_center_by_ind(int index)
     //     currPageIndex = index;
     //     ui_Page[currPageIndex]->ui_init(ui_PanelMain);
     // }
+    // targerChangePageInd = index; // 等待定时器切换 autoChangePageTimer
     // hide_menu();
 }
 

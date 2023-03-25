@@ -125,7 +125,6 @@ extern lv_chart_series_t *chartSer1;
 
 extern lv_style_t bar_style_bg; // 功率bar的样式
 extern lv_style_t bar_style_indic;
-extern lv_style_t label_text_style;
 
 typedef enum
 {
@@ -134,6 +133,7 @@ typedef enum
     PAGE_INDEX_HEAT_PLAT,
     PAGE_INDEX_ADJ_POWER,
     PAGE_INDEX_SETTING,
+    PAGE_INDEX_MAXSIZE
 
 } PAGE_INDEX;
 
@@ -189,7 +189,7 @@ const lv_color_t theme_color1[UI_OBJ_NUM] = {
 void top_layer_init();   // 绘制顶层状态栏
 void theme_color_init(); // 根据模式设置主题色
 
-extern lv_style_t label_text_style; // 用于各种默认标签的样式
+extern lv_style_t label_text_style;        // 用于各种默认标签的样式
 extern lv_style_t black_white_theme_style; // 全局黑白样式
 extern lv_obj_t *ui_PanelTopBgImg;
 extern lv_style_t back_btn_style;
@@ -201,7 +201,7 @@ extern lv_obj_t *ui_PanelTop;  // 顶部状态容器
 // 如果需要启用新的菜单样式，定义这个
 #define USE_NEW_MENU
 #ifdef USE_NEW_MENU
-extern lv_obj_t *rollerMenu;  // 菜单
+extern lv_obj_t *rollerMenu; // 菜单
 #endif
 extern lv_style_t btn_type1_style;
 extern lv_style_t btn_type1_focused_style;

@@ -30,22 +30,18 @@ struct SolderModel
         // 用于独立操作 注：重新设置前必须清空（allValue=0）
         struct BitValue
         {
-            unsigned char predefinedTempEnable_0 : 1; // 温度有效标志位 预定义 0 默认 ENABLE_STATE_CLOSE
-            unsigned char predefinedTempEnable_1 : 1; // 温度有效标志位 预定义 1
-            unsigned char predefinedTempEnable_2 : 1; // 温度有效标志位 预定义 2
-            unsigned char refinementEnable : 1;       // 温度有效标志位 精调
+            unsigned char quickSetupTempEnable_0 : 1; // 温度有效标志位 快速设定 0 默认 ENABLE_STATE_CLOSE
+            unsigned char quickSetupTempEnable_1 : 1; // 温度有效标志位 快速设定 1
+            unsigned char quickSetupTempEnable_2 : 1; // 温度有效标志位 快速设定 2
+            unsigned char fineAdjTempEnable : 1;      // 温度有效标志位 精调
             unsigned char : 4;                        // 预留 实现内存对齐
         } bitValue;
     } tempEnable;
-    // unsigned char predefinedTempEnable_0 : 1; // 温度有效标志位 预定义 0 默认 ENABLE_STATE_CLOSE
-    // unsigned char predefinedTempEnable_1 : 1; // 温度有效标志位 预定义 1
-    // unsigned char predefinedTempEnable_2 : 1; // 温度有效标志位 预定义 2
-    // unsigned char refinementEnable : 1;       // 温度有效标志位 精调
-    // unsigned char : 4;                        // 预留 实现内存对齐
-    int predefinedTemp_0; // 预定义温度0
-    int predefinedTemp_1; // 预定义温度1
-    int predefinedTemp_2; // 预定义温度2
-    int refinement;       // 精调温度
+
+    int quickSetupTemp_0; // 快速设定温度0
+    int quickSetupTemp_1; // 快速设定温度1
+    int quickSetupTemp_2; // 快速设定温度2
+    int fineAdjTemp;      // 精调温度
 
     int targetTemp;      // 设定的温度
     int curTemp;         // 当前的温度
@@ -74,17 +70,17 @@ struct AirhotModel
         // 用于独立操作 注：重新设置前必须清空（allValue=0）
         struct BitValue
         {
-            unsigned char predefinedTempEnable_0 : 1; // 温度有效标志位 预定义 0 默认 ENABLE_STATE_CLOSE
-            unsigned char predefinedTempEnable_1 : 1; // 温度有效标志位 预定义 1
-            unsigned char predefinedTempEnable_2 : 1; // 温度有效标志位 预定义 2
-            unsigned char refinementEnable : 1;       // 温度有效标志位 精调
+            unsigned char quickSetupTempEnable_0 : 1; // 温度有效标志位 快速设定 0 默认 ENABLE_STATE_CLOSE
+            unsigned char quickSetupTempEnable_1 : 1; // 温度有效标志位 快速设定 1
+            unsigned char quickSetupTempEnable_2 : 1; // 温度有效标志位 快速设定 2
+            unsigned char fineAdjTempEnable : 1;      // 温度有效标志位 精调
             unsigned char : 4;                        // 预留 实现内存对齐
         } bitValue;
     } tempEnable;
-    int predefinedTemp_0; // 预定义温度0
-    int predefinedTemp_1; // 预定义温度1
-    int predefinedTemp_2; // 预定义温度2
-    int refinement;       // 精调温度
+    int quickSetupTemp_0; // 快速设定温度0
+    int quickSetupTemp_1; // 快速设定温度1
+    int quickSetupTemp_2; // 快速设定温度2
+    int fineAdjTemp;      // 精调温度
 
     int targetTemp;            // 设定的目标温度
     int curTemp;               // 当前的温度
@@ -118,21 +114,22 @@ struct HeatplatformModel
         // 用于独立操作 注：重新设置前必须清空（allValue=0）
         struct BitValue
         {
-            unsigned char predefinedTempEnable_0 : 1; // 温度有效标志位 预定义 0 默认 ENABLE_STATE_CLOSE
-            unsigned char predefinedTempEnable_1 : 1; // 温度有效标志位 预定义 1
-            unsigned char predefinedTempEnable_2 : 1; // 温度有效标志位 预定义 2
-            unsigned char refinementEnable : 1;       // 温度有效标志位 精调
+            unsigned char quickSetupTempEnable_0 : 1; // 温度有效标志位 快速设定 0 默认 ENABLE_STATE_CLOSE
+            unsigned char quickSetupTempEnable_1 : 1; // 温度有效标志位 快速设定 1
+            unsigned char quickSetupTempEnable_2 : 1; // 温度有效标志位 快速设定 2
+            unsigned char fineAdjTempEnable : 1;      // 温度有效标志位 精调
             unsigned char : 4;                        // 预留 实现内存对齐
         } bitValue;
     } tempEnable;
-    int predefinedTemp_0; // 预定义温度0
-    int predefinedTemp_1; // 预定义温度1
-    int predefinedTemp_2; // 预定义温度2
-    int refinement;       // 精调温度
+    int quickSetupTemp_0; // 快速设定温度0
+    int quickSetupTemp_1; // 快速设定温度1
+    int quickSetupTemp_2; // 快速设定温度2
+    int fineAdjTemp;      // 精调温度
 
-    int targetTemp;      // 设定的温度
-    int curTemp;         // 当前的温度
-    uint16_t powerRatio; // 供电能量占比
+    int targetTemp;            // 设定的温度
+    int curTemp;               // 当前的温度
+    unsigned int workAirSpeed; // 工作状态下的风速
+    uint16_t powerRatio;       // 供电能量占比
 
     unsigned int coolingAirSpeed;     // 冷却时的风速
     int16_t coolingFinishTemp;        // 冷却结束的温度
