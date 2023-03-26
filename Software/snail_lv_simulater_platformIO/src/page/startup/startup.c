@@ -4,9 +4,9 @@
 
 static lv_style_t hostNameStyle;
 static lv_style_t screenStyle;
-lv_obj_t *screen1;
-lv_obj_t *hostName;
-lv_obj_t *version; // SNAILHEATER_VERSION
+static lv_obj_t *screen1;
+static lv_obj_t *hostName;
+static lv_obj_t *version; // SNAILHEATER_VERSION
 
 void startupAnim(lv_obj_t *obj)
 {
@@ -25,7 +25,7 @@ void startupAnim(lv_obj_t *obj)
     /* 设置开始和结束值。例如。 0、150 */
     lv_anim_set_values(&a, lv_obj_get_y(obj), 100);
 
-    lv_anim_set_path_cb(&a, lv_anim_path_overshoot); //设置一个动画的路径
+    lv_anim_set_path_cb(&a, lv_anim_path_overshoot); // 设置一个动画的路径
     // /* 可选设置
     //  *------------------*/
     // /* 开始动画之前的等待时间[ms] */
@@ -76,7 +76,7 @@ void startupUI(const char *ver)
     lv_obj_set_pos(hostName, 0, 0);
     lv_obj_set_align(hostName, LV_ALIGN_TOP_MID);
     lv_obj_add_style(hostName, LV_PART_MAIN, &hostNameStyle);
-    lv_label_set_recolor(hostName, true); //先得使能文本重绘色功能
+    lv_label_set_recolor(hostName, true); // 先得使能文本重绘色功能
     lv_obj_set_style_text_font(hostName, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_label_set_text(hostName, "#FFFFFF SnailHeater#");
 
@@ -85,7 +85,7 @@ void startupUI(const char *ver)
     // lv_obj_set_pos(version, 0, 0);
     lv_obj_set_align(version, LV_ALIGN_BOTTOM_MID);
     // lv_obj_add_style(version, LV_PART_MAIN, &hostNameStyle);
-    lv_label_set_recolor(version, true); //先得使能文本重绘色功能
+    lv_label_set_recolor(version, true); // 先得使能文本重绘色功能
     lv_obj_set_style_text_font(version, &lv_font_montserrat_12, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_label_set_text_fmt(version, "#FF0000 Ver %s#", ver);
 
@@ -100,19 +100,9 @@ void startupDel(void)
 {
     if (NULL != screen1)
     {
-        lv_obj_clean(screen1);
+        lv_obj_del(screen1);
         screen1 = NULL;
-    }
-
-    if (NULL != hostName)
-    {
-        lv_obj_clean(hostName);
         hostName = NULL;
-    }
-
-    if (NULL != version)
-    {
-        lv_obj_clean(version);
         version = NULL;
     }
 }

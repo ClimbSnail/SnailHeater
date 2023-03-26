@@ -1,18 +1,14 @@
+#include "./ui.h"
 
+#ifdef MULTI_UI
 
-#include "ui.h"
-#include "desktop_model.h"
-
-#ifndef NEW_UI
-
-#define FONT_DEBUG 1
-
+static lv_timer_t *solderTimer = NULL;
 static lv_obj_t *solderPageUI = NULL;
 static lv_obj_t *ui_curTempLabel;
 static lv_obj_t *ui_curTempCLabel;
 static lv_obj_t *ui_setTempButton;
 static lv_obj_t *ui_setTempLabel;
-static lv_obj_t *ui_setTempArc;
+static lv_obj_t *ui_setTempArc = NULL;
 static lv_obj_t *ui_solderSetTempTextArea;
 static lv_obj_t *ui_solderSetTempCLabel;
 static lv_obj_t *ui_typeLabel;
@@ -31,13 +27,15 @@ static lv_obj_t *ui_backButtonLabel;
 static lv_obj_t *ui_powerBar;
 static lv_style_t chFontStyle;
 
-static lv_group_t *btn_group;
-static lv_group_t *setTempArcGroup;
+static lv_group_t *btn_group = NULL;
+static lv_group_t *setTempArcGroup = NULL;
 
 static void ui_type_pressed(lv_event_t *e);
 static void ui_wake_type_changed(lv_event_t *e);
 static void ui_set_temp_btn_pressed(lv_event_t *e);
 static void ui_back_btn_pressed(lv_event_t *e);
+static void solderTimer_timeout(lv_timer_t *timer);
+void ui_updateSolderCurTempAndPowerDuty(void);
 
 static void setSolderType(lv_obj_t *obj, unsigned char type)
 {
@@ -107,7 +105,6 @@ static bool solderPageUI_init(lv_obj_t *father)
     solderUIObj.mainButtonUI = solderPageUI;
 
     lv_obj_set_size(solderPageUI, EACH_PAGE_SIZE_X, EACH_PAGE_SIZE_Y);
-    
 
 #ifdef NEW_UI
     lv_obj_set_align(solderPageUI, LV_ALIGN_LEFT_MID);
@@ -116,14 +113,12 @@ static bool solderPageUI_init(lv_obj_t *father)
     lv_obj_set_align(solderPageUI, LV_ALIGN_CENTER);
 #endif
 
-
-
     lv_obj_add_flag(solderPageUI, LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
     lv_obj_clear_flag(solderPageUI, LV_OBJ_FLAG_SCROLLABLE);    /// Flags
     lv_obj_set_style_bg_color(solderPageUI, lv_color_hex(0xDFD338), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(solderPageUI, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    //lv_obj_set_style_border_color(solderPageUI, lv_color_hex(0xFF0000), LV_PART_MAIN | LV_STATE_CHECKED | LV_STATE_PRESSED);
-    //lv_obj_set_style_border_opa(solderPageUI, 255, LV_PART_MAIN | LV_STATE_CHECKED | LV_STATE_PRESSED);
+    // lv_obj_set_style_border_color(solderPageUI, lv_color_hex(0xFF0000), LV_PART_MAIN | LV_STATE_CHECKED | LV_STATE_PRESSED);
+    // lv_obj_set_style_border_opa(solderPageUI, 255, LV_PART_MAIN | LV_STATE_CHECKED | LV_STATE_PRESSED);
 
     lv_obj_t *ui_ButtonTmp = solderPageUI;
 
@@ -332,18 +327,26 @@ static bool solderPageUI_init(lv_obj_t *father)
     lv_obj_add_event_cb(ui_setTempButton, ui_set_temp_btn_pressed, LV_EVENT_PRESSED, NULL);
 
     setTempArcGroup = lv_group_create();
+
+    solderTimer = lv_timer_create(solderTimer_timeout, DATA_REFRESH_MS, NULL);
+    lv_timer_set_repeat_count(solderTimer, -1);
     return true;
+}
+
+static void solderTimer_timeout(lv_timer_t *timer)
+{
+    LV_UNUSED(timer);
+    ui_updateSolderCurTempAndPowerDuty();
 }
 
 void solderPageUI_release()
 {
-    if (NULL == solderPageUI)
+    if (NULL != solderPageUI)
     {
-        return;
+        lv_obj_del(solderPageUI);
+        solderPageUI = NULL;
+        solderUIObj.mainButtonUI = NULL;
     }
-    lv_obj_clean(solderPageUI);
-    solderPageUI = NULL;
-    solderUIObj.mainButtonUI = NULL;
 }
 
 void ui_updateSolderCurTempAndPowerDuty(void)
@@ -373,14 +376,18 @@ static void ui_updateSolderWarkState(void)
 static void ui_back_btn_pressed(lv_event_t *e)
 {
     // 返回项被按下
-    lv_group_del(btn_group);
+    if (NULL != btn_group)
+    {
+        lv_group_del(btn_group);
+        btn_group = NULL;
+    }
     ui_main_pressed(e);
 }
 
 static void solderPageUI_pressed(lv_event_t *e)
 {
     // 烙铁项被按下
-    
+
     // 创建操作的组
     btn_group = lv_group_create();
     lv_group_add_obj(btn_group, ui_setTempButton);
@@ -446,7 +453,8 @@ static void ui_solder_set_tempArc_pressed(lv_event_t *e)
         if (NULL != ui_setTempArc)
         {
             lv_group_remove_obj(ui_setTempArc);
-            lv_obj_clean(ui_setTempArc);
+            lv_obj_del(ui_setTempArc);
+            ui_setTempArc = NULL;
         }
     }
 }
@@ -463,7 +471,8 @@ static void ui_set_temp_btn_pressed(lv_event_t *e)
         if (NULL != ui_setTempArc)
         {
             lv_group_remove_obj(ui_setTempArc);
-            lv_obj_clean(ui_setTempArc);
+            lv_obj_del(ui_setTempArc);
+            ui_setTempArc = NULL;
         }
         ui_setTempArc = lv_arc_create(ui_setTempButton);
         lv_obj_set_size(ui_setTempArc, 30, 30);

@@ -1,9 +1,8 @@
-#include "ui.h"
-#include "desktop_model.h"
+#include "./ui.h"
 
-#ifdef NEW_UI
+#ifdef FULL_UI
 
-static lv_timer_t *powerTimer;
+static lv_timer_t *adjPowerTimer = NULL;
 static lv_obj_t *adjPowerPageUI = NULL;
 static lv_obj_t *ui_voltageLabel;
 static lv_obj_t *ui_voltSlider;
@@ -18,13 +17,14 @@ static lv_obj_t *ui_modeLable;
 static lv_obj_t *ui_backButton;
 static lv_obj_t *ui_backButtonLabel;
 
-static lv_group_t *btn_group;
+static lv_group_t *btn_group = NULL;
 
 static void ui_set_slider_changed(lv_event_t *e);
 static void ui_back_btn_pressed(lv_event_t *e);
 static void ui_enable_switch_pressed(lv_event_t *e);
+static void ui_mode_bnt_pressed(lv_event_t *e);
 
-static void adjPowerPageUI_focused()
+static void adjPowerPageUI_focused(lv_event_t *e)
 {
     btn_group = lv_group_create();
     lv_group_add_obj(btn_group, ui_backButton);
@@ -42,7 +42,7 @@ static void adjPowerPageUI_focused()
     lv_indev_set_group(knobs_indev, btn_group);
 }
 
-static void powerTimer_timeout(lv_timer_t *timer)
+static void adjPowerTimer_timeout(lv_timer_t *timer)
 {
     LV_UNUSED(timer);
     // 更新电压电流功率的函数
@@ -68,7 +68,7 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     lv_obj_center(adjPowerPageUI);
     lv_obj_add_flag(adjPowerPageUI, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_clear_flag(adjPowerPageUI, LV_OBJ_FLAG_SCROLLABLE);
-    //lv_obj_set_style_bg_color(adjPowerPageUI, IS_WHITE_THEME ? lv_color_white() : lv_color_black(), LV_PART_MAIN | LV_STATE_DEFAULT);
+    // lv_obj_set_style_bg_color(adjPowerPageUI, IS_WHITE_THEME ? lv_color_white() : lv_color_black(), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(adjPowerPageUI, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_t *ui_ButtonTmp = adjPowerPageUI;
@@ -198,7 +198,6 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     lv_obj_add_style(ui_backButton, &back_btn_style, LV_STATE_DEFAULT);
     lv_obj_add_style(ui_backButton, &back_btn_focused_style, LV_STATE_FOCUSED);
 
-
     ui_backButtonLabel = lv_label_create(ui_backButton);
     lv_obj_center(ui_backButtonLabel);
     lv_label_set_text(ui_backButtonLabel, LV_SYMBOL_LEFT);
@@ -206,26 +205,35 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     lv_obj_add_event_cb(ui_backButton, ui_back_btn_pressed, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(ui_voltSlider, ui_set_slider_changed, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_event_cb(ui_enableSwitch, ui_enable_switch_pressed, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_add_event_cb(ui_modeButton, ui_mode_bnt_pressed, LV_EVENT_PRESSED, NULL);
 
-    powerTimer = lv_timer_create(powerTimer_timeout, 300, NULL);
-    lv_timer_set_repeat_count(powerTimer, -1);
+    adjPowerPageUI_focused(NULL);
+
+    adjPowerTimer = lv_timer_create(adjPowerTimer_timeout, DATA_REFRESH_MS, NULL);
+    lv_timer_set_repeat_count(adjPowerTimer, -1);
     return true;
 }
 
 static void adjPowerPageUI_release()
 {
-    if (NULL == adjPowerPageUI)
+    if (NULL != adjPowerPageUI)
     {
-        return;
+        lv_obj_del(adjPowerPageUI);
+        adjPowerPageUI = NULL;
+        adjPowerUIObj.mainButtonUI = NULL;
     }
+
     if (NULL != btn_group)
     {
         lv_group_del(btn_group);
+        btn_group = NULL;
     }
-    lv_timer_del(powerTimer);
-    lv_obj_clean(adjPowerPageUI);
-    adjPowerPageUI = NULL;
-    adjPowerUIObj.mainButtonUI = NULL;
+
+    if (NULL != adjPowerTimer)
+    {
+        lv_timer_del(adjPowerTimer);
+        adjPowerTimer = NULL;
+    }
 }
 
 static void ui_back_btn_pressed(lv_event_t *e)
@@ -319,7 +327,7 @@ static void ui_set_slider_changed(lv_event_t *e)
     }
 }
 
-FE_FULL_UI_OBJ adjPowerUIObj = {adjPowerPageUI, adjPowerPageUI_init,
-                                adjPowerPageUI_release, adjPowerPageUI_focused};
+FE_UI_OBJ adjPowerUIObj = {adjPowerPageUI, adjPowerPageUI_init,
+                           adjPowerPageUI_release, adjPowerPageUI_focused};
 
 #endif

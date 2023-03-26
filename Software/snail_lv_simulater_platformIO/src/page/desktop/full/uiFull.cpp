@@ -1,12 +1,8 @@
-// SquareLine LVGL GENERATED FILE
-// EDITOR VERSION: SquareLine Studio 1.0.5
-// LVGL VERSION: 8.2
-// PROJECT: SquareLine_Project
+#include "./ui.h"
 
-#include "ui.h"
-#include "desktop_model.h"
+#ifdef FULL_UI // 判断使能宏
 
-#ifdef NEW_UI
+#include "../desktop_model.h"
 
 uint8_t currPageIndex = PAGE_INDEX_SOLDER;
 
@@ -27,8 +23,8 @@ uint8_t cfgKey1 = 0b10111100;
 lv_style_t back_btn_style;          // 只用在返回按钮上
 lv_style_t back_btn_focused_style;  // 只用在返回按钮上
 lv_style_t black_white_theme_style; // 全局黑白样式
-lv_obj_t *desktop_screen;
-lv_obj_t *ui_PanelMain;
+static lv_obj_t *desktop_screen;
+static lv_obj_t *ui_PanelMain;
 lv_obj_t *ui_PanelTop;
 lv_obj_t *ui_PanelTopBgImg;
 
@@ -54,9 +50,9 @@ lv_style_t label_text_style; // 用于各种默认标签的样式
 lv_style_t bar_style_bg;
 lv_style_t bar_style_indic;
 
-lv_obj_t *ui_topLabel1 = NULL;
-lv_obj_t *ui_topLabel2 = NULL;
-lv_obj_t *ui_topLabel3 = NULL;
+static lv_obj_t *ui_topLabel1 = NULL;
+static lv_obj_t *ui_topLabel2 = NULL;
+static lv_obj_t *ui_topLabel3 = NULL;
 
 static lv_timer_t *topLayerTimer = NULL;
 static lv_timer_t *autoChangePageTimer = NULL;
@@ -66,9 +62,9 @@ lv_obj_t *chartTemp;
 lv_chart_series_t *chartSer1;
 
 lv_indev_t *knobs_indev;
-lv_group_t *menu_btn_group = NULL;
+static lv_group_t *menu_btn_group = NULL;
 
-static FE_FULL_UI_OBJ *ui_Page[UI_OBJ_NUM];
+static FE_UI_OBJ *ui_Page[UI_OBJ_NUM];
 
 static bool is_menu_show = false;
 static lv_anim_t menu_anim;
@@ -112,7 +108,7 @@ static void set_menu_focus_out(lv_anim_t *a)
 {
     if (NULL != ui_Page[currPageIndex])
     {
-        ui_Page[currPageIndex]->ui_btn_group_init();
+        ui_Page[currPageIndex]->selected_event_cb(NULL);
     }
 }
 
@@ -125,7 +121,8 @@ void hide_menu()
         lv_anim_init(&menu_anim);
         lv_anim_set_exec_cb(&menu_anim, set_x_pos);
         lv_anim_set_values(&menu_anim, 0, UI_MENU_WIDTH);
-        lv_anim_set_ready_cb(&menu_anim, set_menu_focus_out);
+        // todo 由init时初始化，故删除此操作
+        // lv_anim_set_ready_cb(&menu_anim, set_menu_focus_out);
         lv_anim_set_repeat_count(&menu_anim, 0);
         lv_anim_set_time(&menu_anim, 300);
 #ifdef USE_NEW_MENU
@@ -595,6 +592,7 @@ static void autoChangePage_timeout(lv_timer_t *timer)
             ui_Page[currPageIndex]->ui_init(ui_PanelMain);
         }
         targerChangePageInd = PAGE_INDEX_MAXSIZE; // 清楚标志
+        hide_menu();
     }
 }
 
@@ -688,7 +686,8 @@ void main_screen_init(lv_indev_t *indev)
 
     bool ret_code = ui_Page[currPageIndex]->ui_init(ui_PanelMain);
     // 页面初始化后直接焦点，不再多按一次
-    ui_Page[currPageIndex]->ui_btn_group_init();
+    // todo 由init时初始化，故删除此操作
+    // ui_Page[currPageIndex]->selected_event_cb(NULL);
 
     autoChangePageTimer = lv_timer_create(autoChangePage_timeout, 1000, NULL);
     lv_timer_set_repeat_count(autoChangePageTimer, -1);
@@ -714,16 +713,14 @@ void ui_release()
 
 void ui_page_move_center_by_ind(int index)
 {
-    // uint16_t index = lv_roller_get_selected(rollerMenu);
-    // todo 待排查
     // if (currPageIndex != index)
     // {
     //     ui_Page[currPageIndex]->ui_release();
     //     currPageIndex = index;
     //     ui_Page[currPageIndex]->ui_init(ui_PanelMain);
     // }
-    // targerChangePageInd = index; // 等待定时器切换 autoChangePageTimer
     // hide_menu();
+    targerChangePageInd = index; // 等待定时器切换 autoChangePageTimer
 }
 
 #endif

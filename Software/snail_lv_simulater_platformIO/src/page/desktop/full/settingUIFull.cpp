@@ -1,8 +1,6 @@
+#include "./ui.h"
 
-#include "ui.h"
-#include "desktop_model.h"
-
-#ifdef NEW_UI
+#ifdef FULL_UI
 
 static lv_obj_t *settingPageUI = NULL;
 
@@ -32,13 +30,13 @@ static lv_obj_t *ui_swVerLabel;
 static lv_obj_t *ui_backButton;
 static lv_obj_t *ui_backButtonLabel;
 
-static lv_group_t *btn_group;
+static lv_group_t *btn_group = NULL;
 
 static void ui_knobs_dir_pressed(lv_event_t *e);
 static void ui_hw_ver_pressed(lv_event_t *e);
 static void ui_back_btn_pressed(lv_event_t *e);
 
-static void settingPageUI_focused()
+static void settingPageUI_focused(lv_event_t *e)
 {
     btn_group = lv_group_create();
     lv_group_add_obj(btn_group, ui_backButton);
@@ -521,22 +519,25 @@ static bool settingPageUI_init(lv_obj_t *father)
     lv_obj_add_event_cb(ui_solderWakeDropdown, ui_solder_wake_pressed, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_event_cb(ui_hardVerDropdown, ui_hw_ver_pressed, LV_EVENT_VALUE_CHANGED, NULL);
 
+    settingPageUI_focused(NULL);
+
     return true;
 }
 
 void settingPageUI_release()
 {
-    if (NULL == settingPageUI)
+    if (NULL != settingPageUI)
     {
-        return;
+        lv_obj_del(settingPageUI);
+        settingPageUI = NULL;
+        settingUIObj.mainButtonUI = NULL;
     }
+
     if (NULL != btn_group)
     {
         lv_group_del(btn_group);
+        btn_group = NULL;
     }
-    lv_obj_clean(settingPageUI);
-    settingPageUI = NULL;
-    settingUIObj.mainButtonUI = NULL;
 }
 
 static void ui_back_btn_pressed(lv_event_t *e)
@@ -579,7 +580,7 @@ static void ui_hw_ver_pressed(lv_event_t *e)
     }
 }
 
-FE_FULL_UI_OBJ settingUIObj = {settingPageUI, settingPageUI_init,
-                               settingPageUI_release, settingPageUI_focused};
+FE_UI_OBJ settingUIObj = {settingPageUI, settingPageUI_init,
+                          settingPageUI_release, settingPageUI_focused};
 
 #endif

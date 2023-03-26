@@ -14,13 +14,13 @@
 #include "ctrl_common.h"
 #include "driver/knobs.h"
 #include "page/desktop/desktop_model.h"
-#include "page/desktop/ui.h"
+#include "page/desktop/snail_ui.h"
 #include "page/startup/startup.h"
 
 #include <SDL2/SDL_timer.h>
 #include "demos/lv_demos.h"
 
-#define SNAILHEATER_VERSION "1.3.7"
+#define SNAILHEATER_VERSION "1.5.5"
 
 void SnailHeater_UI()
 {

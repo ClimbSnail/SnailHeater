@@ -2,6 +2,8 @@
 #ifndef _LANGUAGE_INFO_H
 #define _LANGUAGE_INFO_H
 
+// 语言文件 用于今后的多语言预留
+
 // #define SHL_SYSINFO "SysInfo"    // 系统信息
 // #define SHL_KNOBS_DIR "Pos\nNeg" // 旋钮方向
 

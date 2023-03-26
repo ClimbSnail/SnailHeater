@@ -22,8 +22,6 @@ extern "C"
     // 字库解决方法 https://blog.csdn.net/a200327/article/details/120628170
     LV_FONT_DECLARE(sh_ch_font_14);
 
-    extern lv_obj_t *desktop_screen;
-
     void verification_init(lv_indev_t *indev, const char *userId);
     void verification_release(void);
 

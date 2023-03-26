@@ -1,18 +1,14 @@
 
+#include "./ui.h"
 
-#include "ui.h"
-#include "desktop_model.h"
-
-#ifndef NEW_UI
-
-#define FONT_DEBUG 1
+#ifdef MULTI_UI
 
 static lv_obj_t *airhotPageUI = NULL;
 static lv_obj_t *ui_curTempLabel;
 static lv_obj_t *ui_curTempCLabel;
 static lv_obj_t *ui_setTempButton;
 static lv_obj_t *ui_setTempLabel;
-static lv_obj_t *ui_setTempArc;
+static lv_obj_t *ui_setTempArc = NULL;
 static lv_obj_t *ui_airVoltageLabel;
 static lv_obj_t *ui_airVoltageImage;
 static lv_obj_t *ui_airVoltageDropdown;
@@ -20,7 +16,7 @@ static lv_obj_t *ui_airFanImage;
 static lv_obj_t *ui_airDutyTextArea;
 static lv_obj_t *ui_setAirDutyButton;
 static lv_obj_t *ui_setAirDutyLabel;
-static lv_obj_t *ui_setAirArc;
+static lv_obj_t *ui_setAirArc = NULL;
 static lv_obj_t *ui_moreButton;
 static lv_obj_t *ui_moreButtonLabel;
 static lv_obj_t *ui_backButton;
@@ -29,14 +25,17 @@ static lv_obj_t *ui_backButtonLabel;
 static lv_obj_t *ui_powerBar;
 static lv_style_t chFontStyle;
 
-static lv_group_t *btn_group;
-static lv_group_t *setTempArcGroup;
-static lv_group_t *setAirArcGroup;
+static lv_group_t *btn_group = NULL;
+static lv_group_t *setTempArcGroup = NULL;
+static lv_group_t *setAirArcGroup = NULL;
+static lv_timer_t *airhotTimer = NULL;
 
 static void ui_vol_pressed(lv_event_t *e);
 static void ui_set_temp_btn_pressed(lv_event_t *e);
 static void ui_set_air_btn_pressed(lv_event_t *e);
 static void ui_back_btn_pressed(lv_event_t *e);
+static void airhotTimer_timeout(lv_timer_t *timer);
+void ui_updateAirhotCurTempAndPowerDuty(void);
 
 static bool airhotPageUI_init(lv_obj_t *father)
 {
@@ -75,7 +74,7 @@ static bool airhotPageUI_init(lv_obj_t *father)
     lv_obj_set_style_text_opa(ui_curTempLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     // lv_obj_set_style_text_font(ui_curTempLabel, &lv_font_montserrat_36, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_curTempLabel, &sh_number_50, LV_PART_MAIN | LV_STATE_DEFAULT);
-    
+
     // 温度调节
     ui_setTempButton = lv_btn_create(ui_ButtonTmp);
     lv_obj_set_size(ui_setTempButton, 65, 20);
@@ -230,19 +229,26 @@ static bool airhotPageUI_init(lv_obj_t *father)
     setTempArcGroup = lv_group_create();
     setAirArcGroup = lv_group_create();
 
+    airhotTimer = lv_timer_create(airhotTimer_timeout, 300, NULL);
+    lv_timer_set_repeat_count(airhotTimer, -1);
+
     return true;
+}
+
+static void airhotTimer_timeout(lv_timer_t *timer)
+{
+    LV_UNUSED(timer);
+    ui_updateAirhotCurTempAndPowerDuty();
 }
 
 static void airhotPageUI_release()
 {
-    if (NULL == airhotPageUI)
+    if (NULL != airhotPageUI)
     {
-        return;
+        lv_obj_del(airhotPageUI);
+        airhotPageUI = NULL;
+        airhotUIObj.mainButtonUI = NULL;
     }
-
-    lv_obj_clean(airhotPageUI);
-    airhotPageUI = NULL;
-    airhotUIObj.mainButtonUI = NULL;
 }
 
 void ui_updateAirhotCurTempAndPowerDuty(void)
@@ -271,7 +277,11 @@ void ui_updateAirhotWarkState(void)
 static void ui_back_btn_pressed(lv_event_t *e)
 {
     // 返回项被按下
-    lv_group_del(btn_group);
+    if (NULL != btn_group)
+    {
+        lv_group_del(btn_group);
+        btn_group = NULL;
+    }
     ui_main_pressed(e);
 }
 
@@ -329,7 +339,8 @@ static void ui_set_tempArc_pressed(lv_event_t *e)
         if (NULL != ui_setTempArc)
         {
             lv_group_remove_obj(ui_setTempArc);
-            lv_obj_clean(ui_setTempArc);
+            lv_obj_del(ui_setTempArc);
+            ui_setTempArc = NULL;
         }
     }
 }
@@ -346,7 +357,8 @@ static void ui_set_temp_btn_pressed(lv_event_t *e)
         if (NULL != ui_setTempArc)
         {
             lv_group_remove_obj(ui_setTempArc);
-            lv_obj_clean(ui_setTempArc);
+            lv_obj_del(ui_setTempArc);
+            ui_setTempArc = NULL;
         }
         ui_setTempArc = lv_arc_create(ui_setTempButton);
         lv_obj_set_size(ui_setTempArc, 30, 30);
@@ -393,7 +405,8 @@ static void ui_set_airArc_pressed(lv_event_t *e)
         if (NULL != ui_setAirArc)
         {
             lv_group_remove_obj(ui_setAirArc);
-            lv_obj_clean(ui_setAirArc);
+            lv_obj_del(ui_setAirArc);
+            ui_setAirArc = NULL;
         }
     }
 }
@@ -410,7 +423,8 @@ static void ui_set_air_btn_pressed(lv_event_t *e)
         if (NULL != ui_setAirArc)
         {
             lv_group_remove_obj(ui_setAirArc);
-            lv_obj_clean(ui_setAirArc);
+            lv_obj_del(ui_setAirArc);
+            ui_setAirArc = NULL;
         }
         ui_setAirArc = lv_arc_create(ui_setAirDutyButton);
         lv_obj_set_size(ui_setAirArc, 30, 30);

@@ -1,13 +1,13 @@
 #include "verification.h"
 
-static lv_obj_t *veriScreen;
+static lv_obj_t *veriScreen = NULL;
 static lv_obj_t *ui_Keyboard;
 static lv_obj_t *ui_userIdLabel;
 static lv_obj_t *ui_userIdTextArea;
 static lv_obj_t *ui_keyLabel;
 static lv_obj_t *ui_keyTextArea;
 
-lv_group_t *key_group;
+static lv_group_t *key_group;
 
 static void ui_key_pressed(lv_event_t *e);
 
@@ -68,14 +68,15 @@ static void ui_key_pressed(lv_event_t *e)
 
 void verification_release(void)
 {
-    if (veriScreen)
+    if (NULL != veriScreen)
     {
-        lv_obj_clean(veriScreen);
+        lv_obj_del(veriScreen);
         veriScreen = NULL;
         ui_Keyboard = NULL;
         ui_userIdLabel = NULL;
         ui_userIdTextArea = NULL;
         ui_keyLabel = NULL;
         ui_keyTextArea = NULL;
+        key_group = NULL;
     }
 }

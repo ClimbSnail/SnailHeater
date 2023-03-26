@@ -23,11 +23,10 @@ extern "C"
 
         void (*ui_release)();
 
-        // 按下选中后触发的回调
-        void (*pressed_event_cb)(lv_event_t *e);
+        // 选中该UI对象后 触发的回调
+        void (*selected_event_cb)(lv_event_t *e);
     };
 
-    
 #ifdef __cplusplus
 } /*extern "C"*/
 #endif

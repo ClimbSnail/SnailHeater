@@ -1,10 +1,8 @@
-#include "ui.h"
-#include "desktop_model.h"
+#include "./ui.h"
 
-#ifndef NEW_UI
+#ifdef MULTI_UI
 
-#define FONT_DEBUG 1
-
+static lv_timer_t *adjPowerTimer = NULL;
 static lv_obj_t *adjPowerPageUI = NULL;
 static lv_obj_t *ui_voltageLabel;
 static lv_obj_t *ui_voltSlider;
@@ -21,13 +19,15 @@ static lv_obj_t *ui_backButtonLabel;
 static lv_obj_t *ui_powerBar;
 static lv_style_t chFontStyle;
 
-static lv_group_t *btn_group;
-static lv_group_t *setTempArcGroup;
+static lv_group_t *btn_group = NULL;
+static lv_group_t *setTempArcGroup = NULL;
 
 static void ui_set_slider_changed(lv_event_t *e);
 static void ui_back_btn_pressed(lv_event_t *e);
 static void ui_mode_bnt_pressed(lv_event_t *e);
 static void ui_enable_switch_pressed(lv_event_t *e);
+static void adjPowerTimer_timeout(lv_timer_t *timer);
+void ui_updateAdjPowerCurVoltage(void);
 
 static bool adjPowerPageUI_init(lv_obj_t *father)
 {
@@ -76,13 +76,13 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     if (ADJ_POWER_MODE_CV == adjPowerModel.mode)
     {
         lv_slider_set_value(ui_voltSlider,
-                            DAC_DEFAULT_RESOLUTION - adjPowerModel.volAdcValue,
+                            DAC_DEFAULT_RESOLUTION - adjPowerModel.volDacValue,
                             LV_ANIM_OFF);
     }
     else if (ADJ_POWER_MODE_CC == adjPowerModel.mode)
     {
         lv_slider_set_value(ui_voltSlider,
-                            DAC_DEFAULT_RESOLUTION - adjPowerModel.curAdcValue,
+                            DAC_DEFAULT_RESOLUTION - adjPowerModel.curDacValue,
                             LV_ANIM_OFF);
     }
     lv_obj_set_align(ui_voltSlider, LV_ALIGN_CENTER);
@@ -143,7 +143,7 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     lv_obj_set_size(ui_enableSwitch, 40, 20);
     lv_obj_set_pos(ui_enableSwitch, 0, 50);
     lv_obj_set_align(ui_enableSwitch, LV_ALIGN_CENTER);
-    if (adjPowerModel.workState == ADJ_POWER_OPEN_STATE_OPEN)
+    if (adjPowerModel.workState == ENABLE_STATE_OPEN)
     {
         lv_obj_add_state(ui_enableSwitch, LV_STATE_CHECKED); // 开
     }
@@ -212,24 +212,37 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     lv_obj_add_event_cb(ui_enableSwitch, ui_enable_switch_pressed, LV_EVENT_VALUE_CHANGED, NULL);
 
     setTempArcGroup = lv_group_create();
+
+    adjPowerTimer = lv_timer_create(adjPowerTimer_timeout, DATA_REFRESH_MS, NULL);
+    lv_timer_set_repeat_count(adjPowerTimer, -1);
     return true;
+}
+
+static void adjPowerTimer_timeout(lv_timer_t *timer)
+{
+    LV_UNUSED(timer);
+    // 更新电压电流功率的函数
+    ui_updateAdjPowerCurVoltage();
 }
 
 static void adjPowerPageUI_release()
 {
-    if (NULL == adjPowerPageUI)
+    if (NULL != adjPowerPageUI)
     {
-        return;
+        lv_obj_del(adjPowerPageUI);
+        adjPowerPageUI = NULL;
+        adjPowerUIObj.mainButtonUI = NULL;
     }
-    lv_obj_clean(adjPowerPageUI);
-    adjPowerPageUI = NULL;
-    adjPowerUIObj.mainButtonUI = NULL;
 }
 
 static void ui_back_btn_pressed(lv_event_t *e)
 {
     // 返回项被按下
-    lv_group_del(btn_group);
+    if (NULL != btn_group)
+    {
+        lv_group_del(btn_group);
+        btn_group = NULL;
+    }
     ui_main_pressed(e);
 }
 
@@ -259,14 +272,14 @@ static void ui_mode_bnt_pressed(lv_event_t *e)
         {
             lv_label_set_text_fmt(ui_modeLable, "CV");
             lv_slider_set_value(ui_voltSlider,
-                                DAC_DEFAULT_RESOLUTION - adjPowerModel.volAdcValue,
+                                DAC_DEFAULT_RESOLUTION - adjPowerModel.volDacValue,
                                 LV_ANIM_OFF);
         }
         else if (ADJ_POWER_MODE_CC == adjPowerModel.mode)
         {
             lv_label_set_text_fmt(ui_modeLable, "CC");
             lv_slider_set_value(ui_voltSlider,
-                                DAC_DEFAULT_RESOLUTION - adjPowerModel.curAdcValue,
+                                DAC_DEFAULT_RESOLUTION - adjPowerModel.curDacValue,
                                 LV_ANIM_OFF);
         }
     }
@@ -281,7 +294,7 @@ static void ui_enable_switch_pressed(lv_event_t *e)
     {
 
         bool isEnable = lv_obj_has_state(target, LV_STATE_CHECKED); // 返回 bool 类型， 开-1 ； 关-2
-        adjPowerModel.workState = isEnable == true ? ADJ_POWER_OPEN_STATE_OPEN : ADJ_POWER_OPEN_STATE_CLOSE;
+        adjPowerModel.workState = isEnable == true ? ENABLE_STATE_OPEN : ENABLE_STATE_CLOSE;
     }
 }
 
@@ -304,7 +317,7 @@ void ui_updateAdjPowerWorkState(void)
         return;
     }
 
-    if (ADJ_POWER_OPEN_STATE_CLOSE == adjPowerModel.workState)
+    if (ENABLE_STATE_CLOSE == adjPowerModel.workState)
     {
         lv_obj_clear_state(ui_enableSwitch, LV_STATE_CHECKED); // 关
     }
@@ -323,12 +336,12 @@ static void ui_set_slider_changed(lv_event_t *e)
     {
         if (ADJ_POWER_MODE_CV == adjPowerModel.mode)
         {
-            adjPowerModel.volAdcValue =
+            adjPowerModel.volDacValue =
                 DAC_DEFAULT_RESOLUTION - (int)lv_slider_get_value(ui_voltSlider);
         }
         else if (ADJ_POWER_MODE_CC == adjPowerModel.mode)
         {
-            adjPowerModel.curAdcValue =
+            adjPowerModel.curDacValue =
                 DAC_DEFAULT_RESOLUTION - (int)lv_slider_get_value(ui_voltSlider);
         }
     }

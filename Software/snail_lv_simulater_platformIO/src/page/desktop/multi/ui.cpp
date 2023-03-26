@@ -3,20 +3,21 @@
 // LVGL VERSION: 8.2
 // PROJECT: SquareLine_Project
 
-#include "ui.h"
-#include "desktop_model.h"
+#include "./ui.h"
 
-#ifndef NEW_UI
+#ifdef MULTI_UI // 判断使能宏
+
+#include "../desktop_model.h"
 
 int16_t btnPosXY[WIN_INFO_SIZE][2] = {{-10 - 110, 0}, {0, 0}, {10 + 110, 0}};
 
 ///////////////////// VARIABLES ////////////////////
 lv_style_t focused_style;
-lv_obj_t *desktop_screen;
-lv_obj_t *ui_PanelMain;
+static lv_obj_t *desktop_screen;
+static lv_obj_t *ui_PanelMain;
 
 lv_indev_t *knobs_indev;
-lv_group_t *main_btn_group = NULL;
+static lv_group_t *main_btn_group = NULL;
 
 static FE_UI_OBJ *ui_Button[UI_OBJ_NUM];
 
@@ -360,7 +361,7 @@ bool initUIObj(uint8_t midIndex)
             lv_obj_t *buttonUI = ui_Button[ind]->mainButtonUI;
             lv_group_add_obj(main_btn_group, buttonUI);
             lv_obj_add_event_cb(buttonUI, ui_event_Button, LV_EVENT_FOCUSED, NULL);
-            lv_obj_add_event_cb(buttonUI, ui_Button[ind]->pressed_event_cb, LV_EVENT_PRESSED, NULL);
+            lv_obj_add_event_cb(buttonUI, ui_Button[ind]->selected_event_cb, LV_EVENT_PRESSED, NULL);
         }
         else
         {

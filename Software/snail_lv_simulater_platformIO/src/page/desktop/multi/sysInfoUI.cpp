@@ -1,11 +1,6 @@
+#include "./ui.h"
 
-
-#include "ui.h"
-#include "desktop_model.h"
-
-#ifndef NEW_UI
-
-#define FONT_DEBUG 1
+#ifdef MULTI_UI
 
 static lv_obj_t *sysInfoPageUI = NULL;
 static lv_obj_t *ui_settingImage;
@@ -27,7 +22,7 @@ static lv_obj_t *ui_backButtonLabel;
 static lv_obj_t *ui_powerBar;
 static lv_style_t chFontStyle;
 
-static lv_group_t *btn_group;
+static lv_group_t *btn_group = NULL;
 
 static void ui_knobs_dir_pressed(lv_event_t *e);
 static void ui_hw_ver_pressed(lv_event_t *e);
@@ -259,19 +254,22 @@ static bool sysInfoPageUI_init(lv_obj_t *father)
 
 void sysInfoPageUI_release()
 {
-    if (NULL == sysInfoPageUI)
+    if (NULL != sysInfoPageUI)
     {
-        return;
+        lv_obj_del(sysInfoPageUI);
+        sysInfoPageUI = NULL;
+        sysInfoUIObj.mainButtonUI = NULL;
     }
-    lv_obj_clean(sysInfoPageUI);
-    sysInfoPageUI = NULL;
-    sysInfoUIObj.mainButtonUI = NULL;
 }
 
 static void ui_back_btn_pressed(lv_event_t *e)
 {
     // 返回项被按下
-    lv_group_del(btn_group);
+    if (NULL != btn_group)
+    {
+        lv_group_del(btn_group);
+        btn_group = NULL;
+    }
     ui_main_pressed(e);
 }
 
