@@ -28,6 +28,9 @@ static lv_obj_t *ui_PanelMain;
 lv_obj_t *ui_PanelTop;
 lv_obj_t *ui_PanelTopBgImg;
 
+lv_obj_t* ui_backBtn;
+lv_obj_t* ui_backBtnLabel;
+
 #ifdef USE_NEW_MENU
 lv_obj_t *rollerMenu;
 #define UI_MENU_WIDTH 50
@@ -83,7 +86,7 @@ void memory_print(void)
 {
     lv_mem_monitor_t mon;
     lv_mem_monitor(&mon);
-    LV_LOG_USER("[LVGL] Mem used:%d,(%d%),frag:%d%,biggest free:%d\n", (int)mon.total_size - mon.free_size, mon.used_pct, mon.frag_pct, (int)mon.free_biggest_size);
+    LV_LOG_USER("[LVGL] Mem used:%d(%d%),frag:%d%,biggest free:%d\n", (int)mon.total_size - mon.free_size, mon.used_pct, mon.frag_pct, (int)mon.free_biggest_size);
 }
 
 static void set_x_pos(void *menu, int32_t v)
@@ -94,9 +97,10 @@ static void set_x_pos(void *menu, int32_t v)
 static void set_menu_focus_on(lv_anim_t *a)
 {
 #ifdef USE_NEW_MENU
-    lv_group_focus_obj(rollerMenu);
+    //这里要删除之前的组
     lv_roller_set_selected(rollerMenu, currPageIndex, LV_ANIM_OFF);
     lv_indev_set_group(knobs_indev, menu_btn_group);
+    lv_group_focus_obj(rollerMenu);
     lv_group_set_editing(menu_btn_group, true);
 #else
     lv_group_focus_obj(ui_MenuButton[currPageIndex]);
@@ -121,8 +125,7 @@ void hide_menu()
         lv_anim_init(&menu_anim);
         lv_anim_set_exec_cb(&menu_anim, set_x_pos);
         lv_anim_set_values(&menu_anim, 0, UI_MENU_WIDTH);
-        // todo 由init时初始化，故删除此操作
-        // lv_anim_set_ready_cb(&menu_anim, set_menu_focus_out);
+        lv_anim_set_ready_cb(&menu_anim, set_menu_focus_out);
         lv_anim_set_repeat_count(&menu_anim, 0);
         lv_anim_set_time(&menu_anim, 300);
 #ifdef USE_NEW_MENU
@@ -296,7 +299,7 @@ void theme_color_init()
 void set_temp_label_text(lv_obj_t *lb, int temp)
 {
     if (temp < DISCONNCT_TEMP)
-        lv_label_set_text_fmt(lb, "%3d", temp);
+        lv_label_set_text_fmt(lb, "%d", temp);
     else
         lv_label_set_text(lb, "NA");
 }
@@ -305,10 +308,10 @@ void update_top_info()
 {
     // 顶部状态栏
     // 测试数据，到时候删除
-    // solderModel.curTemp = lv_rand(250, 380);
-    // airhotModel.curTemp = lv_rand(280, 360);
-    // heatplatformModel.curTemp = lv_rand(150, 250);
-    // adjPowerModel.voltage = lv_rand(8000, 24000);
+    //solderModel.curTemp = lv_rand(250, 380);
+    //airhotModel.curTemp = lv_rand(280, 360);
+    //heatplatformModel.curTemp = lv_rand(150, 250);
+    //adjPowerModel.voltage = lv_rand(8000, 24000);
 
     switch (currPageIndex)
     {
@@ -377,6 +380,11 @@ void top_layer_set_name()
         lv_obj_clear_flag(ui_topLabel3, LV_OBJ_FLAG_HIDDEN);
     }
 }
+static void ui_back_btn_pressed(lv_event_t* e)
+{
+    // 返回项被按下
+    show_menu();
+}
 
 void top_layer_init()
 {
@@ -432,6 +440,20 @@ void top_layer_init()
     lv_obj_set_style_text_align(ui_topLabel3, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_style_text_opa(ui_topLabel3, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_topLabel3, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_backBtn = lv_btn_create(ui_PanelTop);
+    lv_obj_remove_style_all(ui_backBtn);
+    lv_obj_align(ui_backBtn, LV_ALIGN_TOP_RIGHT, -10, 0);
+    lv_obj_add_flag(ui_backBtn, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+    lv_obj_clear_flag(ui_backBtn, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_add_style(ui_backBtn, &back_btn_style, LV_STATE_DEFAULT);
+    lv_obj_add_style(ui_backBtn, &back_btn_focused_style, LV_STATE_FOCUSED);
+
+    ui_backBtnLabel = lv_label_create(ui_backBtn);
+    lv_obj_center(ui_backBtnLabel);
+    lv_label_set_text(ui_backBtnLabel, LV_SYMBOL_LEFT);
+
+    lv_obj_add_event_cb(ui_backBtn, ui_back_btn_pressed, LV_EVENT_PRESSED, NULL);
 
     topLayerTimer = lv_timer_create(toplayTimer_timeout, 1000, NULL);
     lv_timer_set_repeat_count(topLayerTimer, -1);
@@ -698,11 +720,13 @@ void main_screen_init(lv_indev_t *indev)
 void ui_init(lv_indev_t *indev)
 {
     knobs_indev = indev;
+    /*这些都不需要，不用他的主题
     lv_disp_t *dispp = lv_disp_get_default();
     lv_theme_t *theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE),
                                               lv_palette_main(LV_PALETTE_RED),
                                               false, LV_FONT_DEFAULT);
     lv_disp_set_theme(dispp, theme);
+    */
     main_screen_init(knobs_indev);
     lv_disp_load_scr(desktop_screen);
 }

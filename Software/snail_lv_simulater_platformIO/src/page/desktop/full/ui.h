@@ -132,6 +132,7 @@ extern "C"
     extern lv_style_t back_btn_style;
     extern lv_style_t back_btn_focused_style;
     extern lv_obj_t *ui_PanelTop; // 顶部状态容器
+    extern lv_obj_t *ui_backBtn;  //顶部返回按钮
 
 // 如果需要启用新的菜单样式，定义这个
 #define USE_NEW_MENU

@@ -13,8 +13,6 @@ static lv_obj_t *ui_setAirDutyButton;
 static lv_obj_t *ui_setAirDutyLabel;
 static lv_obj_t *ui_setAirArc = NULL;
 
-static lv_obj_t *ui_backButton;
-static lv_obj_t *ui_backButtonLabel;
 static lv_obj_t *ui_powerBar;
 
 static lv_obj_t *ui_imgFan;
@@ -41,18 +39,10 @@ static uint8_t chartTempDataSaveInd; // 循环储存的下标
 
 static void ui_set_temp_btn_pressed(lv_event_t *e);
 static void ui_set_air_btn_pressed(lv_event_t *e);
-static void ui_back_btn_pressed(lv_event_t *e);
 
 static void airhotPageUI_focused(lv_event_t *e)
 {
-    btn_group = lv_group_create();
-    lv_group_add_obj(btn_group, ui_backButton);
-    lv_group_add_obj(btn_group, ui_fineAdjTempButton);
-    lv_group_add_obj(btn_group, ui_fastSetTempButton1);
-    lv_group_add_obj(btn_group, ui_fastSetTempButton2);
-    lv_group_add_obj(btn_group, ui_fastSetTempButton3);
-    lv_group_add_obj(btn_group, ui_setAirDutyButton);
-    lv_group_focus_obj(ui_backButton);
+    lv_group_focus_obj(ui_backBtn);
     lv_indev_set_group(knobs_indev, btn_group);
 }
 
@@ -224,11 +214,13 @@ static bool airhotPageUI_init(lv_obj_t *father)
     lv_label_set_text_fmt(ui_fastSetTempLabel3, "%d", airhotModel.quickSetupTemp_2);
 
     ui_curTempLabel = lv_label_create(ui_ButtonTmp);
+    lv_obj_set_size(ui_curTempLabel, 105, 52);
     lv_obj_align(ui_curTempLabel, LV_ALIGN_TOP_LEFT, 68, 44);
-    lv_label_set_text_fmt(ui_curTempLabel, "%3d", airhotModel.curTemp);
+    lv_label_set_text_fmt(ui_curTempLabel, "%d", airhotModel.curTemp);
+    lv_obj_set_style_text_align(ui_curTempLabel,LV_TEXT_ALIGN_RIGHT,0);
     lv_obj_set_style_text_color(ui_curTempLabel, AIR_HOT_THEME_COLOR1, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_curTempLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_curTempLabel, &FontJost_52, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_curTempLabel, &FontRoboto_52, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_letter_space(ui_curTempLabel, 3, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_curTempCLabel = lv_label_create(ui_ButtonTmp);
@@ -296,19 +288,6 @@ static bool airhotPageUI_init(lv_obj_t *father)
     lv_obj_center(ui_setAirDutyLabel);
     lv_label_set_text_fmt(ui_setAirDutyLabel, "%d%%", airhotModel.workAirSpeed);
 
-    // 返回图标
-    ui_backButton = lv_btn_create(ui_PanelTop);
-    lv_obj_remove_style_all(ui_backButton);
-    lv_obj_align(ui_backButton, LV_ALIGN_TOP_RIGHT, -10, 0);
-    lv_obj_add_flag(ui_backButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
-    lv_obj_clear_flag(ui_backButton, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_add_style(ui_backButton, &back_btn_style, LV_STATE_DEFAULT);
-    lv_obj_add_style(ui_backButton, &back_btn_focused_style, LV_STATE_FOCUSED);
-
-    ui_backButtonLabel = lv_label_create(ui_backButton);
-    lv_obj_center(ui_backButtonLabel);
-    lv_label_set_text(ui_backButtonLabel, LV_SYMBOL_LEFT);
-
     ui_powerBar = lv_bar_create(ui_ButtonTmp);
     lv_obj_set_size(ui_powerBar, 250, 6);
     lv_obj_align(ui_powerBar, LV_ALIGN_CENTER, 0, -5);
@@ -344,14 +323,21 @@ static bool airhotPageUI_init(lv_obj_t *father)
         i = (i + 1) % CHART_TEMP_LEN;
     }
 
-    lv_obj_add_event_cb(ui_backButton, ui_back_btn_pressed, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(ui_fastSetTempButton1, ui_fast_temp_btn1_pressed, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(ui_fastSetTempButton2, ui_fast_temp_btn2_pressed, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(ui_fastSetTempButton3, ui_fast_temp_btn3_pressed, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(ui_fineAdjTempButton, ui_set_temp_btn_pressed, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(ui_setAirDutyButton, ui_set_air_btn_pressed, LV_EVENT_PRESSED, NULL);
 
-    airhotPageUI_focused(NULL);
+    btn_group = lv_group_create();
+    lv_group_add_obj(btn_group, ui_backBtn);
+    lv_group_add_obj(btn_group, ui_fineAdjTempButton);
+    lv_group_add_obj(btn_group, ui_fastSetTempButton1);
+    lv_group_add_obj(btn_group, ui_fastSetTempButton2);
+    lv_group_add_obj(btn_group, ui_fastSetTempButton3);
+    lv_group_add_obj(btn_group, ui_setAirDutyButton);
+    lv_group_focus_obj(ui_backBtn);
+    lv_indev_set_group(knobs_indev, btn_group);
 
     setTempArcGroup = lv_group_create();
     setAirArcGroup = lv_group_create();
@@ -375,7 +361,16 @@ static void airhotPageUI_release()
         lv_group_del(btn_group);
         btn_group = NULL;
     }
-
+    if (NULL != setTempArcGroup)
+    {
+        lv_group_del(setTempArcGroup);
+        setTempArcGroup = NULL;
+    }
+    if (NULL != setAirArcGroup)
+    {
+        lv_group_del(setAirArcGroup);
+        setAirArcGroup = NULL;
+    }
     if (NULL != airhotTimer)
     {
         lv_timer_del(airhotTimer);
@@ -397,19 +392,12 @@ void ui_updateAirhotCurTempAndPowerDuty(void)
     }
     else
     {
-        lv_label_set_text_fmt(ui_curTempLabel, "%3d", airhotModel.curTemp);
+        lv_label_set_text_fmt(ui_curTempLabel, "%d", airhotModel.curTemp);
         lv_bar_set_value(ui_powerBar, airhotModel.powerRatio, LV_ANIM_ON);
         chartTempData[chartTempDataSaveInd] = (uint8_t)(airhotModel.curTemp >> 2);
         lv_chart_set_next_value(chartTemp, chartSer1, chartTempData[chartTempDataSaveInd]);
         chartTempDataSaveInd = (chartTempDataSaveInd + 1) % CHART_TEMP_LEN;
     }
-}
-
-static void ui_back_btn_pressed(lv_event_t *e)
-{
-    // 返回项被按下
-    // lv_group_del(btn_group);
-    show_menu();
 }
 
 static void ui_set_tempArc_changed(lv_event_t *e)

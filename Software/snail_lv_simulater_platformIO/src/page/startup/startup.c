@@ -2,11 +2,7 @@
 
 #include "lvgl.h"
 
-static lv_style_t hostNameStyle;
-static lv_style_t screenStyle;
-static lv_obj_t *screen1;
-static lv_obj_t *hostName;
-static lv_obj_t *version; // SNAILHEATER_VERSION
+static lv_obj_t *screen1 = NULL;
 
 void startupAnim(lv_obj_t *obj)
 {
@@ -54,55 +50,43 @@ void startupAnim(lv_obj_t *obj)
 
 void startupInitScreen()
 {
-    lv_style_init(&screenStyle);
-    lv_style_set_bg_color(&screenStyle, lv_color_hex(0x000000));
     if (NULL == screen1)
     {
         screen1 = lv_obj_create(NULL);
-        lv_obj_clear_flag(screen1, LV_OBJ_FLAG_SCROLLABLE);
-        lv_obj_add_style(screen1, &screenStyle, LV_STATE_DEFAULT);
+        // lv_obj_clear_flag(screen1, LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_set_style_bg_color(screen1, lv_color_black(), 0);
         lv_scr_load(screen1);
     }
 }
 
 void startupUI(const char *ver)
 {
-    lv_style_init(&hostNameStyle);
-    lv_style_set_text_color(&hostNameStyle, lv_color_hex(0xFFFFFF));
-    lv_style_set_text_font(&hostNameStyle, &lv_font_montserrat_28);
-
-    hostName = lv_label_create(screen1);
+    lv_obj_t *hostName = lv_label_create(screen1);
     lv_obj_set_size(hostName, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
     lv_obj_set_pos(hostName, 0, 0);
     lv_obj_set_align(hostName, LV_ALIGN_TOP_MID);
-    lv_obj_add_style(hostName, LV_PART_MAIN, &hostNameStyle);
+    lv_obj_set_style_text_color(hostName, lv_color_hex(0xFFFFFF), 0);
+    lv_obj_set_style_text_font(hostName, &lv_font_montserrat_28, 0);
     lv_label_set_recolor(hostName, true); // 先得使能文本重绘色功能
-    lv_obj_set_style_text_font(hostName, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_label_set_text(hostName, "#FFFFFF SnailHeater#");
 
-    version = lv_label_create(screen1);
+    lv_obj_t *version = lv_label_create(screen1);
     lv_obj_set_size(version, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-    // lv_obj_set_pos(version, 0, 0);
     lv_obj_set_align(version, LV_ALIGN_BOTTOM_MID);
-    // lv_obj_add_style(version, LV_PART_MAIN, &hostNameStyle);
     lv_label_set_recolor(version, true); // 先得使能文本重绘色功能
     lv_obj_set_style_text_font(version, &lv_font_montserrat_12, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_label_set_text_fmt(version, "#FF0000 Ver %s#", ver);
 
-    // lv_scr_load(screen1);
     startupAnim(hostName);
-    // lv_scr_load_anim(screen1, LV_SCR_LOAD_ANIM_NONE, 300, 300, false);
+
     ANIEND
-    // lv_scr_load(screen1);
 }
 
 void startupDel(void)
 {
     if (NULL != screen1)
     {
-        lv_obj_del(screen1);
+        lv_obj_clean(screen1);
         screen1 = NULL;
-        hostName = NULL;
-        version = NULL;
     }
 }

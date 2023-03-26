@@ -22,6 +22,8 @@
 
 /*Store the image of the glyphs*/
 static LV_ATTRIBUTE_LARGE_CONST const uint8_t glyph_bitmap[] = {
+    /* U+0020 " " */
+
     /* U+002E "." */
     0x0, 0x9, 0xf9, 0xff, 0xe8, 0xf8,
 
@@ -194,6 +196,7 @@ static LV_ATTRIBUTE_LARGE_CONST const uint8_t glyph_bitmap[] = {
 
 static const lv_font_fmt_txt_glyph_dsc_t glyph_dsc[] = {
     {.bitmap_index = 0, .adv_w = 0, .box_w = 0, .box_h = 0, .ofs_x = 0, .ofs_y = 0} /* id = 0 reserved */,
+    {.bitmap_index = 0, .adv_w = 87, .box_w = 0, .box_h = 0, .ofs_x = 0, .ofs_y = 0},
     {.bitmap_index = 0, .adv_w = 88, .box_w = 3, .box_h = 4, .ofs_x = 1, .ofs_y = 0},
     {.bitmap_index = 6, .adv_w = 180, .box_w = 11, .box_h = 13, .ofs_x = 1, .ofs_y = 0},
     {.bitmap_index = 78, .adv_w = 137, .box_w = 7, .box_h = 14, .ofs_x = 2, .ofs_y = 0},
@@ -216,16 +219,16 @@ static const lv_font_fmt_txt_glyph_dsc_t glyph_dsc[] = {
  *--------------------*/
 
 static const uint16_t unicode_list_0[] = {
-    0x0, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8,
-    0x9, 0xa, 0xb, 0x13, 0x15, 0x20, 0x82
+    0x0, 0xe, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15,
+    0x16, 0x17, 0x18, 0x19, 0x21, 0x23, 0x2e, 0x90
 };
 
 /*Collect the unicode lists and glyph_id offsets*/
 static const lv_font_fmt_txt_cmap_t cmaps[] =
 {
     {
-        .range_start = 46, .range_length = 131, .glyph_id_start = 1,
-        .unicode_list = unicode_list_0, .glyph_id_ofs_list = NULL, .list_length = 15, .type = LV_FONT_FMT_TXT_CMAP_SPARSE_TINY
+        .range_start = 32, .range_length = 145, .glyph_id_start = 1,
+        .unicode_list = unicode_list_0, .glyph_id_ofs_list = NULL, .list_length = 16, .type = LV_FONT_FMT_TXT_CMAP_SPARSE_TINY
     }
 };
 
@@ -237,15 +240,17 @@ static const lv_font_fmt_txt_cmap_t cmaps[] =
 /*Map glyph_ids to kern left classes*/
 static const uint8_t kern_left_class_mapping[] =
 {
-    0, 0, 0, 0, 0, 1, 0, 0,
-    0, 2, 1, 3, 4, 1, 0, 5
+    0, 0, 0, 0, 0, 0, 1, 0,
+    0, 0, 2, 1, 3, 4, 1, 0,
+    5
 };
 
 /*Map glyph_ids to kern right classes*/
 static const uint8_t kern_right_class_mapping[] =
 {
-    0, 1, 0, 0, 0, 0, 0, 0,
-    0, 2, 0, 0, 1, 3, 0, 0
+    0, 0, 1, 0, 0, 0, 0, 0,
+    0, 0, 2, 0, 0, 1, 3, 0,
+    0
 };
 
 /*Kern values between classes*/

@@ -14,30 +14,22 @@ static lv_obj_t *ui_capacityUnitLabel;
 static lv_obj_t *ui_enableSwitch;
 static lv_obj_t *ui_modeButton;
 static lv_obj_t *ui_modeLable;
-static lv_obj_t *ui_backButton;
-static lv_obj_t *ui_backButtonLabel;
 
 static lv_group_t *btn_group = NULL;
 
 static void ui_set_slider_changed(lv_event_t *e);
-static void ui_back_btn_pressed(lv_event_t *e);
 static void ui_enable_switch_pressed(lv_event_t *e);
 static void ui_mode_bnt_pressed(lv_event_t *e);
 
 static void adjPowerPageUI_focused(lv_event_t *e)
 {
-    btn_group = lv_group_create();
-    lv_group_add_obj(btn_group, ui_backButton);
-    lv_group_add_obj(btn_group, ui_voltSlider);
-    lv_group_add_obj(btn_group, ui_modeButton);
-    lv_group_add_obj(btn_group, ui_enableSwitch);
     if (adjPowerModel.workState == 1)
     {
         lv_group_focus_obj(ui_enableSwitch);
     }
     else
     {
-        lv_group_focus_obj(ui_backButton);
+        lv_group_focus_obj(ui_backBtn);
     }
     lv_indev_set_group(knobs_indev, btn_group);
 }
@@ -147,7 +139,7 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     lv_obj_set_style_text_font(ui_capacityUnitLabel, &FontRoboto_36, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     // 模式按钮
-    ui_modeButton = lv_btn_create(ui_ButtonTmp); // 紫色
+    ui_modeButton = lv_btn_create(ui_ButtonTmp);
     lv_obj_set_size(ui_modeButton, 30, 25);
     lv_obj_align(ui_modeButton, LV_ALIGN_CENTER, 100, 90);
     lv_obj_set_style_bg_color(ui_modeButton, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -174,8 +166,8 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     // 使能开关
     ui_enableSwitch = lv_switch_create(ui_ButtonTmp);
     lv_obj_add_flag(ui_enableSwitch, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
-    lv_obj_set_size(ui_enableSwitch, 40, 20);
-    lv_obj_align(ui_enableSwitch, LV_ALIGN_CENTER, 100, 50);
+    lv_obj_set_size(ui_enableSwitch, 60, 30);
+    lv_obj_align(ui_enableSwitch, LV_ALIGN_CENTER, 90, 50);
     if (ENABLE_STATE_OPEN == adjPowerModel.workState)
     {
         lv_obj_add_state(ui_enableSwitch, LV_STATE_CHECKED); // 开
@@ -185,29 +177,29 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
         lv_obj_clear_state(ui_enableSwitch, LV_STATE_CHECKED); // 关
     }
     // 注意，这里触发的是3个状态 CHECKED 、LV_STATE_FOCUS 、 和 LV_STATE_FOCUS_KEY，必须设置成KEY才有效
-    lv_obj_set_style_outline_color(ui_enableSwitch, HEAT_PLAT_THEME_COLOR1, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
+    lv_obj_set_style_outline_color(ui_enableSwitch, ADJ_POWER_THEME_COLOR1, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
+    lv_obj_set_style_bg_color(ui_enableSwitch, ADJ_POWER_THEME_COLOR1, LV_PART_INDICATOR | LV_STATE_FOCUS_KEY);
     lv_obj_set_style_outline_opa(ui_enableSwitch, 255, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
     lv_obj_set_style_outline_pad(ui_enableSwitch, 4, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
 
-    // 返回图标
-    ui_backButton = lv_btn_create(ui_PanelTop);
-    lv_obj_remove_style_all(ui_backButton);
-    lv_obj_align(ui_backButton, LV_ALIGN_TOP_RIGHT, -10, 0);
-    lv_obj_add_flag(ui_backButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
-    lv_obj_clear_flag(ui_backButton, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_add_style(ui_backButton, &back_btn_style, LV_STATE_DEFAULT);
-    lv_obj_add_style(ui_backButton, &back_btn_focused_style, LV_STATE_FOCUSED);
-
-    ui_backButtonLabel = lv_label_create(ui_backButton);
-    lv_obj_center(ui_backButtonLabel);
-    lv_label_set_text(ui_backButtonLabel, LV_SYMBOL_LEFT);
-
-    lv_obj_add_event_cb(ui_backButton, ui_back_btn_pressed, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(ui_voltSlider, ui_set_slider_changed, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_event_cb(ui_enableSwitch, ui_enable_switch_pressed, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_event_cb(ui_modeButton, ui_mode_bnt_pressed, LV_EVENT_PRESSED, NULL);
 
-    adjPowerPageUI_focused(NULL);
+    btn_group = lv_group_create();
+    lv_group_add_obj(btn_group, ui_backBtn);
+    lv_group_add_obj(btn_group, ui_voltSlider);
+    lv_group_add_obj(btn_group, ui_enableSwitch);
+    lv_group_add_obj(btn_group, ui_modeButton);
+    if (adjPowerModel.workState == 1)
+    {
+        lv_group_focus_obj(ui_enableSwitch);
+    }
+    else
+    {
+        lv_group_focus_obj(ui_backBtn);
+    }
+    lv_indev_set_group(knobs_indev, btn_group);
 
     adjPowerTimer = lv_timer_create(adjPowerTimer_timeout, DATA_REFRESH_MS, NULL);
     lv_timer_set_repeat_count(adjPowerTimer, -1);
@@ -234,12 +226,6 @@ static void adjPowerPageUI_release()
         lv_timer_del(adjPowerTimer);
         adjPowerTimer = NULL;
     }
-}
-
-static void ui_back_btn_pressed(lv_event_t *e)
-{
-    // 返回项被按下
-    show_menu();
 }
 
 static void ui_mode_bnt_pressed(lv_event_t *e)

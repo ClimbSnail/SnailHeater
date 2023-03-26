@@ -27,29 +27,15 @@ static lv_obj_t *ui_solderWakeLabel;
 static lv_obj_t *ui_solderWakeDropdown;
 
 static lv_obj_t *ui_swVerLabel;
-static lv_obj_t *ui_backButton;
-static lv_obj_t *ui_backButtonLabel;
 
 static lv_group_t *btn_group = NULL;
 
 static void ui_knobs_dir_pressed(lv_event_t *e);
 static void ui_hw_ver_pressed(lv_event_t *e);
-static void ui_back_btn_pressed(lv_event_t *e);
 
 static void settingPageUI_focused(lv_event_t *e)
 {
-    btn_group = lv_group_create();
-    lv_group_add_obj(btn_group, ui_backButton);
-    lv_group_add_obj(btn_group, ui_knobsDirSwitch);
-    lv_group_add_obj(btn_group, ui_whiteThemeSwitch);
-    lv_group_add_obj(btn_group, ui_autoHeatSwitch);
-    lv_group_add_obj(btn_group, ui_solderGridSwitch);
-    lv_group_add_obj(btn_group, ui_airhotGridSwitch);
-    lv_group_add_obj(btn_group, ui_heatplatGridSwitch);
-    lv_group_add_obj(btn_group, ui_solderTypeDropdown);
-    lv_group_add_obj(btn_group, ui_solderWakeDropdown);
-    lv_group_add_obj(btn_group, ui_hardVerDropdown);
-    lv_group_focus_obj(ui_backButton);
+    lv_group_focus_obj(ui_backBtn);
     lv_indev_set_group(knobs_indev, btn_group);
 }
 
@@ -495,20 +481,6 @@ static bool settingPageUI_init(lv_obj_t *father)
     lv_obj_set_style_text_font(ui_swVerLabel, &lv_font_montserrat_14, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_label_set_text_fmt(ui_swVerLabel, "Ver %s", sysInfoModel.softwareVersion);
 
-    // 返回图标
-    ui_backButton = lv_btn_create(ui_PanelTop);
-    lv_obj_remove_style_all(ui_backButton);
-    lv_obj_align(ui_backButton, LV_ALIGN_TOP_RIGHT, -10, 0);
-    lv_obj_add_flag(ui_backButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
-    lv_obj_clear_flag(ui_backButton, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_add_style(ui_backButton, &back_btn_style, LV_STATE_DEFAULT);
-    lv_obj_add_style(ui_backButton, &back_btn_focused_style, LV_STATE_FOCUSED);
-
-    ui_backButtonLabel = lv_label_create(ui_backButton);
-    lv_obj_center(ui_backButtonLabel);
-    lv_label_set_text(ui_backButtonLabel, LV_SYMBOL_LEFT);
-
-    lv_obj_add_event_cb(ui_backButton, ui_back_btn_pressed, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(ui_knobsDirSwitch, ui_knobs_dir_pressed, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_event_cb(ui_whiteThemeSwitch, ui_white_theme_pressed, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_event_cb(ui_autoHeatSwitch, ui_auto_heat_pressed, LV_EVENT_VALUE_CHANGED, NULL);
@@ -519,7 +491,19 @@ static bool settingPageUI_init(lv_obj_t *father)
     lv_obj_add_event_cb(ui_solderWakeDropdown, ui_solder_wake_pressed, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_event_cb(ui_hardVerDropdown, ui_hw_ver_pressed, LV_EVENT_VALUE_CHANGED, NULL);
 
-    settingPageUI_focused(NULL);
+    btn_group = lv_group_create();
+    lv_group_add_obj(btn_group, ui_backBtn);
+    lv_group_add_obj(btn_group, ui_knobsDirSwitch);
+    lv_group_add_obj(btn_group, ui_whiteThemeSwitch);
+    lv_group_add_obj(btn_group, ui_autoHeatSwitch);
+    lv_group_add_obj(btn_group, ui_solderGridSwitch);
+    lv_group_add_obj(btn_group, ui_airhotGridSwitch);
+    lv_group_add_obj(btn_group, ui_heatplatGridSwitch);
+    lv_group_add_obj(btn_group, ui_solderTypeDropdown);
+    lv_group_add_obj(btn_group, ui_solderWakeDropdown);
+    lv_group_add_obj(btn_group, ui_hardVerDropdown);
+    lv_group_focus_obj(ui_backBtn);
+    lv_indev_set_group(knobs_indev, btn_group);
 
     return true;
 }
@@ -538,12 +522,6 @@ void settingPageUI_release()
         lv_group_del(btn_group);
         btn_group = NULL;
     }
-}
-
-static void ui_back_btn_pressed(lv_event_t *e)
-{
-    // 返回项被按下
-    show_menu();
 }
 
 static void ui_hw_ver_pressed(lv_event_t *e)
