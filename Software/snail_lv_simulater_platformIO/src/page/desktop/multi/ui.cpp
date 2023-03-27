@@ -4,10 +4,9 @@
 // PROJECT: SquareLine_Project
 
 #include "./ui.h"
+#include "../desktop_model.h"
 
 #ifdef MULTI_UI // 判断使能宏
-
-#include "../desktop_model.h"
 
 int16_t btnPosXY[WIN_INFO_SIZE][2] = {{-10 - 110, 0}, {0, 0}, {10 + 110, 0}};
 

@@ -1,4 +1,5 @@
 #include "./ui.h"
+#include "../desktop_model.h"
 
 #ifdef FULL_UI
 
@@ -50,23 +51,34 @@ static void rotate_anim_cb(void *lvobj, int32_t v)
 {
     lv_img_set_angle((lv_obj_t *)lvobj, v);
 }
+
+static void setFineAdjTemp(int temp)
+{
+    airhotModel.fineAdjTemp = temp;
+    airhotModel.targetTemp = airhotModel.fineAdjTemp;
+    lv_label_set_text_fmt(ui_fineAdjTempLabel, "%d°C", airhotModel.fineAdjTemp);
+}
+
 static void ui_fast_temp_btn1_pressed(lv_event_t *e)
 {
-    airhotModel.tempEnable.allValue = 0; // 重设置前必须清空
-    airhotModel.tempEnable.bitValue.quickSetupTempEnable_0 = ENABLE_STATE_OPEN;
-    airhotModel.targetTemp = airhotModel.quickSetupTemp_0;
+    // airhotModel.tempEnable.allValue = 0; // 重设置前必须清空
+    // airhotModel.tempEnable.bitValue.quickSetupTempEnable_0 = ENABLE_STATE_OPEN;
+    // airhotModel.targetTemp = airhotModel.quickSetupTemp_0;
+    setFineAdjTemp(airhotModel.quickSetupTemp_0);
 }
 static void ui_fast_temp_btn2_pressed(lv_event_t *e)
 {
-    airhotModel.tempEnable.allValue = 0; // 重设置前必须清空
-    airhotModel.tempEnable.bitValue.quickSetupTempEnable_1 = ENABLE_STATE_OPEN;
-    airhotModel.targetTemp = airhotModel.quickSetupTemp_1;
+    // airhotModel.tempEnable.allValue = 0; // 重设置前必须清空
+    // airhotModel.tempEnable.bitValue.quickSetupTempEnable_1 = ENABLE_STATE_OPEN;
+    // airhotModel.targetTemp = airhotModel.quickSetupTemp_1;
+    setFineAdjTemp(airhotModel.quickSetupTemp_1);
 }
 static void ui_fast_temp_btn3_pressed(lv_event_t *e)
 {
-    airhotModel.tempEnable.allValue = 0; // 重设置前必须清空
-    airhotModel.tempEnable.bitValue.quickSetupTempEnable_2 = ENABLE_STATE_OPEN;
-    airhotModel.targetTemp = airhotModel.quickSetupTemp_2;
+    // airhotModel.tempEnable.allValue = 0; // 重设置前必须清空
+    // airhotModel.tempEnable.bitValue.quickSetupTempEnable_2 = ENABLE_STATE_OPEN;
+    // airhotModel.targetTemp = airhotModel.quickSetupTemp_2;
+    setFineAdjTemp(airhotModel.quickSetupTemp_2);
 }
 
 static void draw_event_cb(lv_event_t *e)
@@ -217,7 +229,7 @@ static bool airhotPageUI_init(lv_obj_t *father)
     lv_obj_set_size(ui_curTempLabel, 105, 52);
     lv_obj_align(ui_curTempLabel, LV_ALIGN_TOP_LEFT, 68, 44);
     lv_label_set_text_fmt(ui_curTempLabel, "%d", airhotModel.curTemp);
-    lv_obj_set_style_text_align(ui_curTempLabel,LV_TEXT_ALIGN_RIGHT,0);
+    lv_obj_set_style_text_align(ui_curTempLabel, LV_TEXT_ALIGN_RIGHT, 0);
     lv_obj_set_style_text_color(ui_curTempLabel, AIR_HOT_THEME_COLOR1, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_curTempLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_curTempLabel, &FontRoboto_52, LV_PART_MAIN | LV_STATE_DEFAULT);

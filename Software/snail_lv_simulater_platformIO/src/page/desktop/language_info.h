@@ -23,7 +23,7 @@
 #define SETTING_TEXT_SOLDER_WAKEUP "烙铁休眠方式"
 
 #define TEXT_TEMP_PRESET "快速设定"
-#define TEXT_SET_TEMP "细调温度"
+#define TEXT_SET_TEMP "目标温度"
 #define TEXT_AIR_SPEED "散热风速"
 
 #endif

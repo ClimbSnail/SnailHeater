@@ -1,4 +1,5 @@
 #include "./ui.h"
+#include "../desktop_model.h"
 
 #ifdef FULL_UI
 
@@ -40,7 +41,7 @@ static void adjPowerTimer_timeout(lv_timer_t *timer)
     // 更新电压电流功率的函数
     lv_label_set_text_fmt(ui_voltageLabel, "%.2lf", adjPowerModel.voltage / 1000.0);
     lv_label_set_text_fmt(ui_currentLabel, "%.2lf", adjPowerModel.current / 1000.0);
-    lv_label_set_text(ui_capacityUnitLabel, "W");
+    lv_label_set_text_fmt(ui_capacityLabel, "%.2lf", adjPowerModel.capacity / 1000000.0);
 }
 
 static bool adjPowerPageUI_init(lv_obj_t *father)

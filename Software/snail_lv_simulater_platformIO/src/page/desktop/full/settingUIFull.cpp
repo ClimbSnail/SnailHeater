@@ -1,4 +1,5 @@
 #include "./ui.h"
+#include "../desktop_model.h"
 
 #ifdef FULL_UI
 

@@ -5,8 +5,6 @@
 #ifndef _UI_H
 #define _UI_H
 
-#include "../ui_select.h"
-
 #ifdef __cplusplus
 extern "C"
 {
@@ -20,7 +18,6 @@ extern "C"
 
 #include "./uiObjBase.h"
 #include "../language_info.h"
-#include "../desktop_model.h"
 #include "resource/images/ico.h"
 
 #define DATA_REFRESH_MS 300 // 数据刷新的时间

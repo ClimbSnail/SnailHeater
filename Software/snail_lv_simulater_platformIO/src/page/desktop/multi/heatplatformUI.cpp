@@ -1,6 +1,7 @@
 
 
 #include "./ui.h"
+#include "../desktop_model.h"
 
 #ifdef MULTI_UI
 

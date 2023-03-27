@@ -1,4 +1,5 @@
 #include "./ui.h"
+#include "../desktop_model.h"
 
 #ifdef FULL_UI
 
@@ -41,25 +42,33 @@ static void solderPageUI_focused(lv_event_t *e)
     lv_indev_set_group(knobs_indev, btn_group);
 }
 
+static void setFineAdjTemp(int temp)
+{
+    solderModel.fineAdjTemp = temp;
+    solderModel.targetTemp = solderModel.fineAdjTemp;
+    lv_label_set_text_fmt(ui_fineAdjTempLabel, "%d°C", solderModel.fineAdjTemp);
+}
+
 static void ui_fast_temp_btn1_pressed(lv_event_t *e)
 {
-    solderModel.tempEnable.allValue = 0; // 重设置前必须清空
-    solderModel.tempEnable.bitValue.quickSetupTempEnable_0 = ENABLE_STATE_OPEN;
-    solderModel.targetTemp = solderModel.quickSetupTemp_0;
+    // solderModel.tempEnable.allValue = 0; // 重设置前必须清空
+    // solderModel.tempEnable.bitValue.quickSetupTempEnable_0 = ENABLE_STATE_OPEN;
+    // solderModel.targetTemp = solderModel.quickSetupTemp_0;
+    setFineAdjTemp(solderModel.quickSetupTemp_0);
 }
-
 static void ui_fast_temp_btn2_pressed(lv_event_t *e)
 {
-    solderModel.tempEnable.allValue = 0; // 重设置前必须清空
-    solderModel.tempEnable.bitValue.quickSetupTempEnable_1 = ENABLE_STATE_OPEN;
-    solderModel.targetTemp = solderModel.quickSetupTemp_1;
+    // solderModel.tempEnable.allValue = 0; // 重设置前必须清空
+    // solderModel.tempEnable.bitValue.quickSetupTempEnable_1 = ENABLE_STATE_OPEN;
+    // solderModel.targetTemp = solderModel.quickSetupTemp_1;
+    setFineAdjTemp(solderModel.quickSetupTemp_1);
 }
-
 static void ui_fast_temp_btn3_pressed(lv_event_t *e)
 {
-    solderModel.tempEnable.allValue = 0; // 重设置前必须清空
-    solderModel.tempEnable.bitValue.quickSetupTempEnable_2 = ENABLE_STATE_OPEN;
-    solderModel.targetTemp = solderModel.quickSetupTemp_2;
+    // solderModel.tempEnable.allValue = 0; // 重设置前必须清空
+    // solderModel.tempEnable.bitValue.quickSetupTempEnable_2 = ENABLE_STATE_OPEN;
+    // solderModel.targetTemp = solderModel.quickSetupTemp_2;
+    setFineAdjTemp(solderModel.quickSetupTemp_2);
 }
 
 static void draw_event_cb(lv_event_t *e)
@@ -210,7 +219,7 @@ static bool solderPageUI_init(lv_obj_t *father)
     lv_obj_set_size(ui_curTempLabel, 105, 52);
     lv_obj_align(ui_curTempLabel, LV_ALIGN_TOP_LEFT, 68, 44);
     lv_label_set_text_fmt(ui_curTempLabel, "%d", solderModel.curTemp);
-    lv_obj_set_style_text_align(ui_curTempLabel,LV_TEXT_ALIGN_RIGHT,0);
+    lv_obj_set_style_text_align(ui_curTempLabel, LV_TEXT_ALIGN_RIGHT, 0);
     lv_obj_set_style_text_color(ui_curTempLabel, SOLDER_THEME_COLOR1, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_curTempLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_curTempLabel, &FontRoboto_52, LV_PART_MAIN | LV_STATE_DEFAULT);
