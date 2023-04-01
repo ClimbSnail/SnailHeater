@@ -228,7 +228,15 @@ static bool airhotPageUI_init(lv_obj_t *father)
     ui_curTempLabel = lv_label_create(ui_ButtonTmp);
     lv_obj_set_size(ui_curTempLabel, 105, 52);
     lv_obj_align(ui_curTempLabel, LV_ALIGN_TOP_LEFT, 68, 44);
-    lv_label_set_text_fmt(ui_curTempLabel, "%d", airhotModel.curTemp);
+    if (airhotModel.curTemp >= DISCONNCT_TEMP)
+    {
+        // 未连接
+        lv_label_set_text(ui_curTempLabel, NO_CONNECT_MSG);
+    }
+    else
+    {
+        lv_label_set_text_fmt(ui_curTempLabel, "%d", airhotModel.curTemp);
+    }
     lv_obj_set_style_text_align(ui_curTempLabel, LV_TEXT_ALIGN_RIGHT, 0);
     lv_obj_set_style_text_color(ui_curTempLabel, AIR_HOT_THEME_COLOR1, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_curTempLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -400,7 +408,7 @@ void ui_updateAirhotCurTempAndPowerDuty(void)
     if (airhotModel.curTemp >= DISCONNCT_TEMP)
     {
         // 未连接
-        lv_label_set_text(ui_curTempLabel, "Err");
+        lv_label_set_text(ui_curTempLabel, NO_CONNECT_MSG);
     }
     else
     {

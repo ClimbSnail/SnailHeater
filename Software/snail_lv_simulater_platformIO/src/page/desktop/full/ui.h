@@ -16,9 +16,21 @@ extern "C"
 #include "lvgl/lvgl.h"
 #endif
 
+#include "./themeColor.h"
 #include "./uiObjBase.h"
 #include "../language_info.h"
 #include "resource/images/ico.h"
+// 菜单风格，1，最老的，2，roller 3，最新的圆盘
+#define USE_MENU_STYLE 3
+
+#if USE_MENU_STYLE == 3
+#include "./arcmenu/lv_arcmenu.h"
+#define ARC_MENU_BEGIN_ANGLE 270
+#define ARC_MENU_NUM 5
+#define ARC_MENU_ARC_WIDTH 50
+#define ARC_MENU_WIDTH 160
+#define ARC_MENU_HEIGHT 160
+#endif
 
 #define DATA_REFRESH_MS 300 // 数据刷新的时间
 
@@ -87,16 +99,6 @@ extern "C"
     extern uint8_t currPageIndex; // 当前页所在的页面索引，对应上面的枚举 PAGE_INDEX
     const char modeName[5][20] = {"烙铁", "风枪", "热台", "电源", "设置"};
 
-#define SOLDER_THEME_COLOR1 lv_color_hex(0xdb3156)
-#define SOLDER_THEME_COLOR2 lv_color_hex(0x851e34)
-#define HEAT_PLAT_THEME_COLOR1 lv_color_hex(0x009be6)
-#define HEAT_PLAT_THEME_COLOR2 lv_color_hex(0x006799)
-#define AIR_HOT_THEME_COLOR1 lv_color_hex(0xffcc33)
-#define AIR_HOT_THEME_COLOR2 lv_color_hex(0xd4aa2a)
-#define ADJ_POWER_THEME_COLOR1 lv_color_hex(0x4ed438)
-#define SETTING_THEME_COLOR1 lv_color_hex(0x999999)
-#define SETTING_THEME_COLOR2 lv_color_hex(0x666666)
-
     const lv_color_t theme_color1[UI_OBJ_NUM] = {
         SOLDER_THEME_COLOR1,
         AIR_HOT_THEME_COLOR1,
@@ -114,12 +116,6 @@ extern "C"
 // #define IS_WHITE_THEME GET_BIT(cfgKey1, CFG_KEY1_WHITE_THEME)
 #define IS_WHITE_THEME sysInfoModel.uiGlobalParam.whiteThemeEnable
 
-#define BLACK_THEME_CHART_COLOR1 lv_color_hex(0x222222)
-#define BLACK_THEME_CHART_COLOR2 lv_color_hex(0x444444)
-
-#define WHITE_THEME_CHART_COLOR1 lv_color_hex(0xf0f0f0)
-#define WHITE_THEME_CHART_COLOR2 lv_color_hex(0xdddddd)
-
     void top_layer_init();   // 绘制顶层状态栏
     void theme_color_init(); // 根据模式设置主题色
 
@@ -129,11 +125,14 @@ extern "C"
     extern lv_style_t back_btn_style;
     extern lv_style_t back_btn_focused_style;
     extern lv_obj_t *ui_PanelTop; // 顶部状态容器
-    extern lv_obj_t *ui_backBtn;  //顶部返回按钮
+    extern lv_obj_t *ui_backBtn;  // 顶部返回按钮
 
-// 如果需要启用新的菜单样式，定义这个
-#define USE_NEW_MENU
-#ifdef USE_NEW_MENU
+#if USE_MENU_STYLE == 3
+    extern lv_style_t menu_button_style;
+    extern lv_style_t menu_button_checked_style;
+    extern lv_style_t menu_arc_style;
+#endif
+#if USE_MENU_STYLE == 2
     extern lv_obj_t *rollerMenu; // 菜单
 #endif
     extern lv_style_t btn_type1_style;

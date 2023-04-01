@@ -68,6 +68,8 @@ void SnailHeater_UI()
     {
         SolderModel model;
         model.workState = SOLDER_STATE_DEEP_SLEEP;
+        model.curCoreID = 0;
+        model.coreNameList = "0_T12\n1_C210\n2_C245";
         model.type = SOLDER_TYPE_T12;
         model.wakeType = SOLDER_SHAKE_TYPE_CHANGE;
         model.tempEnable.allValue = 0x01;

@@ -3,7 +3,7 @@
 
 struct SolderModel solderModel = {SOLDER_STATE_DEEP_SLEEP, SOLDER_TYPE_T12,
                                   SOLDER_SHAKE_TYPE_CHANGE, 1, 270, 360, 400, 300,
-                                  0, 0, 0};
+                                  0, 3, 0, 0};
 
 struct AirhotModel airhotModel = {HOTAIR_STATE_SLEEP, 0,
                                   250, 350, 400, 350,

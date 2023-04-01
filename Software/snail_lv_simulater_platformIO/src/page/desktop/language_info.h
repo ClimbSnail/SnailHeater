@@ -26,4 +26,6 @@
 #define TEXT_SET_TEMP "目标温度"
 #define TEXT_AIR_SPEED "散热风速"
 
+#define NO_CONNECT_MSG "---"
+
 #endif

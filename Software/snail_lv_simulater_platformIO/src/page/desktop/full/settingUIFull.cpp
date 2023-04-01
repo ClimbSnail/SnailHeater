@@ -22,8 +22,8 @@ static lv_obj_t *ui_heatplatGridSwitch;
 // 下拉
 static lv_obj_t *ui_hardVerLabel;
 static lv_obj_t *ui_hardVerDropdown;
-static lv_obj_t *ui_solderTypeLabel;
-static lv_obj_t *ui_solderTypeDropdown;
+static lv_obj_t *ui_solderNameLabel;
+static lv_obj_t *ui_solderNameDropdown;
 static lv_obj_t *ui_solderWakeLabel;
 static lv_obj_t *ui_solderWakeDropdown;
 
@@ -40,30 +40,21 @@ static void settingPageUI_focused(lv_event_t *e)
     lv_indev_set_group(knobs_indev, btn_group);
 }
 
-static void setSolderType(lv_obj_t *obj, unsigned char type)
+static void setSolderName(lv_obj_t *obj, const char *solderName)
 {
-    uint8_t typeInd;
-    switch (type)
+    char name[16];
+    int maxSize = lv_dropdown_get_option_cnt(obj);
+    int cnt;
+    for (cnt = 0; cnt < maxSize; cnt++)
     {
-    case SOLDER_TYPE_T12:
-    {
-        typeInd = 0;
+        lv_dropdown_set_selected(obj, cnt);
+        lv_dropdown_get_selected_str(obj, name, 16);
+        int ret = strcmp(solderName, name);
+        if (ret == 0)
+        {
+            break;
+        }
     }
-    break;
-    case SOLDER_TYPE_JBC210:
-    {
-        typeInd = 1;
-    }
-    break;
-    case SOLDER_TYPE_JBC245:
-    {
-        typeInd = 2;
-    }
-    break;
-    defualt:
-        break;
-    }
-    lv_dropdown_set_selected(obj, typeInd);
 }
 static void setSolderSwitchType(lv_obj_t *obj, unsigned char type)
 {
@@ -147,10 +138,14 @@ static void ui_white_theme_pressed(lv_event_t *e)
             sysInfoModel.uiGlobalParam.whiteThemeEnable = ENABLE_STATE_OPEN;
             lv_style_set_bg_color(&black_white_theme_style, lv_color_white());
             lv_img_set_src(ui_PanelTopBgImg, &img_top_bar_white);
-            lv_style_set_text_color(&label_text_style, lv_color_hex(0x666666));
-#ifdef USE_NEW_MENU
-            lv_obj_set_style_bg_color(rollerMenu, lv_color_hex(0xf0f0f0), LV_PART_MAIN);
-            lv_obj_set_style_text_color(rollerMenu, lv_color_hex(0x666666), LV_PART_MAIN);
+            lv_style_set_text_color(&label_text_style, WHITE_THEME_LABEL_TEXT_COLOR);
+#if USE_MENU_STYLE == 3
+            lv_style_set_text_color(&menu_button_style, WHITE_THEME_ARCMENU_TEXT_COLOR);
+            lv_style_set_arc_color(&menu_arc_style, WHITE_THEME_ARCMENU_BG_COLOR);
+#endif
+#if USE_MENU_STYLE == 2
+            lv_obj_set_style_bg_color(rollerMenu, WHITE_THEME_ROLLERMENU_BG_COLOR, LV_PART_MAIN);
+            lv_obj_set_style_text_color(rollerMenu, WHITE_THEME_ROLLERMENU_TEXT_COLOR, LV_PART_MAIN);
 #endif
         }
 
@@ -159,10 +154,14 @@ static void ui_white_theme_pressed(lv_event_t *e)
             sysInfoModel.uiGlobalParam.whiteThemeEnable = ENABLE_STATE_CLOSE;
             lv_style_set_bg_color(&black_white_theme_style, lv_color_black());
             lv_img_set_src(ui_PanelTopBgImg, &img_top_bar_black);
-            lv_style_set_text_color(&label_text_style, lv_color_hex(0xc0c0c0));
-#ifdef USE_NEW_MENU
-            lv_obj_set_style_bg_color(rollerMenu, lv_color_hex(0x444444), LV_PART_MAIN);
-            lv_obj_set_style_text_color(rollerMenu, lv_color_hex(0xa7a8a9), LV_PART_MAIN);
+            lv_style_set_text_color(&label_text_style, BLACK_THEME_LABEL_TEXT_COLOR);
+#if USE_MENU_STYLE == 3
+            lv_style_set_text_color(&menu_button_style, BLACK_THEME_ARCMENU_TEXT_COLOR);
+            lv_style_set_arc_color(&menu_arc_style, BLACK_THEME_ARCMENU_BG_COLOR);
+#endif
+#if USE_MENU_STYLE == 2
+            lv_obj_set_style_bg_color(rollerMenu, BLACK_THEME_ROLLERMENU_BG_COLOR, LV_PART_MAIN);
+            lv_obj_set_style_text_color(rollerMenu, BLACK_THEME_ROLLERMENU_TEXT_COLOR, LV_PART_MAIN);
 #endif
         }
         // CLR_BIT(cfgKey1,CFG_KEY1_WHITE_THEME);
@@ -235,15 +234,40 @@ static void ui_heat_plat_grid_pressed(lv_event_t *e)
     }
 }
 
-static void ui_solder_type_pressed(lv_event_t *e)
+static void ui_solder_name_pressed(lv_event_t *e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t *target = lv_event_get_target(e);
 
     if (LV_EVENT_VALUE_CHANGED == event_code)
     {
-        uint16_t index = lv_dropdown_get_selected(ui_solderTypeDropdown); // 获取索引
-        solderModel.type = index;
+        // uint16_t index = lv_dropdown_get_selected(ui_solderNameDropdown); // 获取索引
+        // solderModel.type = index;
+
+        char id_text[16];
+        char solderNameStr[16];
+        // 烙铁名字的格式 id+'_'+type
+        lv_dropdown_get_selected_str(ui_solderNameDropdown, solderNameStr, 16);
+        int index;
+        for (index = 0; solderNameStr[index] != '\0'; index++)
+        {
+            if (solderNameStr[index] == '_')
+            {
+                id_text[index] = '\0';
+                break;
+            }
+            else
+            {
+                id_text[index] = solderNameStr[index];
+            }
+        }
+
+        solderModel.curCoreID = 0;
+        for (index = 0; id_text[index] != 0; index++)
+        {
+            solderModel.curCoreID = solderModel.curCoreID * 10 + id_text[index] - '0';
+        }
+        // solderModel.curCoreID = atoi(id_text);
     }
 }
 
@@ -422,22 +446,23 @@ static bool settingPageUI_init(lv_obj_t *father)
     lv_obj_set_style_outline_pad(ui_heatplatGridSwitch, 4, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
 
     // 开始下拉菜单
-    ui_solderTypeLabel = lv_label_create(ui_ButtonTmp);
-    lv_obj_align(ui_solderTypeLabel, LV_ALIGN_TOP_LEFT, 180, 10);
-    lv_label_set_text(ui_solderTypeLabel, SETTING_TEXT_SOLDER_TYPE);
-    lv_obj_add_style(ui_solderTypeLabel, &label_text_style, 0);
+    ui_solderNameLabel = lv_label_create(ui_ButtonTmp);
+    lv_obj_align(ui_solderNameLabel, LV_ALIGN_TOP_LEFT, 180, 10);
+    lv_label_set_text(ui_solderNameLabel, SETTING_TEXT_SOLDER_TYPE);
+    lv_obj_add_style(ui_solderNameLabel, &label_text_style, 0);
 
-    static char solderType[] = "T12\nC210\nC245";
-    ui_solderTypeDropdown = lv_dropdown_create(ui_ButtonTmp);
-    lv_dropdown_set_options_static(ui_solderTypeDropdown, solderType);
-    setSolderType(ui_solderTypeDropdown, solderModel.type);
-    lv_obj_set_size(ui_solderTypeDropdown, 80, LV_SIZE_CONTENT);
-    lv_obj_align(ui_solderTypeDropdown, LV_ALIGN_TOP_LEFT, 180, 30);
-    lv_obj_add_flag(ui_solderTypeDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
-    lv_obj_set_style_text_font(ui_solderTypeDropdown, &lv_font_montserrat_12, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_outline_color(ui_solderTypeDropdown, SETTING_THEME_COLOR1, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
-    lv_obj_set_style_outline_opa(ui_solderTypeDropdown, 255, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
-    lv_obj_set_style_outline_pad(ui_solderTypeDropdown, 4, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
+    // static char solderName[] = "T12\nC210\nC245";
+    ui_solderNameDropdown = lv_dropdown_create(ui_ButtonTmp);
+    lv_dropdown_set_options(ui_solderNameDropdown, solderModel.coreNameList);
+    // lv_dropdown_set_options_static(ui_solderNameDropdown, solderName);
+    setSolderName(ui_solderNameDropdown, solderModel.curCoreName);
+    lv_obj_set_size(ui_solderNameDropdown, 80, LV_SIZE_CONTENT);
+    lv_obj_align(ui_solderNameDropdown, LV_ALIGN_TOP_LEFT, 180, 30);
+    lv_obj_add_flag(ui_solderNameDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+    lv_obj_set_style_text_font(ui_solderNameDropdown, &lv_font_montserrat_12, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_outline_color(ui_solderNameDropdown, SETTING_THEME_COLOR1, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
+    lv_obj_set_style_outline_opa(ui_solderNameDropdown, 255, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
+    lv_obj_set_style_outline_pad(ui_solderNameDropdown, 4, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
 
     ui_solderWakeLabel = lv_label_create(ui_ButtonTmp);
     lv_obj_align(ui_solderWakeLabel, LV_ALIGN_TOP_LEFT, 180, 80);
@@ -488,7 +513,7 @@ static bool settingPageUI_init(lv_obj_t *father)
     lv_obj_add_event_cb(ui_solderGridSwitch, ui_solder_grid_pressed, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_event_cb(ui_airhotGridSwitch, ui_air_hot_grid_pressed, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_event_cb(ui_heatplatGridSwitch, ui_heat_plat_grid_pressed, LV_EVENT_VALUE_CHANGED, NULL);
-    lv_obj_add_event_cb(ui_solderTypeDropdown, ui_solder_type_pressed, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_add_event_cb(ui_solderNameDropdown, ui_solder_name_pressed, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_event_cb(ui_solderWakeDropdown, ui_solder_wake_pressed, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_event_cb(ui_hardVerDropdown, ui_hw_ver_pressed, LV_EVENT_VALUE_CHANGED, NULL);
 
@@ -500,7 +525,7 @@ static bool settingPageUI_init(lv_obj_t *father)
     lv_group_add_obj(btn_group, ui_solderGridSwitch);
     lv_group_add_obj(btn_group, ui_airhotGridSwitch);
     lv_group_add_obj(btn_group, ui_heatplatGridSwitch);
-    lv_group_add_obj(btn_group, ui_solderTypeDropdown);
+    lv_group_add_obj(btn_group, ui_solderNameDropdown);
     lv_group_add_obj(btn_group, ui_solderWakeDropdown);
     lv_group_add_obj(btn_group, ui_hardVerDropdown);
     lv_group_focus_obj(ui_backBtn);

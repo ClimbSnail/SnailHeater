@@ -18,9 +18,6 @@ struct SolderModel
 {
     unsigned char workState; // 工作状态
 
-    unsigned char type;     // 烙铁
-    unsigned char wakeType; // 唤醒类型（震动开关）
-
     // 使能标志位 + 三组预设温度 + 一组精调温度
     union TempEnable
     {
@@ -51,8 +48,14 @@ struct SolderModel
     int32_t enterEasySleepTime; // 进入浅休眠的时间
     int32_t enterDeepSleepTime; // 进入深度休眠的时间
     int16_t alarmValue;         // 超温报警阈值
-    int16_t heaterCnt;          // 烙铁芯数量
-    int16_t curID;              // 当前选择的烙铁芯ID
+    uint16_t coreCnt;           // 烙铁芯数量
+    uint16_t coreIDRecord;      // 使用位标志烙铁芯id编号 1~31位
+    uint16_t curCoreID;         // 当前选择的烙铁芯ID
+
+    char curCoreName[16];     // 烙铁名字 格式 id+'_'+type
+    const char *coreNameList; // 烙铁芯的名字列表
+    unsigned char type;       // 烙铁类型
+    uint8_t wakeType;         // 唤醒类型（震动开关）
 };
 
 extern struct SolderModel solderModel;

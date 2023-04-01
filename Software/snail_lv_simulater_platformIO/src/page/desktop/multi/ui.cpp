@@ -413,4 +413,13 @@ void ui_init(lv_indev_t *indev)
     lv_disp_load_scr(desktop_screen);
 }
 
+// 触摸事件处理
+void touch_event(unsigned int value)
+{
+    // if (NULL != ui_backBtn)
+    // {
+    //     lv_event_send(ui_backBtn, LV_EVENT_PRESSED, 0);
+    // }
+}
+
 #endif

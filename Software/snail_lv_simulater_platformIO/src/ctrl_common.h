@@ -110,6 +110,9 @@ enum SOLDER_SHAKE_TYPE
     SOLDER_SHAKE_TYPE_CHANGE    // 高低变化休眠
 };
 
+const char solder_type_str[3][8] = {
+    "T12", "C210", "C245"};
+
 enum SOLDER_TYPE
 {
     SOLDER_TYPE_T12 = 0,

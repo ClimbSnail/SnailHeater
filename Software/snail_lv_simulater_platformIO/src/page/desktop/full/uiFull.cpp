@@ -28,13 +28,21 @@ static lv_obj_t *ui_PanelMain;
 lv_obj_t *ui_PanelTop;
 lv_obj_t *ui_PanelTopBgImg;
 
-lv_obj_t* ui_backBtn;
-lv_obj_t* ui_backBtnLabel;
+lv_obj_t *ui_backBtn = NULL;
+lv_obj_t *ui_backBtnLabel;
 
-#ifdef USE_NEW_MENU
+#if USE_MENU_STYLE == 3
+lv_obj_t *arcMenu;
+static lv_obj_t *arcMenuLabel[ARC_MENU_NUM];
+lv_style_t menu_button_style;
+lv_style_t menu_button_checked_style;
+lv_style_t menu_arc_style;
+#endif
+#if USE_MENU_STYLE == 2
 lv_obj_t *rollerMenu;
 #define UI_MENU_WIDTH 50
-#else
+#endif
+#if USE_MENU_STYLE == 1
 lv_obj_t *ui_PanelMenu;
 lv_obj_t *ui_MenuButton[UI_OBJ_NUM];
 lv_obj_t *ui_MenuLabel[UI_OBJ_NUM];
@@ -94,15 +102,31 @@ static void set_x_pos(void *menu, int32_t v)
     lv_obj_align((lv_obj_t *)menu, LV_ALIGN_RIGHT_MID, v, 0);
 }
 
+static void set_bg_opa(void *menu, int32_t v)
+{
+    lv_obj_set_style_bg_opa(lv_layer_top(), v * 0.8, 0);
+    lv_obj_set_style_arc_opa(arcMenu, v, LV_PART_MAIN);
+    for (uint8_t i = 0; i < ARC_MENU_NUM; i++)
+    {
+        lv_obj_set_style_text_opa(arcMenuLabel[i], v, 0);
+    }
+}
+
 static void set_menu_focus_on(lv_anim_t *a)
 {
-#ifdef USE_NEW_MENU
-    //这里要删除之前的组
+#if USE_MENU_STYLE == 3
+    lv_arcmenu_set_value(arcMenu, currPageIndex);
+    lv_indev_set_group(knobs_indev, menu_btn_group);
+    lv_group_focus_obj(arcMenu);
+    lv_group_set_editing(menu_btn_group, true);
+#endif
+#if USE_MENU_STYLE == 2
     lv_roller_set_selected(rollerMenu, currPageIndex, LV_ANIM_OFF);
     lv_indev_set_group(knobs_indev, menu_btn_group);
     lv_group_focus_obj(rollerMenu);
     lv_group_set_editing(menu_btn_group, true);
-#else
+#endif
+#if USE_MENU_STYLE == 1
     lv_group_focus_obj(ui_MenuButton[currPageIndex]);
     lv_indev_set_group(knobs_indev, menu_btn_group);
 #endif
@@ -121,6 +145,18 @@ void hide_menu()
     if (is_menu_show)
     {
         is_menu_show = false;
+#if USE_MENU_STYLE == 3
+        lv_anim_del(&menu_anim, set_bg_opa);
+        lv_anim_init(&menu_anim);
+        lv_anim_set_exec_cb(&menu_anim, set_bg_opa);
+        lv_anim_set_values(&menu_anim, 255, 0);
+        lv_anim_set_ready_cb(&menu_anim, set_menu_focus_out);
+        lv_anim_set_repeat_count(&menu_anim, 0);
+        lv_anim_set_time(&menu_anim, 300);
+        lv_anim_set_var(&menu_anim, arcMenu);
+        lv_anim_start(&menu_anim);
+#endif
+#if USE_MENU_STYLE == 2
         lv_anim_del(&menu_anim, set_x_pos);
         lv_anim_init(&menu_anim);
         lv_anim_set_exec_cb(&menu_anim, set_x_pos);
@@ -128,14 +164,22 @@ void hide_menu()
         lv_anim_set_ready_cb(&menu_anim, set_menu_focus_out);
         lv_anim_set_repeat_count(&menu_anim, 0);
         lv_anim_set_time(&menu_anim, 300);
-#ifdef USE_NEW_MENU
         lv_anim_set_var(&menu_anim, rollerMenu);
-#else
-        lv_anim_set_var(&menu_anim, ui_PanelMenu);
-#endif
         lv_anim_start(&menu_anim);
+#endif
+#if USE_MENU_STYLE == 1
+        lv_anim_del(&menu_anim, set_x_pos);
+        lv_anim_init(&menu_anim);
+        lv_anim_set_exec_cb(&menu_anim, set_x_pos);
+        lv_anim_set_values(&menu_anim, 0, UI_MENU_WIDTH);
+        lv_anim_set_ready_cb(&menu_anim, set_menu_focus_out);
+        lv_anim_set_repeat_count(&menu_anim, 0);
+        lv_anim_set_time(&menu_anim, 300);
+        lv_anim_set_var(&menu_anim, ui_PanelMenu);
+        lv_anim_start(&menu_anim);
+#endif
     }
-    memory_print();
+    // memory_print();
 }
 
 void show_menu()
@@ -147,6 +191,18 @@ void show_menu()
     else
     {
         is_menu_show = true;
+#if USE_MENU_STYLE == 3
+        lv_anim_del(&menu_anim, set_bg_opa);
+        lv_anim_init(&menu_anim);
+        lv_anim_set_exec_cb(&menu_anim, set_bg_opa);
+        lv_anim_set_values(&menu_anim, 0, 255);
+        lv_anim_set_ready_cb(&menu_anim, set_menu_focus_on);
+        lv_anim_set_repeat_count(&menu_anim, 0);
+        lv_anim_set_time(&menu_anim, 300);
+        lv_anim_set_var(&menu_anim, arcMenu);
+        lv_anim_start(&menu_anim);
+#endif
+#if USE_MENU_STYLE == 2
         lv_anim_del(&menu_anim, set_x_pos);
         lv_anim_init(&menu_anim);
         lv_anim_set_exec_cb(&menu_anim, set_x_pos);
@@ -154,16 +210,24 @@ void show_menu()
         lv_anim_set_ready_cb(&menu_anim, set_menu_focus_on);
         lv_anim_set_repeat_count(&menu_anim, 0);
         lv_anim_set_time(&menu_anim, 300);
-#ifdef USE_NEW_MENU
         lv_anim_set_var(&menu_anim, rollerMenu);
-#else
-        lv_anim_set_var(&menu_anim, ui_PanelMenu);
-#endif
         lv_anim_start(&menu_anim);
+#endif
+#if USE_MENU_STYLE == 1
+        lv_anim_del(&menu_anim, set_x_pos);
+        lv_anim_init(&menu_anim);
+        lv_anim_set_exec_cb(&menu_anim, set_x_pos);
+        lv_anim_set_values(&menu_anim, UI_MENU_WIDTH, 0);
+        lv_anim_set_ready_cb(&menu_anim, set_menu_focus_on);
+        lv_anim_set_repeat_count(&menu_anim, 0);
+        lv_anim_set_time(&menu_anim, 300);
+        lv_anim_set_var(&menu_anim, ui_PanelMenu);
+        lv_anim_start(&menu_anim);
+#endif
     }
 }
 
-#ifdef USE_NEW_MENU
+#if USE_MENU_STYLE == 2
 
 static void roller_menu_event_handler(lv_event_t *e)
 {
@@ -224,7 +288,8 @@ static void roller_menu_event_handler(lv_event_t *e)
         hide_menu();
     }
 }
-#else
+#endif
+#if USE_MENU_STYLE == 1
 static void ui_menu_btn_solder_pressed(lv_event_t *e)
 {
     if (currPageIndex != PAGE_INDEX_SOLDER)
@@ -283,9 +348,13 @@ static void ui_menu_btn_setting_pressed(lv_event_t *e)
 
 void theme_color_init()
 {
-#ifdef USE_NEW_MENU
+#if USE_MENU_STYLE == 3
+    lv_obj_set_style_bg_color(arcMenu, theme_color1[currPageIndex], LV_PART_KNOB); // 这个的颜色就是选中菜单的颜色
+#endif
+#if USE_MENU_STYLE == 2
     lv_obj_set_style_bg_color(rollerMenu, theme_color1[currPageIndex], LV_PART_SELECTED);
-#else
+#endif
+#if USE_MENU_STYLE == 1
     lv_style_set_bg_color(&menu_button_focus_style, theme_color1[currPageIndex]);
 #endif
     lv_style_set_bg_color(&back_btn_focused_style, theme_color1[currPageIndex]);
@@ -308,10 +377,10 @@ void update_top_info()
 {
     // 顶部状态栏
     // 测试数据，到时候删除
-    //solderModel.curTemp = lv_rand(250, 380);
-    //airhotModel.curTemp = lv_rand(280, 360);
-    //heatplatformModel.curTemp = lv_rand(150, 250);
-    //adjPowerModel.voltage = lv_rand(8000, 24000);
+    // solderModel.curTemp = lv_rand(250, 380);
+    // airhotModel.curTemp = lv_rand(280, 360);
+    // heatplatformModel.curTemp = lv_rand(150, 250);
+    // adjPowerModel.voltage = lv_rand(8000, 24000);
 
     switch (currPageIndex)
     {
@@ -380,7 +449,7 @@ void top_layer_set_name()
         lv_obj_clear_flag(ui_topLabel3, LV_OBJ_FLAG_HIDDEN);
     }
 }
-static void ui_back_btn_pressed(lv_event_t* e)
+static void ui_back_btn_pressed(lv_event_t *e)
 {
     // 返回项被按下
     show_menu();
@@ -459,7 +528,96 @@ void top_layer_init()
     lv_timer_set_repeat_count(topLayerTimer, -1);
 }
 
-#ifdef USE_NEW_MENU
+#if USE_MENU_STYLE == 3
+static void arc_menu_event_handler(lv_event_t *e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    if (code == LV_EVENT_KEY)
+    {
+        lv_obj_t *obj = lv_event_get_target(e);
+        char c = *((char *)lv_event_get_param(e));
+        if (c == LV_KEY_ENTER)
+        {
+            // 退出编辑模式并且隐藏菜单
+            uint16_t index = lv_arcmenu_get_value(arcMenu);
+            if (currPageIndex != index)
+            {
+                ui_Page[currPageIndex]->ui_release();
+                currPageIndex = index;
+                ui_Page[currPageIndex]->ui_init(ui_PanelMain);
+            }
+            hide_menu();
+        }
+    }
+    else if (code == LV_EVENT_VALUE_CHANGED)
+    {
+        lv_obj_t *obj = lv_event_get_target(e);
+        uint8_t ind = lv_arcmenu_get_value(obj);
+        for (uint8_t i = 0; i < ARC_MENU_NUM; i++)
+        {
+            if (ind != i)
+                lv_obj_clear_state(arcMenuLabel[i], LV_STATE_CHECKED);
+            else
+                lv_obj_add_state(arcMenuLabel[i], LV_STATE_CHECKED);
+        }
+    }
+}
+void arc_menu_init()
+{
+    arcMenu = lv_arcmenu_create(lv_layer_top());
+    lv_obj_align(arcMenu, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_set_size(arcMenu, ARC_MENU_WIDTH, ARC_MENU_HEIGHT);
+    lv_arcmenu_set_item_num(arcMenu, ARC_MENU_NUM);         // 菜单个数
+    lv_arcmenu_set_rotation(arcMenu, ARC_MENU_BEGIN_ANGLE); // 起始角度
+    lv_obj_clear_flag(arcMenu, LV_OBJ_FLAG_CLICKABLE);
+
+    lv_style_init(&menu_arc_style);
+    lv_style_set_arc_color(&menu_arc_style, IS_WHITE_THEME ? WHITE_THEME_ARCMENU_BG_COLOR : BLACK_THEME_ARCMENU_BG_COLOR);
+
+    lv_obj_set_style_arc_width(arcMenu, ARC_MENU_ARC_WIDTH, LV_PART_MAIN);
+    lv_obj_set_style_arc_opa(arcMenu, LV_OPA_TRANSP, LV_PART_MAIN); // 这个也关系到选中的OPA
+    lv_obj_add_style(arcMenu, &menu_arc_style, LV_PART_MAIN);
+    lv_obj_set_style_arc_rounded(arcMenu, false, LV_PART_MAIN);
+
+    lv_obj_remove_style(arcMenu, NULL, LV_PART_INDICATOR);
+    lv_obj_set_style_arc_width(arcMenu, ARC_MENU_ARC_WIDTH, LV_PART_INDICATOR);
+    lv_obj_set_style_arc_opa(arcMenu, LV_OPA_TRANSP, LV_PART_INDICATOR);
+    lv_obj_set_style_arc_rounded(arcMenu, false, LV_PART_INDICATOR);
+
+    lv_obj_remove_style(arcMenu, NULL, LV_PART_KNOB);
+    lv_obj_set_style_pad_all(arcMenu, 20, LV_PART_KNOB);                           // 这里是为了增加绘制区域，因为选中的弧是个扇形比较大
+    lv_obj_set_style_bg_color(arcMenu, theme_color1[currPageIndex], LV_PART_KNOB); // 这个的颜色就是选中菜单的颜色
+    lv_obj_set_style_bg_opa(arcMenu, 0, LV_PART_KNOB);
+
+    lv_arcmenu_set_value(arcMenu, currPageIndex);
+
+    lv_style_init(&menu_button_style);
+    lv_style_set_text_color(&menu_button_style, IS_WHITE_THEME ? WHITE_THEME_ARCMENU_TEXT_COLOR : BLACK_THEME_ARCMENU_TEXT_COLOR);
+
+    lv_style_init(&menu_button_checked_style);
+    lv_style_set_text_color(&menu_button_checked_style, ARCMENU_ACTIVE_TEXT_COLOR);
+
+    for (uint8_t i = 0; i < ARC_MENU_NUM; i++)
+    {
+        arcMenuLabel[i] = lv_label_create(lv_layer_top());
+        // lv_obj_set_size(arcMenuLabel[i], 40, 20); //使用自动大小
+        lv_label_set_text(arcMenuLabel[i], modeName[i]);
+        // lv_obj_set_style_text_align(arcMenuLabel[i], LV_TEXT_ALIGN_CENTER, 0);
+        lv_obj_set_style_text_font(arcMenuLabel[i], &FontDeyi_16, 0);
+        lv_obj_set_style_text_opa(arcMenuLabel[i], LV_OPA_TRANSP, 0);
+        lv_obj_add_style(arcMenuLabel[i], &menu_button_style, LV_STATE_DEFAULT);
+        lv_obj_add_style(arcMenuLabel[i], &menu_button_checked_style, LV_STATE_CHECKED);
+        lv_arcmenu_add_item(arcMenu, arcMenuLabel[i], i, 0);
+        if (currPageIndex == i)
+            lv_obj_add_state(arcMenuLabel[i], LV_STATE_CHECKED);
+    }
+
+    lv_obj_add_event_cb(arcMenu, arc_menu_event_handler, LV_EVENT_ALL, NULL);
+    menu_btn_group = lv_group_create();
+    lv_group_add_obj(menu_btn_group, arcMenu);
+}
+#endif
+#if USE_MENU_STYLE == 2
 void roller_menu_init()
 {
     rollerMenu = lv_roller_create(desktop_screen);
@@ -477,11 +635,11 @@ void roller_menu_init()
     lv_obj_set_height(rollerMenu, 240);
     lv_obj_set_style_border_width(rollerMenu, 0, LV_PART_MAIN);
     lv_obj_set_style_radius(rollerMenu, 0, LV_PART_MAIN);
-    lv_obj_set_style_bg_color(rollerMenu, IS_WHITE_THEME ? lv_color_hex(0xf0f0f0) : lv_color_hex(0x444444), LV_PART_MAIN);
-    lv_obj_set_style_text_color(rollerMenu, IS_WHITE_THEME ? lv_color_hex(0x666666) : lv_color_hex(0xa7a8a9), LV_PART_MAIN);
+    lv_obj_set_style_bg_color(rollerMenu, IS_WHITE_THEME ? WHITE_THEME_ROLLERMENU_BG_COLOR : BLACK_THEME_ROLLERMENU_BG_COLOR, LV_PART_MAIN);
+    lv_obj_set_style_text_color(rollerMenu, IS_WHITE_THEME ? WHITE_THEME_ROLLERMENU_TEXT_COLOR : BLACK_THEME_ROLLERMENU_TEXT_COLOR, LV_PART_MAIN);
     lv_obj_set_style_bg_opa(rollerMenu, 255, LV_PART_MAIN);
     lv_obj_set_style_bg_opa(rollerMenu, 255, LV_PART_SELECTED);
-    lv_obj_set_style_text_color(rollerMenu, lv_color_hex(0xffffff), LV_PART_SELECTED);
+    lv_obj_set_style_text_color(rollerMenu, ROLLERMENU_ACTIVE_TEXT_COLOR, LV_PART_SELECTED);
     lv_obj_set_style_text_font(rollerMenu, &FontDeyi_20, LV_PART_SELECTED);
     lv_obj_set_style_outline_width(rollerMenu, 0, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
     lv_obj_set_style_outline_width(rollerMenu, 0, LV_PART_MAIN | LV_STATE_EDITED);
@@ -494,7 +652,8 @@ void roller_menu_init()
 
     lv_group_add_obj(menu_btn_group, rollerMenu);
 }
-#else
+#endif
+#if USE_MENU_STYLE == 1
 void menu_init()
 {
     // 初始化导航按键
@@ -631,7 +790,7 @@ void main_screen_init(lv_indev_t *indev)
     lv_style_init(&back_btn_style);
     lv_style_set_width(&back_btn_style, 46);
     lv_style_set_height(&back_btn_style, 24);
-    lv_style_set_text_color(&back_btn_style, lv_color_hex(0xa5a5a5));
+    lv_style_set_text_color(&back_btn_style, BTN_BACK_TEXT_COLOR);
     lv_style_set_radius(&back_btn_style, 10);
     lv_style_set_bg_opa(&back_btn_style, 0);
 
@@ -645,8 +804,8 @@ void main_screen_init(lv_indev_t *indev)
     lv_style_set_border_width(&btn_type1_style, 1);
     lv_style_set_text_opa(&btn_type1_style, 255);
     lv_style_set_text_font(&btn_type1_style, &FontJost_14);
-    lv_style_set_border_color(&btn_type1_style, lv_color_hex(0x666666));
-    lv_style_set_text_color(&btn_type1_style, lv_color_hex(0x989798));
+    lv_style_set_border_color(&btn_type1_style, BTN_TYPE1_BORDER_COLOR);
+    lv_style_set_text_color(&btn_type1_style, BTN_TYPE1_TEXT_COLOR);
 
     lv_style_init(&btn_type1_focused_style);
     lv_style_set_radius(&btn_type1_focused_style, 4);
@@ -673,7 +832,7 @@ void main_screen_init(lv_indev_t *indev)
 
     lv_style_init(&label_text_style);
     lv_style_set_text_font(&label_text_style, &FontDeyi_16);
-    lv_style_set_text_color(&label_text_style, isWhiteTheme ? lv_color_hex(0x666666) : lv_color_hex(0xc0c0c0));
+    lv_style_set_text_color(&label_text_style, isWhiteTheme ? WHITE_THEME_LABEL_TEXT_COLOR : BLACK_THEME_LABEL_TEXT_COLOR);
 
     ui_PanelMain = lv_obj_create(desktop_screen);
     lv_obj_remove_style_all(ui_PanelMain);
@@ -684,7 +843,6 @@ void main_screen_init(lv_indev_t *indev)
     lv_obj_set_style_border_width(ui_PanelMain, 0, LV_STATE_DEFAULT);
     lv_obj_clear_flag(ui_PanelMain, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_opa(ui_PanelMain, 0, 0);
-    // lv_obj_set_style_bg_color(ui_PanelMain, isWhiteTheme ? lv_color_white() : lv_color_black(), LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Page[0] = &solderUIObj;
     ui_Page[1] = &airhotUIObj;
@@ -700,9 +858,15 @@ void main_screen_init(lv_indev_t *indev)
     lv_obj_set_style_bg_opa(ui_PanelTop, 0, 0);
     top_layer_init();
 
-#ifdef USE_NEW_MENU
+#if USE_MENU_STYLE == 3
+    lv_obj_add_style(lv_layer_top(), &black_white_theme_style, 0);
+    lv_obj_set_style_bg_opa(lv_layer_top(), LV_OPA_TRANSP, 0);
+    arc_menu_init();
+#endif
+#if USE_MENU_STYLE == 2
     roller_menu_init();
-#else
+#endif
+#if USE_MENU_STYLE == 1
     menu_init();
 #endif
 
@@ -745,6 +909,23 @@ void ui_page_move_center_by_ind(int index)
     // }
     // hide_menu();
     targerChangePageInd = index; // 等待定时器切换 autoChangePageTimer
+}
+
+// 触摸事件处理
+void touch_event(unsigned int value)
+{
+    if (NULL != ui_backBtn)
+    {
+        if (is_menu_show)
+        {
+            hide_menu();
+        }
+        else
+        {
+            show_menu();
+        }
+        // lv_event_send(ui_backBtn, LV_EVENT_PRESSED, 0);
+    }
 }
 
 #endif
