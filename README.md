@@ -88,3 +88,4 @@ platformIO模拟器 https://github.com/lvgl/lv_platformio
 * PWM实现DAC电路设计 https://www.elecfans.com/d/590628.html
 * PWM转DAC如何实现 https://blog.csdn.net/shileiwu0505/article/details/124053815
 * 运放的电流检测 https://blog.csdn.net/qq997758497/article/details/79374599
+* 接地设计 https://blog.csdn.net/sinat_15677011/article/details/126088471
