@@ -1,0 +1,173 @@
+---
+# 待处理的Gerber目录
+GerberFileDir: .\功率板\功率板gerber
+# 输出的目录
+GerberOutDir:
+
+TextFileName: PCB下单必读.txt
+TextFileContent: |-
+  如何进行PCB下单
+
+  请查看：
+  https://docs.lceda.cn/cn/PCB/Order-PCB
+
+SUFFIX:
+  # -------边框层规则-------
+  # Altium Designer根据你画板时边框所在层选择
+  # KiCad一般是-Edge_Cuts或者Keep Out层
+
+  # KiCad
+  # Outline: -Edge_Cuts
+
+  # 禁止布线层 Keep Out，Protel格式文件扩展名
+  # 机械1层 Mechanical Layer 1，Protel格式文件扩展名
+  # 适用于KiCad Altium Designer
+  Outline: .gm1|.GM1|.gko|.GKO
+
+  # 机械13层 Mechanical Layer 13，Protel格式文件扩展名
+  # 适用于Altium Designer
+  # Outline: .gm13|.GM13
+
+  # -------其他层规则-------
+  # 根据自身情况选择，务必核对清楚
+
+  # KiCad
+  # Top_Cu: -F_Cu
+  # Bottom_Cu: -B_Cu
+  # # InnerLayer1_Cu: -In1_Cu
+  # # InnerLayer2_Cu: -In2_Cu
+  # # InnerLayer3_Cu: -In3_Cu
+  # # InnerLayer4_Cu: -In4_Cu
+  # Top_SilkScreen: -F_Silkscreen
+  # Bottom_SilkScreen: -B_Silkscreen
+  # Top_SolderMask: -F_Mask
+  # Bottom_SolderMask: -B_Mask
+  # Top_SolderPaste: -F_Paste
+  # Bottom_SolderPaste: -B_Paste
+
+  # Protel格式文件扩展名
+  # 适用于 KiCad Altium Designer
+  Top_Cu: .gtl|.GTL
+  Bottom_Cu: .gbl|.GBL
+  # InnerLayer1_Cu: .g1|.G1  
+  # InnerLayer2_Cu: .g2|.G2
+  # InnerLayer3_Cu: .g3|.G3
+  # InnerLayer4_Cu: .g4|.G4
+  Top_SilkScreen: .gto|.GTO
+  Bottom_SilkScreen: .gbo|.GBO
+  Top_SolderMask: .gts|.GTS
+  Bottom_SolderMask: .gbs|.GBS
+  Top_SolderPaste: .gtp|.GTP
+  Bottom_SolderPaste: .gbp|.GBP
+
+---
+# 待处理的Gerber目录
+GerberFileDir: .\核心板\核心板gerber
+# 输出的目录
+GerberOutDir:
+
+TextFileName: PCB下单必读.txt
+TextFileContent: |-
+  如何进行PCB下单
+
+  请查看：
+  https://docs.lceda.cn/cn/PCB/Order-PCB
+
+SUFFIX:
+  Outline: .gm1|.GM1|.gko|.GKO
+  Top_Cu: .gtl|.GTL
+  Bottom_Cu: .gbl|.GBL
+  # InnerLayer1_Cu: .g1|.G1  
+  # InnerLayer2_Cu: .g2|.G2
+  # InnerLayer3_Cu: .g3|.G3
+  # InnerLayer4_Cu: .g4|.G4
+  Top_SilkScreen: .gto|.GTO
+  Bottom_SilkScreen: .gbo|.GBO
+  Top_SolderMask: .gts|.GTS
+  Bottom_SolderMask: .gbs|.GBS
+  Top_SolderPaste: .gtp|.GTP
+  Bottom_SolderPaste: .gbp|.GBP
+
+---
+# 待处理的Gerber目录
+GerberFileDir: .\屏幕板\屏幕板gerber
+# 输出的目录
+GerberOutDir:
+
+TextFileName: PCB下单必读.txt
+TextFileContent: |-
+  如何进行PCB下单
+
+  请查看：
+  https://docs.lceda.cn/cn/PCB/Order-PCB
+
+SUFFIX:
+  Outline: .gm1|.GM1|.gko|.GKO
+  Top_Cu: .gtl|.GTL
+  Bottom_Cu: .gbl|.GBL
+  # InnerLayer1_Cu: .g1|.G1  
+  # InnerLayer2_Cu: .g2|.G2
+  # InnerLayer3_Cu: .g3|.G3
+  # InnerLayer4_Cu: .g4|.G4
+  Top_SilkScreen: .gto|.GTO
+  Bottom_SilkScreen: .gbo|.GBO
+  Top_SolderMask: .gts|.GTS
+  Bottom_SolderMask: .gbs|.GBS
+  Top_SolderPaste: .gtp|.GTP
+  Bottom_SolderPaste: .gbp|.GBP
+
+---
+# 待处理的Gerber目录
+GerberFileDir: .\拓展板\拓展板gerber
+# 输出的目录
+GerberOutDir:
+
+TextFileName: PCB下单必读.txt
+TextFileContent: |-
+  如何进行PCB下单
+
+  请查看：
+  https://docs.lceda.cn/cn/PCB/Order-PCB
+
+SUFFIX:
+  Outline: .gm1|.GM1|.gko|.GKO
+  Top_Cu: .gtl|.GTL
+  Bottom_Cu: .gbl|.GBL
+  # InnerLayer1_Cu: .g1|.G1  
+  # InnerLayer2_Cu: .g2|.G2
+  # InnerLayer3_Cu: .g3|.G3
+  # InnerLayer4_Cu: .g4|.G4
+  Top_SilkScreen: .gto|.GTO
+  Bottom_SilkScreen: .gbo|.GBO
+  Top_SolderMask: .gts|.GTS
+  Bottom_SolderMask: .gbs|.GBS
+  Top_SolderPaste: .gtp|.GTP
+  Bottom_SolderPaste: .gbp|.GBP
+
+---
+# 待处理的Gerber目录
+GerberFileDir: .\内嵌板\内嵌板gerber_2mm
+# 输出的目录
+GerberOutDir:
+
+TextFileName: PCB下单必读.txt
+TextFileContent: |-
+  如何进行PCB下单
+
+  请查看：
+  https://docs.lceda.cn/cn/PCB/Order-PCB
+
+SUFFIX:
+  Outline: .gm1|.GM1|.gko|.GKO
+  Top_Cu: .gtl|.GTL
+  Bottom_Cu: .gbl|.GBL
+  # InnerLayer1_Cu: .g1|.G1  
+  # InnerLayer2_Cu: .g2|.G2
+  # InnerLayer3_Cu: .g3|.G3
+  # InnerLayer4_Cu: .g4|.G4
+  Top_SilkScreen: .gto|.GTO
+  Bottom_SilkScreen: .gbo|.GBO
+  Top_SolderMask: .gts|.GTS
+  Bottom_SolderMask: .gbs|.GBS
+  Top_SolderPaste: .gtp|.GTP
+  Bottom_SolderPaste: .gbp|.GBP
