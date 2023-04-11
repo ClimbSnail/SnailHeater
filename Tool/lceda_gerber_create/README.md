@@ -3,9 +3,7 @@
 
 # 使用方法
 
-文件`task.yaml`中的每个文档即为每个任务，修改、添加、删除来控制任务。
-
-如果需要修改`Header`信息，请修改文本文件`header`
+文件`task.yaml`中的每个`Gerber`即为每个任务，修改、添加、删除来控制任务。
 
 执行脚本 `python lceda_gerber.py`
 
