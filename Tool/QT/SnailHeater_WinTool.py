@@ -14,6 +14,8 @@ import sys
 import os
 import time
 import threading
+import re
+import traceback
 
 import serial  # pip install pyserial
 import serial.tools.list_ports
@@ -24,6 +26,7 @@ from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import Qt
 
+import massagehead as mh
 from esptoolpy import esptool
 # from esptoolpy import espefuse
 from download import Ui_SanilHeaterTool
@@ -31,12 +34,14 @@ import common
 
 COLOR_RED = '<span style=\" color: #ff0000;\">%s</span>'
 BAUD_RATE = 921600
+INFO_BAUD_RATE = 115200
 
 
 class DownloadController(object):
 
     def __init__(self):
         self.progress_bar_time_cnt = 0
+        self.ser = None  # 串口
         self.progress_bar_timer = QtCore.QTimer()
         self.progress_bar_timer.timeout.connect(self.schedule_display_time)
 
@@ -119,7 +124,52 @@ class DownloadController(object):
 
     def act_button_click(self):
         self.print_log("正在激活设备...")
-        # todo
+        if self.ser != None:  # 串口打开标志
+            return None
+
+        select_com = self.form.ComComboBox.currentText().split(" -> ")[0].strip()
+        self.ser = serial.Serial(select_com, INFO_BAUD_RATE, timeout=10)
+
+        act_ret = False
+
+        # 判断是否打开成功
+        if self.ser.is_open:
+            # self.machine_code_thread = threading.Thread(target=self.read_data,
+            #                                         args=(self.ser,))
+            # self.machine_code_thread.start()
+
+            # 循环接收数据，此为死循环，可用线程实现
+            send_data = mh.SettingMsg()
+            send_data.action_type = mh.AT.AT_SETTING_SET
+            # send_data.prefs_name = bytes(info["namespace"], encoding='utf8')
+            key = ""
+            send_data.key = bytes(key, encoding='utf8')
+            send_data.type = mh.VT.VALUE_TYPE_SN.to_bytes(1, byteorder='little', signed=True)
+            print(send_data.type)
+            value = self.form.SNLineEdit.text()
+            print(value)
+            send_data.value = bytes(value, encoding='utf8')
+            print(send_data.encode('!'))
+            self.ser.write(send_data.encode('!'))
+
+            time.sleep(1)
+            if self.ser.in_waiting:
+                STRGLO = self.ser.read(self.ser.in_waiting)
+                print("\nSTRGLO = ", STRGLO)
+                try:
+                    match_info = re.findall(r"Activate Success", STRGLO.decode("utf8"))
+                    if match_info != []:
+                        act_ret = True
+                except Exception as err:
+                    print(str(traceback.format_exc()))
+
+            if act_ret == True:
+                self.print_log("激活成功")
+            else:
+                self.print_log("激活失败")
+        self.ser.close()  # 关闭串口
+        del self.ser
+        self.ser = None
 
     def uic_button_click(self):
         """
@@ -127,8 +177,8 @@ class DownloadController(object):
         :return: None
         """
         self.print_log("获取机器码（用户识别码）...")
-        self.form.UICLineEdit.setText("功能未开通")
-        # todo
+        machine_code = self.get_machine_code()
+        self.form.UICLineEdit.setText(machine_code)
 
     def update_button_click(self):
         """
@@ -192,6 +242,10 @@ class DownloadController(object):
         :return:None
         """
         try:
+            if self.ser != None:
+                return
+
+            self.ser = 1
             self.progress_bar_time_cnt = 1  # 间接启动进度条更新
 
             if mode == "清空式":
@@ -217,10 +271,12 @@ class DownloadController(object):
             # sys.argv = cmd
             esptool.main(cmd[1:])
             self.esp_reboot()  # 手动复位芯片
+            self.ser = None
             self.print_log("刷机结束！")
             self.print_log("\n\n刷机流程完毕，请保持typec通电等待焊台屏幕将会亮起后才能断电。\n注：更新式刷机一般刷机完成后2s就能亮屏，清空式刷机则需等待20s左右。\n")
 
         except Exception as err:
+            self.ser = None
             self.print_log(COLOR_RED % "未释放资源，请15s后再试。如无法触发下载，拔插type-c接口再试。")
             print(err)
 
@@ -257,6 +313,57 @@ class DownloadController(object):
         self.form.UpdateModeMethodRadioButton.setEnabled(True)
         self.form.ClearModeMethodRadioButton.setEnabled(True)
 
+    def get_machine_code(self):
+        '''
+        查询机器码
+        '''
+        if self.ser != None:  # 串口打开标志
+            return None
+
+        select_com = self.form.ComComboBox.currentText().split(" -> ")[0].strip()
+        self.ser = serial.Serial(select_com, INFO_BAUD_RATE, timeout=10)
+        machine_code = "查询失败"
+
+        # 判断是否打开成功
+        if self.ser.is_open:
+            # self.machine_code_thread = threading.Thread(target=self.read_data,
+            #                                         args=(self.ser,))
+            # self.machine_code_thread.start()
+
+            # 循环接收数据，此为死循环，可用线程实现
+            send_data = mh.SettingMsg()
+            send_data.action_type = mh.AT.AT_SETTING_GET
+            # send_data.prefs_name = bytes(info["namespace"], encoding='utf8')
+            key = ""
+            send_data.key = bytes(key, encoding='utf8')
+            send_data.type = mh.VT.VALUE_TYPE_MC.to_bytes(1, byteorder='little', signed=True)
+            print(send_data.type)
+            value = ""
+            send_data.value = bytes(value, encoding='utf8')
+            print(send_data.encode('!'))
+            self.ser.write(send_data.encode('!'))
+
+            time.sleep(1)
+            if self.ser.in_waiting:
+                STRGLO = self.ser.read(self.ser.in_waiting).decode("utf8")
+                print(STRGLO)
+                try:
+                    machine_code = re.findall(r"AT_SETTING_GET VALUE_TYPE_MC = \d*", STRGLO)[0]\
+                    .split(" ")[-1]
+                except Exception as err:
+                    machine_code = "查询失败"
+                print(machine_code)
+
+            if machine_code == "查询失败":
+                self.print_log("机器码查询失败")
+            else:
+                self.print_log("机器码查询成功")
+
+        self.ser.close()  # 关闭串口
+        del self.ser
+        self.ser = None
+        return machine_code
+
     def print_log(self, info):
         self.form.LogInfoTextBrowser.append(info + '\n')
         QApplication.processEvents()
@@ -268,6 +375,7 @@ class DownloadController(object):
         :return:
         """
 
+        time.sleep(0.1)
         select_com = self.form.ComComboBox.currentText().split(" -> ")[0].strip()
         port = serial.Serial(select_com, BAUD_RATE, timeout=10)
         port.setRTS(True)  # EN->LOW
