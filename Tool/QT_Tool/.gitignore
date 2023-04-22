@@ -1,0 +1,11 @@
+Doc/*.pdf
+Lib/
+Scripts/
+Include/
+esptoolpy/
+build/
+dist/
+.idea/
+__pycache__/
+*.bin
+SnailHeater_WinTool.spec
