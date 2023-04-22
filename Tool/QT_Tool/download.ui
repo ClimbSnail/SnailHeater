@@ -59,9 +59,9 @@
   <widget class="QLabel" name="QQInfolabel">
    <property name="geometry">
     <rect>
-     <x>28</x>
-     <y>12</y>
-     <width>119</width>
+     <x>25</x>
+     <y>6</y>
+     <width>150</width>
      <height>16</height>
     </rect>
    </property>
@@ -78,14 +78,14 @@
     <enum>QFrame::NoFrame</enum>
    </property>
    <property name="text">
-    <string>QQ群 148563337</string>
+    <string>QQ_1群 148563337</string>
    </property>
   </widget>
   <widget class="QLabel" name="Infolabel">
    <property name="geometry">
     <rect>
-     <x>288</x>
-     <y>16</y>
+     <x>293</x>
+     <y>6</y>
      <width>63</width>
      <height>16</height>
     </rect>
@@ -110,37 +110,6 @@
    </property>
    <property name="openExternalLinks">
     <bool>false</bool>
-   </property>
-  </widget>
-  <widget class="QLabel" name="LinkInfolabel">
-   <property name="geometry">
-    <rect>
-     <x>358</x>
-     <y>16</y>
-     <width>349</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <family>微软雅黑</family>
-     <pointsize>10</pointsize>
-    </font>
-   </property>
-   <property name="mouseTracking">
-    <bool>true</bool>
-   </property>
-   <property name="frameShape">
-    <enum>QFrame::NoFrame</enum>
-   </property>
-   <property name="text">
-    <string>&lt;a href=&quot;https://www.bilibili.com/video/BV1oG4y1h7A8?p=2&quot;&gt;https://www.bilibili.com/video/BV1oG4y1h7A8?p=2</string>
-   </property>
-   <property name="scaledContents">
-    <bool>true</bool>
-   </property>
-   <property name="openExternalLinks">
-    <bool>true</bool>
    </property>
   </widget>
   <widget class="QGroupBox" name="UpdateGroupBox">
@@ -448,6 +417,124 @@
      </rect>
     </property>
    </widget>
+  </widget>
+  <widget class="QLabel" name="QQInfolabel_2">
+   <property name="geometry">
+    <rect>
+     <x>25</x>
+     <y>32</y>
+     <width>150</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>微软雅黑</family>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
+   <property name="mouseTracking">
+    <bool>true</bool>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::NoFrame</enum>
+   </property>
+   <property name="text">
+    <string>QQ_2群 686756592</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="updateLoglabel">
+   <property name="geometry">
+    <rect>
+     <x>265</x>
+     <y>30</y>
+     <width>91</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>微软雅黑</family>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
+   <property name="mouseTracking">
+    <bool>true</bool>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::NoFrame</enum>
+   </property>
+   <property name="text">
+    <string>固件更新日志：</string>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+   <property name="openExternalLinks">
+    <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="UpdateLogLinkInfolabel">
+   <property name="geometry">
+    <rect>
+     <x>360</x>
+     <y>30</y>
+     <width>349</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>微软雅黑</family>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
+   <property name="mouseTracking">
+    <bool>true</bool>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::NoFrame</enum>
+   </property>
+   <property name="text">
+    <string>&lt;a href=&quot;https://docs.qq.com/doc/DQWdkTFpvV2ZSR29G&quot;&gt;https://docs.qq.com/doc/DQWdkTFpvV2ZSR29G</string>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+   <property name="openExternalLinks">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="LinkInfolabel">
+   <property name="geometry">
+    <rect>
+     <x>360</x>
+     <y>6</y>
+     <width>349</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>微软雅黑</family>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
+   <property name="mouseTracking">
+    <bool>true</bool>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::NoFrame</enum>
+   </property>
+   <property name="text">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://www.bilibili.com/video/BV1oG4y1h7A8?p=2&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;https://www.bilibili.com/video/BV1oG4y1h7A8?p=2&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+   <property name="openExternalLinks">
+    <bool>true</bool>
+   </property>
   </widget>
  </widget>
  <resources>

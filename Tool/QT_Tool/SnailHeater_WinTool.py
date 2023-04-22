@@ -428,7 +428,7 @@ class DownloadController(object):
                     sn = "查询失败"
                 print(sn)
 
-            if sn == "查询失败":
+            if sn == "查询失败" or sn == "":
                 self.print_log("SN查询失败")
             else:
                 self.print_log("SN查询成功")
