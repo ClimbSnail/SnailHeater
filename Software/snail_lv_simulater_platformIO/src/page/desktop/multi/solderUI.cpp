@@ -233,7 +233,7 @@ static bool solderPageUI_init(lv_obj_t *father)
 
     ui_solderWakeDropdown = lv_dropdown_create(ui_ButtonTmp);
     lv_dropdown_set_options(ui_solderWakeDropdown, "None\nHigh\nLow\nChange");
-    setSolderSwitchType(ui_solderWakeDropdown, solderModel.wakeType);
+    setSolderSwitchType(ui_solderWakeDropdown, solderModel.coreConfig.wakeSwitchType);
     lv_obj_set_size(ui_solderWakeDropdown, 55, LV_SIZE_CONTENT);
     lv_obj_set_pos(ui_solderWakeDropdown, 20, 45);
     lv_obj_set_align(ui_solderWakeDropdown, LV_ALIGN_CENTER);
@@ -423,7 +423,7 @@ static void ui_wake_type_changed(lv_event_t *e)
     if (LV_EVENT_VALUE_CHANGED == event_code)
     {
         uint16_t index = lv_dropdown_get_selected(ui_solderWakeDropdown); // 获取索引
-        solderModel.wakeType = index;
+        solderModel.coreConfig.wakeSwitchType = index;
     }
 }
 

@@ -86,6 +86,7 @@ static void setSolderSwitchType(lv_obj_t *obj, unsigned char type)
     }
     lv_dropdown_set_selected(obj, typeInd);
 }
+
 static void setHwVer(lv_obj_t *obj, VERSION_INFO ver)
 {
     uint8_t verInd;
@@ -242,7 +243,7 @@ static void ui_solder_name_pressed(lv_event_t *e)
     if (LV_EVENT_VALUE_CHANGED == event_code)
     {
         // uint16_t index = lv_dropdown_get_selected(ui_solderNameDropdown); // 获取索引
-        // solderModel.type = index;
+        // solderModel.coreConfig.solderType = index;
 
         char id_text[16];
         char solderNameStr[16];
@@ -262,12 +263,16 @@ static void ui_solder_name_pressed(lv_event_t *e)
             }
         }
 
-        solderModel.curCoreID = 0;
+        uint16_t id = 0;
         for (index = 0; id_text[index] != 0; index++)
         {
-            solderModel.curCoreID = solderModel.curCoreID * 10 + id_text[index] - '0';
+            id = id * 10 + id_text[index] - '0';
         }
+        solderModel.utilConfig.curCoreID = id;
         // solderModel.curCoreID = atoi(id_text);
+
+        // todo
+        setSolderSwitchType(ui_solderWakeDropdown, solderModel.coreConfig.wakeSwitchType);
     }
 }
 
@@ -279,7 +284,7 @@ static void ui_solder_wake_pressed(lv_event_t *e)
     if (LV_EVENT_VALUE_CHANGED == event_code)
     {
         uint16_t index = lv_dropdown_get_selected(ui_solderWakeDropdown); // 获取索引
-        solderModel.wakeType = index;
+        solderModel.coreConfig.wakeSwitchType = index;
     }
 }
 
@@ -471,7 +476,7 @@ static bool settingPageUI_init(lv_obj_t *father)
 
     ui_solderWakeDropdown = lv_dropdown_create(ui_ButtonTmp);
     lv_dropdown_set_options(ui_solderWakeDropdown, "None\nHigh\nLow\nChange");
-    setSolderSwitchType(ui_solderWakeDropdown, solderModel.wakeType);
+    setSolderSwitchType(ui_solderWakeDropdown, solderModel.coreConfig.wakeSwitchType);
     lv_obj_set_size(ui_solderWakeDropdown, 80, LV_SIZE_CONTENT);
     lv_obj_align(ui_solderWakeDropdown, LV_ALIGN_TOP_LEFT, 180, 100);
     lv_obj_add_flag(ui_solderWakeDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS);

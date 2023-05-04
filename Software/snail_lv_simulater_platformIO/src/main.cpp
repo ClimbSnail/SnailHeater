@@ -20,14 +20,14 @@
 #include <SDL2/SDL_timer.h>
 #include "demos/lv_demos.h"
 
-#define SNAILHEATER_VERSION "1.5.5"
+#define SNAILHEATER_VERSION "1.6.6"
 
 void SnailHeater_UI()
 {
     // 开机动画
     startupInitScreen();
     startupUI(SNAILHEATER_VERSION);
-    SDL_Delay(1000);
+    SDL_Delay(5000);
     startupDel();
 
     // 设置必要的预显示参数
@@ -35,15 +35,13 @@ void SnailHeater_UI()
     {
         AirhotModel model;
         model.workState = HOTAIR_STATE_SLEEP;
-        model.tempEnable.allValue = 0x01;
-        model.quickSetupTemp_0 = 270;
-        model.quickSetupTemp_1 = 360;
-        model.quickSetupTemp_2 = 400;
-        model.fineAdjTemp = 300;
-        model.targetTemp = 0;
+        model.utilConfig.quickSetupTemp_0 = 270;
+        model.utilConfig.quickSetupTemp_1 = 360;
+        model.utilConfig.quickSetupTemp_2 = 400;
+        model.utilConfig.workAirSpeed = 30;
+        model.utilConfig.targetTemp = 0;
         model.curTemp = 0;
         model.powerRatio = 0;
-        model.workAirSpeed = 30;
         model.powerRatio = 0;
         setAirhotInfo(&model);
     }
@@ -53,12 +51,10 @@ void SnailHeater_UI()
         HeatplatformModel model;
         // model.workState = ;
         model.enable = HP_STATE_SLEEP;
-        model.tempEnable.allValue = 0x01;
-        model.quickSetupTemp_0 = 270;
-        model.quickSetupTemp_1 = 360;
-        model.quickSetupTemp_2 = 400;
-        model.fineAdjTemp = 300;
-        model.targetTemp = 0;
+        model.utilConfig.quickSetupTemp_0 = 270;
+        model.utilConfig.quickSetupTemp_1 = 360;
+        model.utilConfig.quickSetupTemp_2 = 400;
+        model.utilConfig.targetTemp = 0;
         model.curTemp = 0;
         model.powerRatio = 0;
         setHeatplatformInfo(&model);
@@ -68,16 +64,16 @@ void SnailHeater_UI()
     {
         SolderModel model;
         model.workState = SOLDER_STATE_DEEP_SLEEP;
-        model.curCoreID = 0;
+        model.utilConfig.curCoreID = 0;
         model.coreNameList = "0_T12\n1_C210\n2_C245";
-        model.type = SOLDER_TYPE_T12;
-        model.wakeType = SOLDER_SHAKE_TYPE_CHANGE;
+        model.coreConfig.solderType = SOLDER_TYPE_T12;
+        model.coreConfig.wakeSwitchType = SOLDER_SHAKE_TYPE_CHANGE;
         model.tempEnable.allValue = 0x01;
-        model.quickSetupTemp_0 = 270;
-        model.quickSetupTemp_1 = 360;
-        model.quickSetupTemp_2 = 400;
+        model.utilConfig.quickSetupTemp_0 = 270;
+        model.utilConfig.quickSetupTemp_1 = 360;
+        model.utilConfig.quickSetupTemp_2 = 400;
         model.fineAdjTemp = 300;
-        model.targetTemp = 0;
+        model.utilConfig.targetTemp = 0;
         model.curTemp = 0;
         model.powerRatio = 0;
         setSolderInfo(&model);
@@ -87,9 +83,9 @@ void SnailHeater_UI()
     {
         AdjPowerModel model;
         model.workState = ENABLE_STATE_CLOSE;
-        model.volDacValue = 0;
-        model.curDacValue = 0;
-        model.mode = 0;
+        model.utilConfig.volDacValue = 0;
+        model.utilConfig.curDacValue = 0;
+        model.utilConfig.mode = 0;
         model.voltage = 0;
         model.current = 0;
         model.capacity = 0;

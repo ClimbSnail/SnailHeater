@@ -28,6 +28,9 @@ static lv_obj_t *ui_PanelMain;
 lv_obj_t *ui_PanelTop;
 lv_obj_t *ui_PanelTopBgImg;
 
+static lv_timer_t *sysInfoTimer = NULL; // 系统消息窗的定时器
+static lv_obj_t *sysInfoLabel = NULL;   // 系统消息
+
 lv_obj_t *ui_backBtn = NULL;
 lv_obj_t *ui_backBtnLabel;
 
@@ -87,6 +90,8 @@ static lv_anim_t menu_anim;
 #if LV_COLOR_16_SWAP != 0
 #error "#error LV_COLOR_16_SWAP should be 0 to match SquareLine Studio's settings"
 #endif
+
+static void sysInfoTimer_timeout(lv_timer_t *timer);
 
 ///////////////////// SCREENS ////////////////////
 // 测试用
@@ -878,6 +883,9 @@ void main_screen_init(lv_indev_t *indev)
     autoChangePageTimer = lv_timer_create(autoChangePage_timeout, 1000, NULL);
     lv_timer_set_repeat_count(autoChangePageTimer, -1);
 
+    sysInfoTimer = lv_timer_create(sysInfoTimer_timeout, DATA_REFRESH_MS, NULL);
+    lv_timer_set_repeat_count(sysInfoTimer, -1);
+
     lv_scr_load(desktop_screen);
 }
 
@@ -909,6 +917,31 @@ void ui_page_move_center_by_ind(int index)
     // }
     // hide_menu();
     targerChangePageInd = index; // 等待定时器切换 autoChangePageTimer
+}
+
+static void sysInfoTimer_timeout(lv_timer_t *timer)
+{
+    LV_UNUSED(timer);
+    if (true == sysInfoModel.hasInfo && NULL == sysInfoLabel)
+    {
+        sysInfoLabel = lv_label_create(lv_layer_top());
+        lv_obj_set_align(sysInfoLabel, LV_ALIGN_CENTER);
+        lv_obj_set_pos(sysInfoLabel, 0, 40);
+        lv_label_set_text_fmt(sysInfoLabel, "%s", sysInfoModel.sysInfo);
+        lv_obj_set_size(sysInfoLabel, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+        lv_obj_add_flag(sysInfoLabel, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+        lv_obj_clear_flag(sysInfoLabel, LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_set_style_text_color(sysInfoLabel, lv_color_hex(0xdb3156), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_font(sysInfoLabel, &FontDeyi_36, LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+    else if(false == sysInfoModel.hasInfo)
+    {
+        if (NULL != sysInfoLabel)
+        {
+            lv_obj_del(sysInfoLabel);
+            sysInfoLabel = NULL;
+        }
+    }
 }
 
 // 触摸事件处理

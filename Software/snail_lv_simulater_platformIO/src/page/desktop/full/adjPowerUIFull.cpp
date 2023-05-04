@@ -90,16 +90,16 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     lv_obj_set_style_bg_color(ui_voltSlider, ADJ_POWER_THEME_COLOR1, LV_PART_KNOB | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_voltSlider, lv_color_hex(0x999999), LV_PART_INDICATOR | LV_STATE_DEFAULT);
 
-    if (ADJ_POWER_MODE_CV == adjPowerModel.mode)
+    if (ADJ_POWER_MODE_CV == adjPowerModel.utilConfig.mode)
     {
         lv_slider_set_value(ui_voltSlider,
-                            DAC_DEFAULT_RESOLUTION - adjPowerModel.volDacValue,
+                            DAC_DEFAULT_RESOLUTION - adjPowerModel.utilConfig.volDacValue,
                             LV_ANIM_OFF);
     }
-    else if (ADJ_POWER_MODE_CC == adjPowerModel.mode)
+    else if (ADJ_POWER_MODE_CC == adjPowerModel.utilConfig.mode)
     {
         lv_slider_set_value(ui_voltSlider,
-                            DAC_DEFAULT_RESOLUTION - adjPowerModel.curDacValue,
+                            adjPowerModel.utilConfig.settingCurrent,
                             LV_ANIM_OFF);
     }
 
@@ -152,11 +152,11 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     lv_obj_set_size(ui_modeLable, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
     lv_obj_set_pos(ui_modeLable, 0, 0);
     lv_obj_set_align(ui_modeLable, LV_ALIGN_CENTER);
-    if (ADJ_POWER_MODE_CV == adjPowerModel.mode)
+    if (ADJ_POWER_MODE_CV == adjPowerModel.utilConfig.mode)
     {
         lv_label_set_text_fmt(ui_modeLable, "CV");
     }
-    else if (ADJ_POWER_MODE_CC == adjPowerModel.mode)
+    else if (ADJ_POWER_MODE_CC == adjPowerModel.utilConfig.mode)
     {
         lv_label_set_text_fmt(ui_modeLable, "CC");
     }
@@ -236,19 +236,19 @@ static void ui_mode_bnt_pressed(lv_event_t *e)
 
     if (event_code == LV_EVENT_PRESSED)
     {
-        adjPowerModel.mode = (adjPowerModel.mode + 1) % ADJ_POWER_MODE_MAX_NUM;
-        if (ADJ_POWER_MODE_CV == adjPowerModel.mode)
+        adjPowerModel.utilConfig.mode = (adjPowerModel.utilConfig.mode + 1) % ADJ_POWER_MODE_MAX_NUM;
+        if (ADJ_POWER_MODE_CV == adjPowerModel.utilConfig.mode)
         {
             lv_label_set_text_fmt(ui_modeLable, "CV");
             lv_slider_set_value(ui_voltSlider,
-                                DAC_DEFAULT_RESOLUTION - adjPowerModel.volDacValue,
+                                DAC_DEFAULT_RESOLUTION - adjPowerModel.utilConfig.volDacValue,
                                 LV_ANIM_OFF);
         }
-        else if (ADJ_POWER_MODE_CC == adjPowerModel.mode)
+        else if (ADJ_POWER_MODE_CC == adjPowerModel.utilConfig.mode)
         {
             lv_label_set_text_fmt(ui_modeLable, "CC");
             lv_slider_set_value(ui_voltSlider,
-                                DAC_DEFAULT_RESOLUTION - adjPowerModel.curDacValue,
+                                adjPowerModel.utilConfig.settingCurrent,
                                 LV_ANIM_OFF);
         }
     }
@@ -301,15 +301,14 @@ static void ui_set_slider_changed(lv_event_t *e)
 
     if (LV_EVENT_VALUE_CHANGED == event_code)
     {
-        if (ADJ_POWER_MODE_CV == adjPowerModel.mode)
+        if (ADJ_POWER_MODE_CV == adjPowerModel.utilConfig.mode)
         {
-            adjPowerModel.volDacValue =
+            adjPowerModel.utilConfig.volDacValue =
                 DAC_DEFAULT_RESOLUTION - (int)lv_slider_get_value(ui_voltSlider);
         }
-        else if (ADJ_POWER_MODE_CC == adjPowerModel.mode)
+        else if (ADJ_POWER_MODE_CC == adjPowerModel.utilConfig.mode)
         {
-            adjPowerModel.curDacValue =
-                DAC_DEFAULT_RESOLUTION - (int)lv_slider_get_value(ui_voltSlider);
+            adjPowerModel.utilConfig.curDacValue = (int)lv_slider_get_value(ui_voltSlider);
         }
     }
 }

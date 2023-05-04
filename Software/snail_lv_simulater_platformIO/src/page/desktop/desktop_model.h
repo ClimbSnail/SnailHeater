@@ -34,28 +34,19 @@ struct SolderModel
             unsigned char : 4;                        // 预留 实现内存对齐
         } bitValue;
     } tempEnable;
+    int fineAdjTemp; // 精调温度
 
-    int quickSetupTemp_0; // 快速设定温度0
-    int quickSetupTemp_1; // 快速设定温度1
-    int quickSetupTemp_2; // 快速设定温度2
-    int fineAdjTemp;      // 精调温度
+    SolderUtilConfig utilConfig; // 通用设置
+    SolderCoreConfig coreConfig; // 发热芯参数
 
-    int targetTemp;      // 设定的温度
-    int curTemp;         // 当前的温度
+    int16_t curTemp;     // 当前的温度
     uint16_t powerRatio; // 供电能量占比
 
-    int16_t easySleepTemp;      // 浅度休眠的温度
-    int32_t enterEasySleepTime; // 进入浅休眠的时间
-    int32_t enterDeepSleepTime; // 进入深度休眠的时间
-    int16_t alarmValue;         // 超温报警阈值
-    uint16_t coreCnt;           // 烙铁芯数量
-    uint16_t coreIDRecord;      // 使用位标志烙铁芯id编号 1~31位
-    uint16_t curCoreID;         // 当前选择的烙铁芯ID
+    char curCoreName[16];     // 发热名字 格式 id+'_'+type
+    const char *coreNameList; // 发热芯的名字列表
 
-    char curCoreName[16];     // 烙铁名字 格式 id+'_'+type
-    const char *coreNameList; // 烙铁芯的名字列表
-    unsigned char type;       // 烙铁类型
-    uint8_t wakeType;         // 唤醒类型（震动开关）
+    uint16_t typeValue; // 烙铁类型值
+    uint16_t volValue;  // 测试得到的电压
 };
 
 extern struct SolderModel solderModel;
@@ -64,41 +55,14 @@ struct AirhotModel
 {
     unsigned char workState; // 工作状态
 
-    // 使能标志位 + 三组预设温度 + 一组精调温度
-    union TempEnable
-    {
-        // 用于批量操作
-        unsigned char allValue; // 用于批量操作， 比如所有位清空 all=0 重新设置前必须清空
+    HA_UtilConfig utilConfig; // 通用设置
+    HA_CoreConfig coreConfig; // 发热芯参数
 
-        // 用于独立操作 注：重新设置前必须清空（allValue=0）
-        struct BitValue
-        {
-            unsigned char quickSetupTempEnable_0 : 1; // 温度有效标志位 快速设定 0 默认 ENABLE_STATE_CLOSE
-            unsigned char quickSetupTempEnable_1 : 1; // 温度有效标志位 快速设定 1
-            unsigned char quickSetupTempEnable_2 : 1; // 温度有效标志位 快速设定 2
-            unsigned char fineAdjTempEnable : 1;      // 温度有效标志位 精调
-            unsigned char : 4;                        // 预留 实现内存对齐
-        } bitValue;
-    } tempEnable;
-    int quickSetupTemp_0; // 快速设定温度0
-    int quickSetupTemp_1; // 快速设定温度1
-    int quickSetupTemp_2; // 快速设定温度2
-    int fineAdjTemp;      // 精调温度
+    int curTemp;         // 当前的温度
+    uint16_t powerRatio; // 供电能量占比
 
-    int targetTemp;            // 设定的目标温度
-    int curTemp;               // 当前的温度
-    unsigned int workAirSpeed; // 工作状态下的风速
-    uint16_t powerRatio;       // 供电能量占比
-
-    unsigned int coolingAirSpeed;     // 冷却时的风速
-    int16_t coolingFinishTemp;        // 冷却结束的温度
-    int16_t alarmValue;               // 超温报警阈值
-    unsigned int kp;                  // PID参数
-    unsigned int ki;                  // PID参数
-    unsigned int kd;                  // PID参数
-    unsigned int kt;                  // PID参数
-    unsigned int pid_start_value_low; // PID调控的最低值
-    unsigned int pid_end_value_high;  // PID调控的最高值
+    char curCoreName[16];     // 发热名字 格式 id+'_'+type
+    const char *coreNameList; // 发热芯的名字列表
 };
 
 extern struct AirhotModel airhotModel;
@@ -108,41 +72,10 @@ struct HeatplatformModel
     unsigned char workState; // 工作状态
     unsigned char enable;    // 使能状态
 
-    // 使能标志位 + 三组预设温度 + 一组精调温度
-    union TempEnable
-    {
-        // 用于批量操作
-        unsigned char allValue; // 用于批量操作， 比如所有位清空 all=0 重新设置前必须清空
-
-        // 用于独立操作 注：重新设置前必须清空（allValue=0）
-        struct BitValue
-        {
-            unsigned char quickSetupTempEnable_0 : 1; // 温度有效标志位 快速设定 0 默认 ENABLE_STATE_CLOSE
-            unsigned char quickSetupTempEnable_1 : 1; // 温度有效标志位 快速设定 1
-            unsigned char quickSetupTempEnable_2 : 1; // 温度有效标志位 快速设定 2
-            unsigned char fineAdjTempEnable : 1;      // 温度有效标志位 精调
-            unsigned char : 4;                        // 预留 实现内存对齐
-        } bitValue;
-    } tempEnable;
-    int quickSetupTemp_0; // 快速设定温度0
-    int quickSetupTemp_1; // 快速设定温度1
-    int quickSetupTemp_2; // 快速设定温度2
-    int fineAdjTemp;      // 精调温度
-
-    int targetTemp;            // 设定的温度
+    HP_UtilConfig utilConfig; // 通用设置
+    
     int curTemp;               // 当前的温度
-    unsigned int workAirSpeed; // 工作状态下的风速
     uint16_t powerRatio;       // 供电能量占比
-
-    unsigned int coolingAirSpeed;     // 冷却时的风速
-    int16_t coolingFinishTemp;        // 冷却结束的温度
-    int16_t alarmValue;               // 超温报警阈值
-    unsigned int kp;                  // PID参数
-    unsigned int ki;                  // PID参数
-    unsigned int kd;                  // PID参数
-    unsigned int kt;                  // PID参数
-    unsigned int pid_start_value_low; // PID调控的差值(开始值)
-    unsigned int pid_end_value_high;  // PID调控的差值（结束值）
 };
 
 extern struct HeatplatformModel heatplatformModel;
@@ -151,15 +84,10 @@ struct AdjPowerModel
 {
     unsigned char workState; // 工作状态
 
-    int volDacValue;  // 控制电压的DAC值
-    int curDacValue;  // 控制电流的DAC值
-    uint8_t mode;     // 模式
+    AdjPowerConfig utilConfig;  // 通用配置
     int32_t voltage;  // 当前电压
     int32_t current;  // 当前的电流
     int32_t capacity; // 功率
-
-    uint8_t autoOpen;    // 开机自动开启输出
-    uint32_t stepByStep; // 调节的不进（mV/mA）
 };
 
 extern struct AdjPowerModel adjPowerModel;
@@ -187,6 +115,9 @@ struct SysInfoModel
     char softwareVersion[16];    // 软件版本
     KNOBS_DIR knobDir;           // 旋钮方向
     UI_PARAM_INFO uiGlobalParam; // 关于UI的全局配置参数，会持久化保存
+    bool hasInfo;                // 是否有系统消息
+    uint16_t sysInfoDispTime;    // 系统消息显示的时长 ms
+    char sysInfo[128];           // 系统消息的具体内容
 };
 
 extern struct SysInfoModel sysInfoModel;

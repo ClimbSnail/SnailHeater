@@ -7,9 +7,9 @@ static lv_timer_t *airhotTimer = NULL;
 static lv_obj_t *airhotPageUI = NULL;
 static lv_obj_t *ui_curTempLabel;
 static lv_obj_t *ui_curTempCLabel;
-static lv_obj_t *ui_fineAdjTempButton;
-static lv_obj_t *ui_fineAdjTempLabel;
-static lv_obj_t *ui_fineAdjTempArc = NULL;
+static lv_obj_t *ui_targetTempButton;
+static lv_obj_t *ui_targetTempLabel;
+static lv_obj_t *ui_targetTempArc = NULL;
 static lv_obj_t *ui_setAirDutyButton;
 static lv_obj_t *ui_setAirDutyLabel;
 static lv_obj_t *ui_setAirArc = NULL;
@@ -54,31 +54,21 @@ static void rotate_anim_cb(void *lvobj, int32_t v)
 
 static void setFineAdjTemp(int temp)
 {
-    airhotModel.fineAdjTemp = temp;
-    airhotModel.targetTemp = airhotModel.fineAdjTemp;
-    lv_label_set_text_fmt(ui_fineAdjTempLabel, "%d°C", airhotModel.fineAdjTemp);
+    airhotModel.utilConfig.targetTemp = temp;
+    lv_label_set_text_fmt(ui_targetTempLabel, "%d°C", airhotModel.utilConfig.targetTemp);
 }
 
 static void ui_fast_temp_btn1_pressed(lv_event_t *e)
 {
-    // airhotModel.tempEnable.allValue = 0; // 重设置前必须清空
-    // airhotModel.tempEnable.bitValue.quickSetupTempEnable_0 = ENABLE_STATE_OPEN;
-    // airhotModel.targetTemp = airhotModel.quickSetupTemp_0;
-    setFineAdjTemp(airhotModel.quickSetupTemp_0);
+    setFineAdjTemp(airhotModel.utilConfig.quickSetupTemp_0);
 }
 static void ui_fast_temp_btn2_pressed(lv_event_t *e)
 {
-    // airhotModel.tempEnable.allValue = 0; // 重设置前必须清空
-    // airhotModel.tempEnable.bitValue.quickSetupTempEnable_1 = ENABLE_STATE_OPEN;
-    // airhotModel.targetTemp = airhotModel.quickSetupTemp_1;
-    setFineAdjTemp(airhotModel.quickSetupTemp_1);
+    setFineAdjTemp(airhotModel.utilConfig.quickSetupTemp_1);
 }
 static void ui_fast_temp_btn3_pressed(lv_event_t *e)
 {
-    // airhotModel.tempEnable.allValue = 0; // 重设置前必须清空
-    // airhotModel.tempEnable.bitValue.quickSetupTempEnable_2 = ENABLE_STATE_OPEN;
-    // airhotModel.targetTemp = airhotModel.quickSetupTemp_2;
-    setFineAdjTemp(airhotModel.quickSetupTemp_2);
+    setFineAdjTemp(airhotModel.utilConfig.quickSetupTemp_2);
 }
 
 static void draw_event_cb(lv_event_t *e)
@@ -197,7 +187,7 @@ static bool airhotPageUI_init(lv_obj_t *father)
 
     ui_fastSetTempLabel1 = lv_label_create(ui_fastSetTempButton1);
     lv_obj_set_align(ui_fastSetTempLabel1, LV_ALIGN_CENTER);
-    lv_label_set_text_fmt(ui_fastSetTempLabel1, "%d", airhotModel.quickSetupTemp_0);
+    lv_label_set_text_fmt(ui_fastSetTempLabel1, "%d", airhotModel.utilConfig.quickSetupTemp_0);
 
     ui_fastSetTempButton2 = lv_btn_create(ui_ButtonTmp);
     lv_obj_remove_style_all(ui_fastSetTempButton2);
@@ -210,7 +200,7 @@ static bool airhotPageUI_init(lv_obj_t *father)
 
     ui_fastSetTempLabel2 = lv_label_create(ui_fastSetTempButton2);
     lv_obj_set_align(ui_fastSetTempLabel2, LV_ALIGN_CENTER);
-    lv_label_set_text_fmt(ui_fastSetTempLabel2, "%d", airhotModel.quickSetupTemp_1);
+    lv_label_set_text_fmt(ui_fastSetTempLabel2, "%d", airhotModel.utilConfig.quickSetupTemp_1);
 
     ui_fastSetTempButton3 = lv_btn_create(ui_ButtonTmp);
     lv_obj_remove_style_all(ui_fastSetTempButton3);
@@ -223,7 +213,7 @@ static bool airhotPageUI_init(lv_obj_t *father)
 
     ui_fastSetTempLabel3 = lv_label_create(ui_fastSetTempButton3);
     lv_obj_set_align(ui_fastSetTempLabel3, LV_ALIGN_CENTER);
-    lv_label_set_text_fmt(ui_fastSetTempLabel3, "%d", airhotModel.quickSetupTemp_2);
+    lv_label_set_text_fmt(ui_fastSetTempLabel3, "%d", airhotModel.utilConfig.quickSetupTemp_2);
 
     ui_curTempLabel = lv_label_create(ui_ButtonTmp);
     lv_obj_set_size(ui_curTempLabel, 105, 52);
@@ -255,24 +245,24 @@ static bool airhotPageUI_init(lv_obj_t *father)
     lv_obj_align(lb2, LV_ALIGN_TOP_LEFT, 10, 46);
     lv_obj_add_style(lb2, &label_text_style, 0);
 
-    // 细调温度
-    ui_fineAdjTempButton = lv_btn_create(ui_ButtonTmp);
-    lv_obj_remove_style_all(ui_fineAdjTempButton);
-    lv_obj_set_size(ui_fineAdjTempButton, 60, 20);
-    lv_obj_align(ui_fineAdjTempButton, LV_ALIGN_TOP_LEFT, 4, 64);
-    lv_obj_add_flag(ui_fineAdjTempButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
-    lv_obj_clear_flag(ui_fineAdjTempButton, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_radius(ui_fineAdjTempButton, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(ui_fineAdjTempButton, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(ui_fineAdjTempButton, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_fineAdjTempButton, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_add_style(ui_fineAdjTempButton, &btn_type1_focused_style, LV_STATE_FOCUSED);
-    lv_obj_add_style(ui_fineAdjTempButton, &btn_type1_pressed_style, LV_STATE_EDITED);
+    // 目标温度
+    ui_targetTempButton = lv_btn_create(ui_ButtonTmp);
+    lv_obj_remove_style_all(ui_targetTempButton);
+    lv_obj_set_size(ui_targetTempButton, 60, 20);
+    lv_obj_align(ui_targetTempButton, LV_ALIGN_TOP_LEFT, 4, 64);
+    lv_obj_add_flag(ui_targetTempButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+    lv_obj_clear_flag(ui_targetTempButton, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_radius(ui_targetTempButton, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_targetTempButton, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_targetTempButton, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_targetTempButton, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_add_style(ui_targetTempButton, &btn_type1_focused_style, LV_STATE_FOCUSED);
+    lv_obj_add_style(ui_targetTempButton, &btn_type1_pressed_style, LV_STATE_EDITED);
 
-    ui_fineAdjTempLabel = lv_label_create(ui_fineAdjTempButton);
-    lv_obj_set_size(ui_fineAdjTempLabel, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-    lv_obj_center(ui_fineAdjTempLabel);
-    lv_label_set_text_fmt(ui_fineAdjTempLabel, "%d°C", airhotModel.fineAdjTemp);
+    ui_targetTempLabel = lv_label_create(ui_targetTempButton);
+    lv_obj_set_size(ui_targetTempLabel, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+    lv_obj_center(ui_targetTempLabel);
+    lv_label_set_text_fmt(ui_targetTempLabel, "%d°C", airhotModel.utilConfig.targetTemp);
 
     // 风扇
     ui_imgFan = lv_img_create(ui_ButtonTmp);
@@ -284,9 +274,9 @@ static bool airhotPageUI_init(lv_obj_t *father)
     lv_anim_set_values(&fan_anim, 0, 3600);
     lv_anim_set_repeat_count(&fan_anim, LV_ANIM_REPEAT_INFINITE);
 
-    if (airhotModel.workAirSpeed != 0)
+    if (airhotModel.utilConfig.workAirSpeed != 0)
     {
-        lv_anim_set_time(&fan_anim, 4960 - (airhotModel.workAirSpeed - 1) * 40);
+        lv_anim_set_time(&fan_anim, 4960 - (airhotModel.utilConfig.workAirSpeed - 1) * 40);
         lv_anim_start(&fan_anim);
     }
 
@@ -306,7 +296,7 @@ static bool airhotPageUI_init(lv_obj_t *father)
     ui_setAirDutyLabel = lv_label_create(ui_setAirDutyButton);
     lv_obj_set_size(ui_setAirDutyLabel, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
     lv_obj_center(ui_setAirDutyLabel);
-    lv_label_set_text_fmt(ui_setAirDutyLabel, "%d%%", airhotModel.workAirSpeed);
+    lv_label_set_text_fmt(ui_setAirDutyLabel, "%d%%", airhotModel.utilConfig.workAirSpeed);
 
     ui_powerBar = lv_bar_create(ui_ButtonTmp);
     lv_obj_set_size(ui_powerBar, 250, 6);
@@ -346,12 +336,12 @@ static bool airhotPageUI_init(lv_obj_t *father)
     lv_obj_add_event_cb(ui_fastSetTempButton1, ui_fast_temp_btn1_pressed, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(ui_fastSetTempButton2, ui_fast_temp_btn2_pressed, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(ui_fastSetTempButton3, ui_fast_temp_btn3_pressed, LV_EVENT_PRESSED, NULL);
-    lv_obj_add_event_cb(ui_fineAdjTempButton, ui_set_temp_btn_pressed, LV_EVENT_PRESSED, NULL);
+    lv_obj_add_event_cb(ui_targetTempButton, ui_set_temp_btn_pressed, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(ui_setAirDutyButton, ui_set_air_btn_pressed, LV_EVENT_PRESSED, NULL);
 
     btn_group = lv_group_create();
     lv_group_add_obj(btn_group, ui_backBtn);
-    lv_group_add_obj(btn_group, ui_fineAdjTempButton);
+    lv_group_add_obj(btn_group, ui_targetTempButton);
     lv_group_add_obj(btn_group, ui_fastSetTempButton1);
     lv_group_add_obj(btn_group, ui_fastSetTempButton2);
     lv_group_add_obj(btn_group, ui_fastSetTempButton3);
@@ -427,7 +417,7 @@ static void ui_set_tempArc_changed(lv_event_t *e)
 
     if (LV_EVENT_VALUE_CHANGED == event_code)
     {
-        lv_label_set_text_fmt(ui_fineAdjTempLabel, "%d°C", lv_arc_get_value(ui_fineAdjTempArc));
+        lv_label_set_text_fmt(ui_targetTempLabel, "%d°C", lv_arc_get_value(ui_targetTempArc));
     }
 }
 
@@ -438,22 +428,19 @@ static void ui_set_tempArc_pressed(lv_event_t *e)
 
     if (LV_EVENT_PRESSED == event_code)
     {
-        airhotModel.tempEnable.allValue = 0; // 重设置前必须清空
-        airhotModel.tempEnable.bitValue.fineAdjTempEnable = ENABLE_STATE_OPEN;
-        airhotModel.fineAdjTemp = lv_arc_get_value(ui_fineAdjTempArc);
-        airhotModel.targetTemp = airhotModel.fineAdjTemp;
+        airhotModel.utilConfig.targetTemp = lv_arc_get_value(ui_targetTempArc);
 
         lv_group_focus_freeze(setTempArcGroup, false);
         lv_indev_set_group(knobs_indev, btn_group);
 
         LV_LOG_USER("set_tempArc LV_EVENT_PRESSED % u", event_code);
-        if (NULL != ui_fineAdjTempArc)
+        if (NULL != ui_targetTempArc)
         {
-            lv_group_remove_obj(ui_fineAdjTempArc);
-            lv_obj_del(ui_fineAdjTempArc);
-            ui_fineAdjTempArc = NULL;
+            lv_group_remove_obj(ui_targetTempArc);
+            lv_obj_del(ui_targetTempArc);
+            ui_targetTempArc = NULL;
         }
-        lv_obj_clear_state(ui_fineAdjTempButton, LV_STATE_EDITED);
+        lv_obj_clear_state(ui_targetTempButton, LV_STATE_EDITED);
     }
 }
 
@@ -466,27 +453,27 @@ static void ui_set_temp_btn_pressed(lv_event_t *e)
     {
         LV_LOG_USER("button_pressed LV_EVENT_PRESSED % u", event_code);
 
-        lv_obj_add_state(ui_fineAdjTempButton, LV_STATE_EDITED);
-        if (NULL != ui_fineAdjTempArc)
+        lv_obj_add_state(ui_targetTempButton, LV_STATE_EDITED);
+        if (NULL != ui_targetTempArc)
         {
-            lv_group_remove_obj(ui_fineAdjTempArc);
-            lv_obj_del(ui_fineAdjTempArc);
-            ui_fineAdjTempArc = NULL;
+            lv_group_remove_obj(ui_targetTempArc);
+            lv_obj_del(ui_targetTempArc);
+            ui_targetTempArc = NULL;
         }
-        ui_fineAdjTempArc = lv_arc_create(ui_fineAdjTempButton);
-        lv_obj_set_size(ui_fineAdjTempArc, 30, 30);
-        lv_obj_center(ui_fineAdjTempArc);
-        lv_arc_set_range(ui_fineAdjTempArc, 0, 500);
-        lv_arc_set_value(ui_fineAdjTempArc, airhotModel.fineAdjTemp);
+        ui_targetTempArc = lv_arc_create(ui_targetTempButton);
+        lv_obj_set_size(ui_targetTempArc, 30, 30);
+        lv_obj_center(ui_targetTempArc);
+        lv_arc_set_range(ui_targetTempArc, 0, 500);
+        lv_arc_set_value(ui_targetTempArc, airhotModel.utilConfig.targetTemp);
         // 设置隐藏
-        lv_obj_set_style_opa(ui_fineAdjTempArc, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_opa(ui_targetTempArc, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-        lv_group_add_obj(setTempArcGroup, ui_fineAdjTempArc);
+        lv_group_add_obj(setTempArcGroup, ui_targetTempArc);
         lv_indev_set_group(knobs_indev, setTempArcGroup);
-        lv_group_focus_obj(ui_fineAdjTempArc);
+        lv_group_focus_obj(ui_targetTempArc);
 
-        lv_obj_add_event_cb(ui_fineAdjTempArc, ui_set_tempArc_pressed, LV_EVENT_PRESSED, NULL);
-        lv_obj_add_event_cb(ui_fineAdjTempArc, ui_set_tempArc_changed, LV_EVENT_VALUE_CHANGED, NULL);
+        lv_obj_add_event_cb(ui_targetTempArc, ui_set_tempArc_pressed, LV_EVENT_PRESSED, NULL);
+        lv_obj_add_event_cb(ui_targetTempArc, ui_set_tempArc_changed, LV_EVENT_VALUE_CHANGED, NULL);
     }
 }
 
@@ -508,11 +495,11 @@ static void ui_set_airArc_pressed(lv_event_t *e)
 
     if (LV_EVENT_PRESSED == event_code)
     {
-        airhotModel.workAirSpeed = lv_arc_get_value(ui_setAirArc);
-        if (airhotModel.workAirSpeed != 0)
+        airhotModel.utilConfig.workAirSpeed = lv_arc_get_value(ui_setAirArc);
+        if (airhotModel.utilConfig.workAirSpeed != 0)
         {
             lv_anim_set_repeat_count(&fan_anim, LV_ANIM_REPEAT_INFINITE);
-            lv_anim_set_time(&fan_anim, 4960 - (airhotModel.workAirSpeed - 1) * 40);
+            lv_anim_set_time(&fan_anim, 4960 - (airhotModel.utilConfig.workAirSpeed - 1) * 40);
             lv_anim_start(&fan_anim);
         }
         else
@@ -555,7 +542,7 @@ static void ui_set_air_btn_pressed(lv_event_t *e)
         lv_obj_set_size(ui_setAirArc, 30, 30);
         lv_obj_center(ui_setAirArc);
         lv_arc_set_range(ui_setAirArc, 5, 100);
-        lv_arc_set_value(ui_setAirArc, airhotModel.workAirSpeed);
+        lv_arc_set_value(ui_setAirArc, airhotModel.utilConfig.workAirSpeed);
         // 设置隐藏
         lv_obj_set_style_opa(ui_setAirArc, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 

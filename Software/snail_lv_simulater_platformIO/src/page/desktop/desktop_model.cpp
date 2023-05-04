@@ -5,13 +5,13 @@ struct SolderModel solderModel = {SOLDER_STATE_DEEP_SLEEP, SOLDER_TYPE_T12,
                                   SOLDER_SHAKE_TYPE_CHANGE, 1, 270, 360, 400, 300,
                                   0, 3, 0, 0};
 
-struct AirhotModel airhotModel = {HOTAIR_STATE_SLEEP, 0,
-                                  250, 350, 400, 350,
-                                  0, 0, 30, 0};
+struct AirhotModel airhotModel = {HOTAIR_STATE_SLEEP,
+                                  250, 350, 400,
+                                  350, 0, 30, 0};
 
-struct HeatplatformModel heatplatformModel = {HP_STATE_SLEEP, ENABLE_STATE_CLOSE, 1,
-                                              180, 245, 270, 230,
-                                              0, 0, 30, 0};
+struct HeatplatformModel heatplatformModel = {HP_STATE_SLEEP, ENABLE_STATE_CLOSE,
+                                              180, 245, 270,
+                                              230, 0, 30, 0};
 
 struct AdjPowerModel adjPowerModel = {ENABLE_STATE_CLOSE, 0, 0,
                                       0, 0, 0, 0};

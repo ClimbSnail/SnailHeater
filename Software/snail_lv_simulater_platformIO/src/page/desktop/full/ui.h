@@ -38,6 +38,7 @@ extern "C"
 #define EACH_PAGE_SIZE_X 280
 #define EACH_PAGE_SIZE_Y 216
     LV_FONT_DECLARE(FontDeyi_16);
+    LV_FONT_DECLARE(FontDeyi_36);
     LV_FONT_DECLARE(FontDeyi_20);
     LV_FONT_DECLARE(FontJost_52);
     LV_FONT_DECLARE(FontRoboto_52);
@@ -55,6 +56,8 @@ extern "C"
     LV_IMG_DECLARE(img_text_noc);
     LV_IMG_DECLARE(img_top_bar_white);
     LV_IMG_DECLARE(img_top_bar_black);
+    LV_FONT_DECLARE(lv_font_montserrat_18);
+    LV_FONT_DECLARE(lv_font_montserrat_48);
 
     void show_menu();
     void hide_menu();
