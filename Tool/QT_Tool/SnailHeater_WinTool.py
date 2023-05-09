@@ -64,7 +64,9 @@ class DownloadController(object):
 
         # 设置文本可复制
         self.form.LinkInfolabel.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self.form.UpdateLogLinkInfolabel.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.form.QQInfolabel.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self.form.QQInfolabel_2.setTextInteractionFlags(Qt.TextSelectableByMouse)
 
         self.form.ComComboBox.clicked.connect(self.scan_com)  # 信号与槽函数的绑定
         self.form.FirmwareComboBox.clicked.connect(self.scan_firmware)
@@ -82,7 +84,6 @@ class DownloadController(object):
 
         #
         self.form.UICLineEdit.setReadOnly(True)
-        # x = self.form.x()
 
         # self.win_main.move(self.win_main)
         self.win_main.show()
@@ -492,16 +493,6 @@ class DownloadController(object):
 
 
 def main():
-    # 解决不同电脑不同缩放比例问题
-    # QGuiApplication.setAttribute(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
-    QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
-    # 和designer设计的窗口比例一致
-    QtCore.QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
-    # 适应高DPI设备
-    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
-    # 解决图片在不同分辨率显示模糊问题
-    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
-
     # app = QApplication([])
     app = QApplication(sys.argv)
     download_ui = uic.loadUi("download.ui")
@@ -511,6 +502,17 @@ def main():
 
 
 if __name__ == '__main__':
+    # 解决不同电脑不同缩放比例问题
+    # QGuiApplication.setAttribute(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
+    QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
+    # 和designer设计的窗口比例一致
+    QtCore.QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
+    # 适应高DPI设备
+    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
+    # 解决图片在不同分辨率显示模糊问题
+    # QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
+
     # main()
+
     downloader = DownloadController()
     downloader.run()
