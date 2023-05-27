@@ -186,6 +186,9 @@ class DownloadController(object):
                     print(str(traceback.format_exc()))
 
             if act_ret == True:
+                sn_record = open("sn_recode.txt", 'a')
+                sn_record.write(value+"\n")
+                sn_record.close()
                 self.print_log("激活成功")
             else:
                 self.print_log("激活失败")
@@ -275,7 +278,8 @@ class DownloadController(object):
                 self.print_log("正在清空主机数据...")
                 # esptool.py erase_region 0x20000 0x4000
                 # esptool.py erase_flash
-                cmd = ['erase_flash']
+                # cmd = ['erase_flash']
+                cmd = ['--port', select_com, 'erase_flash']
                 esptool.main(cmd)
                 self.print_log("完成清空！")
 
@@ -433,7 +437,9 @@ class DownloadController(object):
                 self.print_log("SN查询失败")
             else:
                 self.print_log("SN查询成功")
-
+                sn_record = open("sn_recode.txt", 'a')
+                sn_record.write(sn+"\n")
+                sn_record.close()
         self.ser.close()  # 关闭串口
         del self.ser
         self.ser = None
