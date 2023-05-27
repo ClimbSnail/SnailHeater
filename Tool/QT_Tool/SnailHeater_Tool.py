@@ -68,7 +68,7 @@ if __name__ == '__main__':
             method = int(input("请选择固件刷写方式。（输入1 更新式刷机， 输入2 清空式刷机）").strip())
             if method == 2:
                 print("\n清空芯片中.....")
-                cmd = ['erase_flash']
+                cmd = [ '--port', select_com, 'erase_flash']
                 esptool.main(cmd)
                 print("清空芯片成功！")
                 break
