@@ -15,6 +15,7 @@ import os
 import time
 import threading
 import re
+import requests
 import traceback
 
 import serial  # pip install pyserial
@@ -36,6 +37,13 @@ import common
 COLOR_RED = '<span style=\" color: #ff0000;\">%s</span>'
 BAUD_RATE = 921600
 INFO_BAUD_RATE = 115200
+
+# 读取配置信息
+config = open("SnailHeater_WinTool.cfg", 'r', encoding="utf-8")
+config_info = config.readlines()
+sn_recode_path = config_info[0].strip()
+sn_url = config_info[1].strip()
+config.close()
 
 
 class DownloadController(object):
@@ -186,9 +194,9 @@ class DownloadController(object):
                     print(str(traceback.format_exc()))
 
             if act_ret == True:
-                sn_record = open("sn_recode.txt", 'a')
-                sn_record.write(value+"\n")
-                sn_record.close()
+                # sn_record = open(sn_recode_path, 'a', encoding="utf-8")
+                # sn_record.write(value+"\n")
+                # sn_record.close()
                 self.print_log("激活成功")
             else:
                 self.print_log("激活失败")
@@ -206,9 +214,26 @@ class DownloadController(object):
         machine_code = self.get_machine_code()
         self.form.UICLineEdit.setText(machine_code)
 
-        self.print_log("\n获取激活码（SN）...")
+        self.print_log("\n获取本地激活码（SN）...")
         sn = self.get_sn()
+        # 尝试联网查询
+        if sn == "":
+            self.print_log("联网查询激活码...")
+            try:
+                response = requests.get(sn_url + machine_code, timeout=3)  # , verify=False
+                # sn = re.findall(r'\d+', response.text)
+                sn = response.text.strip()
+                self.print_log("sn " + str(sn))
+            except Exception as err:
+                print(str(traceback.format_exc()))
+                self.print_log("联网异常")
+
         self.form.SNLineEdit.setText(sn)
+
+        if sn != "":
+            sn_record = open(sn_recode_path, 'a', encoding="utf-8")
+            sn_record.write(machine_code + "\t" + sn + "\n")
+            sn_record.close()
 
     def update_button_click(self):
         """
@@ -278,7 +303,6 @@ class DownloadController(object):
                 self.print_log("正在清空主机数据...")
                 # esptool.py erase_region 0x20000 0x4000
                 # esptool.py erase_flash
-                # cmd = ['erase_flash']
                 cmd = ['--port', select_com, 'erase_flash']
                 esptool.main(cmd)
                 self.print_log("完成清空！")
@@ -401,7 +425,7 @@ class DownloadController(object):
             return None
 
         self.ser = serial.Serial(select_com, INFO_BAUD_RATE, timeout=10)
-        sn = "查询失败"
+        sn = ""
 
         # 判断是否打开成功
         if self.ser.is_open:
@@ -430,16 +454,13 @@ class DownloadController(object):
                     sn = re.findall(r"AT_SETTING_GET VALUE_TYPE_SN = \S*", STRGLO)[0] \
                         .split(" ")[-1]
                 except Exception as err:
-                    sn = "查询失败"
+                    sn = ""
                 print(sn)
 
-            if sn == "查询失败" or sn == "":
+            if sn == "":
                 self.print_log("SN查询失败")
             else:
                 self.print_log("SN查询成功")
-                sn_record = open("sn_recode.txt", 'a')
-                sn_record.write(sn+"\n")
-                sn_record.close()
         self.ser.close()  # 关闭串口
         del self.ser
         self.ser = None
