@@ -463,7 +463,7 @@ static void ui_set_temp_btn_pressed(lv_event_t *e)
         ui_targetTempArc = lv_arc_create(ui_targetTempButton);
         lv_obj_set_size(ui_targetTempArc, 30, 30);
         lv_obj_center(ui_targetTempArc);
-        lv_arc_set_range(ui_targetTempArc, 0, 500);
+        lv_arc_set_range(ui_targetTempArc, 0, 600);
         lv_arc_set_value(ui_targetTempArc, airhotModel.utilConfig.targetTemp);
         // 设置隐藏
         lv_obj_set_style_opa(ui_targetTempArc, 0, LV_PART_MAIN | LV_STATE_DEFAULT);

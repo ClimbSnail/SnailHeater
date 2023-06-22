@@ -73,9 +73,9 @@ struct HeatplatformModel
     unsigned char enable;    // 使能状态
 
     HP_UtilConfig utilConfig; // 通用设置
-    
-    int curTemp;               // 当前的温度
-    uint16_t powerRatio;       // 供电能量占比
+
+    int curTemp;         // 当前的温度
+    uint16_t powerRatio; // 供电能量占比
 };
 
 extern struct HeatplatformModel heatplatformModel;
@@ -84,10 +84,11 @@ struct AdjPowerModel
 {
     unsigned char workState; // 工作状态
 
-    AdjPowerConfig utilConfig;  // 通用配置
-    int32_t voltage;  // 当前电压
-    int32_t current;  // 当前的电流
-    int32_t capacity; // 功率
+    AdjPowerConfig utilConfig; // 通用配置
+    int32_t voltage;           // 当前电压
+    int32_t current;           // 当前的电流
+    int32_t capacity;          // 功率
+    bool curToZeroFlag;        // 电流归零
 };
 
 extern struct AdjPowerModel adjPowerModel;
@@ -112,12 +113,19 @@ struct SysInfoModel
     VERSION_INFO srceenVersion;
     VERSION_INFO coreVersion;
     VERSION_INFO outBoardVersion;
-    char softwareVersion[16];    // 软件版本
-    KNOBS_DIR knobDir;           // 旋钮方向
+    char softwareVersion[16]; // 软件版本
+    uint8_t touchFlag;        // 触摸开关
+    ENABLE_STATE sysTone;     // 系统提示音（关闭后 旋钮设置将不起作用）
+    ENABLE_STATE knobTone;    // 旋钮反馈音
+    KNOBS_DIR knobDir;        // 旋钮方向
+
     UI_PARAM_INFO uiGlobalParam; // 关于UI的全局配置参数，会持久化保存
     bool hasInfo;                // 是否有系统消息
-    uint16_t sysInfoDispTime;    // 系统消息显示的时长 ms
+    int16_t sysInfoDispTime;     // 系统消息显示的时长 ms
     char sysInfo[128];           // 系统消息的具体内容
+
+    // 设置保存的回调函数
+    int (*saveConfAPI)(void *param);
 };
 
 extern struct SysInfoModel sysInfoModel;

@@ -22,7 +22,7 @@ struct StopWelderModel stopWelderModel = {SPOTWELDER_STATE_WAIT, SPOTWELDER_MODE
 
 struct SysInfoModel sysInfoModel = {"", VERSION_INFO_SRCEEN_V20,
                                     VERSION_INFO_CORE_V20, VERSION_INFO_OUT_BOARD_V20,
-                                    "", KNOBS_DIR_POS};
+                                    ""};
 
 /*
  *   电烙铁

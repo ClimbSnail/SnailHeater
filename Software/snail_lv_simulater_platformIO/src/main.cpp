@@ -20,7 +20,14 @@
 #include <SDL2/SDL_timer.h>
 #include "demos/lv_demos.h"
 
-#define SNAILHEATER_VERSION "1.6.6"
+#define SNAILHEATER_VERSION "1.6.12"
+
+int saveSettingAPI(void *parameter)
+{
+    snprintf(sysInfoModel.sysInfo, 128, "%s", "设置已保存");
+    sysInfoModel.sysInfoDispTime = 1000;
+    return 0;
+}
 
 void SnailHeater_UI()
 {
@@ -89,6 +96,7 @@ void SnailHeater_UI()
         model.voltage = 0;
         model.current = 0;
         model.capacity = 0;
+        model.curToZeroFlag = 0;
         setAdjPowerInfo(&model);
     }
 
@@ -106,7 +114,9 @@ void SnailHeater_UI()
         model.outBoardVersion = VERSION_INFO_OUT_BOARD_V20;
         snprintf(model.softwareVersion, 16, "%s", SNAILHEATER_VERSION);
         model.knobDir = KNOBS_DIR_POS;
-        model.uiGlobalParam = {0, 0, 1, 0, 1};
+        model.saveConfAPI = saveSettingAPI;
+        model.uiGlobalParam = {0, 0, 1, 0, 0};
+
         setSysInfo(&model);
     }
 

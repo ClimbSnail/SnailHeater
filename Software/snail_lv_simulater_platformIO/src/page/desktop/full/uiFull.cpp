@@ -922,25 +922,39 @@ void ui_page_move_center_by_ind(int index)
 static void sysInfoTimer_timeout(lv_timer_t *timer)
 {
     LV_UNUSED(timer);
-    if (true == sysInfoModel.hasInfo && NULL == sysInfoLabel)
+    if (0 < sysInfoModel.sysInfoDispTime && NULL == sysInfoLabel)
     {
+        lv_obj_set_style_bg_opa(lv_layer_top(), 100, 0);
+        // lv_obj_set_style_arc_opa(arcMenu, v, LV_PART_MAIN);
+        // for (uint8_t i = 0; i < ARC_MENU_NUM; i++)
+        // {
+        //     lv_obj_set_style_text_opa(arcMenuLabel[i], v, 0);
+        // }
         sysInfoLabel = lv_label_create(lv_layer_top());
         lv_obj_set_align(sysInfoLabel, LV_ALIGN_CENTER);
         lv_obj_set_pos(sysInfoLabel, 0, 40);
         lv_label_set_text_fmt(sysInfoLabel, "%s", sysInfoModel.sysInfo);
+        // lv_label_set_long_mode(sysInfoLabel, );
         lv_obj_set_size(sysInfoLabel, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
         lv_obj_add_flag(sysInfoLabel, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
         lv_obj_clear_flag(sysInfoLabel, LV_OBJ_FLAG_SCROLLABLE);
         lv_obj_set_style_text_color(sysInfoLabel, lv_color_hex(0xdb3156), LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_font(sysInfoLabel, &FontDeyi_36, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_font(sysInfoLabel, &FontDeyi_24, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
-    else if(false == sysInfoModel.hasInfo)
+
+    if (0 > sysInfoModel.sysInfoDispTime)
     {
+        // 显示时间到
         if (NULL != sysInfoLabel)
         {
             lv_obj_del(sysInfoLabel);
             sysInfoLabel = NULL;
+            lv_obj_set_style_bg_opa(lv_layer_top(), 0, 0);
         }
+    }
+    else
+    {
+        sysInfoModel.sysInfoDispTime -= DATA_REFRESH_MS;
     }
 }
 

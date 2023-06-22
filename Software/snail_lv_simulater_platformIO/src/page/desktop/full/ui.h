@@ -38,17 +38,20 @@ extern "C"
 #define EACH_PAGE_SIZE_X 280
 #define EACH_PAGE_SIZE_Y 216
     LV_FONT_DECLARE(FontDeyi_16);
+    LV_FONT_DECLARE(FontDeyi_24);
     LV_FONT_DECLARE(FontDeyi_36);
     LV_FONT_DECLARE(FontDeyi_20);
     LV_FONT_DECLARE(FontJost_52);
     LV_FONT_DECLARE(FontRoboto_52);
     LV_FONT_DECLARE(FontRoboto_36);
+    LV_FONT_DECLARE(FontRoboto_24);
     LV_FONT_DECLARE(FontJost_14);
     LV_FONT_DECLARE(FontJost_18);
     LV_FONT_DECLARE(FontJost_24);
     LV_FONT_DECLARE(FontJost_36);
     LV_FONT_DECLARE(FontJost);
     LV_IMG_DECLARE(img_soldering_gray);
+    LV_IMG_DECLARE(qq_group);
     LV_IMG_DECLARE(img_fan_speed);
     LV_IMG_DECLARE(img_text_c245);
     LV_IMG_DECLARE(img_text_c210);
