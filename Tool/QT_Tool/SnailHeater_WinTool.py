@@ -325,7 +325,7 @@ class DownloadController(object):
 
             self.esp_reboot()  # 手动复位芯片
             self.print_log("刷机结束！")
-            self.print_log("\n\n刷机流程完毕，请保持typec通电等待焊台屏幕将会亮起后才能断电。\n注：更新式刷机一般刷机完成后2s就能亮屏，清空式刷机则需等待20s左右。\n")
+            self.print_log("\n\n刷机流程完毕，请保持typec通电等待焊台屏幕将会亮起后才能断电。\n注：更新式刷机一般刷机完成后2s就能亮屏，清空式刷机则需等待25s左右。\n如25s后始终未能自动亮屏，请手动拔插一次typec接口再次等待25s。\n")
 
         except Exception as err:
             self.ser = None
