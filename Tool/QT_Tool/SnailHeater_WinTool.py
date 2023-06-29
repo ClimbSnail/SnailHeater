@@ -43,6 +43,7 @@ config = open("SnailHeater_WinTool.cfg", 'r', encoding="utf-8")
 config_info = config.readlines()
 sn_recode_path = config_info[0].strip()
 sn_url = config_info[1].strip()
+sn_super_url = config_info[2].strip()
 config.close()
 
 
@@ -184,9 +185,9 @@ class DownloadController(object):
 
             time.sleep(1)
             if self.ser.in_waiting:
-                STRGLO = self.ser.read(self.ser.in_waiting)
-                print("\nSTRGLO = ", STRGLO)
                 try:
+                    STRGLO = self.ser.read(self.ser.in_waiting)
+                    print("\nSTRGLO = ", STRGLO)
                     match_info = re.findall(r"Activate Success", STRGLO.decode("utf8"))
                     if match_info != []:
                         act_ret = True
@@ -227,6 +228,18 @@ class DownloadController(object):
             except Exception as err:
                 print(str(traceback.format_exc()))
                 self.print_log("联网异常")
+
+        # 批量生产使用的自动激活
+        if sn == "" and sn_super_url != "":
+            self.print_log("联网查询激活码(生产模式)...")
+            try:
+                response = requests.get(sn_super_url + machine_code, timeout=3)  # , verify=False
+                # sn = re.findall(r'\d+', response.text)
+                sn = response.text.strip()
+                self.print_log("sn " + str(sn))
+            except Exception as err:
+                print(str(traceback.format_exc()))
+                self.print_log("联网异常(生产模式)")
 
         self.form.SNLineEdit.setText(sn)
 
@@ -324,8 +337,10 @@ class DownloadController(object):
             self.ser = None
 
             self.esp_reboot()  # 手动复位芯片
-            self.print_log("刷机结束！")
-            self.print_log("\n\n刷机流程完毕，请保持typec通电等待焊台屏幕将会亮起后才能断电。\n注：更新式刷机一般刷机完成后2s就能亮屏，清空式刷机则需等待25s左右。\n如25s后始终未能自动亮屏，请手动拔插一次typec接口再次等待25s。\n")
+            self.print_log(COLOR_RED % "刷机结束！")
+            self.print_log("刷机流程完毕，请保持typec通电等待焊台屏幕将会亮起后才能断电。")
+            self.print_log((COLOR_RED % "注：") + "更新式刷机一般刷机完成后2s就能亮屏，清空式刷机则需等待25s左右。")
+            self.print_log("如25s后始终未能自动亮屏，请手动拔插一次typec接口再次等待25s。\n")
 
         except Exception as err:
             self.ser = None
@@ -397,9 +412,9 @@ class DownloadController(object):
 
             time.sleep(1)
             if self.ser.in_waiting:
-                STRGLO = self.ser.read(self.ser.in_waiting).decode("utf8")
-                print(STRGLO)
                 try:
+                    STRGLO = self.ser.read(self.ser.in_waiting).decode("utf8")
+                    print(STRGLO)
                     machine_code = re.findall(r"AT_SETTING_GET VALUE_TYPE_MC = \d*", STRGLO)[0] \
                         .split(" ")[-1]
                 except Exception as err:
@@ -448,9 +463,9 @@ class DownloadController(object):
 
             time.sleep(1)
             if self.ser.in_waiting:
-                STRGLO = self.ser.read(self.ser.in_waiting).decode("utf8")
-                print(STRGLO)
                 try:
+                    STRGLO = self.ser.read(self.ser.in_waiting).decode("utf8")
+                    print(STRGLO)
                     sn = re.findall(r"AT_SETTING_GET VALUE_TYPE_SN = \S*", STRGLO)[0] \
                         .split(" ")[-1]
                 except Exception as err:
