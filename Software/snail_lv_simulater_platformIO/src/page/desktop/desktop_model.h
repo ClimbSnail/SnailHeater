@@ -119,7 +119,11 @@ struct SysInfoModel
     ENABLE_STATE knobTone;    // 旋钮反馈音
     KNOBS_DIR knobDir;        // 旋钮方向
 
+    uint16_t lockScreenDelayTime; // 锁屏延时时间(s)
+    uint16_t wallpaperSwitchTime; // 锁屏切换时间(s)
+
     UI_PARAM_INFO uiGlobalParam; // 关于UI的全局配置参数，会持久化保存
+    bool lockScreenFlag;         // 是否锁屏
     bool hasInfo;                // 是否有系统消息
     int16_t sysInfoDispTime;     // 系统消息显示的时长 ms
     char sysInfo[128];           // 系统消息的具体内容

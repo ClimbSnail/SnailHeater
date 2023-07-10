@@ -11,6 +11,6 @@
 // #define NEW_UI_EXAMPLE
 
 // 触摸事件处理
-void touch_event(unsigned int value);
+void touch_event(unsigned int value = 0);
 
 #endif

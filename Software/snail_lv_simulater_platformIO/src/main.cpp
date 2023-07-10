@@ -114,6 +114,10 @@ void SnailHeater_UI()
         model.outBoardVersion = VERSION_INFO_OUT_BOARD_V20;
         snprintf(model.softwareVersion, 16, "%s", SNAILHEATER_VERSION);
         model.knobDir = KNOBS_DIR_POS;
+        model.lockScreenDelayTime = 10;
+        model.wallpaperSwitchTime = 5;
+        model.lockScreenFlag = false;
+        // model.lockScreenFlag = true;
         model.saveConfAPI = saveSettingAPI;
         model.uiGlobalParam = {0, 0, 1, 0, 0};
 

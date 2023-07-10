@@ -25,6 +25,19 @@ enum VERSION_INFO
     VERSION_INFO_MAX
 };
 
+// 控制器工作活跃标志
+enum CTRL_WORK_EN : unsigned char
+{
+    HOTAIR0_CTRL_WORK_EN = 0x1,
+    HOTAIR1_CTRL_WORK_EN = 0x2,
+    HP_CTRL_WORK_EN = 0x4,
+
+    SOLDER_CTRL_WORK_EN = 0x8,
+    ADJPOWER_CTRL_WORK_EN = 0x10,
+
+    CTRL_WORK_EN_MAX = 5
+};
+
 const char version_info[VERSION_INFO_MAX][8] = {
     "v2.0", "v2.0", "v2.0",
     "v2.1", "v2.1", "v2.1",

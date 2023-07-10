@@ -28,8 +28,14 @@ static lv_obj_t *ui_PanelMain;
 lv_obj_t *ui_PanelTop;
 lv_obj_t *ui_PanelTopBgImg;
 
-static lv_timer_t *sysInfoTimer = NULL; // 系统消息窗的定时器
-static lv_obj_t *sysInfoLabel = NULL;   // 系统消息
+static lv_timer_t *sysInfoTimer = NULL;  // 系统消息窗的定时器
+static lv_obj_t *sysInfoLabel = NULL;    // 系统消息
+static lv_obj_t *lockScreenImage = NULL; // 锁屏壁纸
+static int lockScreenImageIndex = 0;     // 锁屏壁纸播放的下标
+#define WALLPAPER_NUM 6
+static int wallpaperSwitchLeaveTime = 0; // 锁屏切换的打点器
+static lv_img_dsc_t wallpaperList[] = {lighthouse, bridge, coast,
+                                       naturalScenery, night_view, sunsetGlow}; // 壁纸列表
 
 lv_obj_t *ui_backBtn = NULL;
 lv_obj_t *ui_backBtnLabel;
@@ -922,6 +928,52 @@ void ui_page_move_center_by_ind(int index)
 static void sysInfoTimer_timeout(lv_timer_t *timer)
 {
     LV_UNUSED(timer);
+
+    // 锁屏壁纸
+    if (sysInfoModel.lockScreenFlag)
+    {
+        // 锁屏壁纸
+        if (NULL == lockScreenImage)
+        {
+            lockScreenImage = lv_img_create(lv_layer_top());
+            lv_img_set_src(lockScreenImage, &wallpaperList[lockScreenImageIndex]);
+            lv_obj_align(lockScreenImage, LV_ALIGN_CENTER, 0, -240);
+
+            lv_anim_t ls_anim;
+            lv_anim_init(&ls_anim);
+            lv_anim_set_exec_cb(&ls_anim, (lv_anim_exec_xcb_t)lv_obj_set_y);
+            lv_anim_set_var(&ls_anim, lockScreenImage);
+            /* 动画时长[ms] */
+            lv_anim_set_time(&ls_anim, 1500);
+            lv_anim_set_values(&ls_anim, -240, 0);
+            // lv_anim_path_overshoot lv_anim_path_bounce
+            lv_anim_set_path_cb(&ls_anim, lv_anim_path_bounce); // 设置一个动画的路径
+            lv_anim_set_early_apply(&ls_anim, true);
+            lv_anim_start(&ls_anim); /* 应用动画效果 */
+
+            wallpaperSwitchLeaveTime = sysInfoModel.wallpaperSwitchTime * 1000;
+        }
+        else
+        {
+            wallpaperSwitchLeaveTime -= DATA_REFRESH_MS;
+            if (wallpaperSwitchLeaveTime <= 0)
+            {
+                wallpaperSwitchLeaveTime = sysInfoModel.wallpaperSwitchTime * 1000;
+                lockScreenImageIndex = (lockScreenImageIndex + 1) % WALLPAPER_NUM;
+                lv_img_set_src(lockScreenImage, &wallpaperList[lockScreenImageIndex]);
+            }
+        }
+    }
+    else if (!sysInfoModel.lockScreenFlag)
+    {
+        if (NULL != lockScreenImage)
+        {
+            lv_obj_del(lockScreenImage);
+            lockScreenImage = NULL;
+        }
+    }
+
+    // 系统消息
     if (0 < sysInfoModel.sysInfoDispTime && NULL == sysInfoLabel)
     {
         lv_obj_set_style_bg_opa(lv_layer_top(), 100, 0);
