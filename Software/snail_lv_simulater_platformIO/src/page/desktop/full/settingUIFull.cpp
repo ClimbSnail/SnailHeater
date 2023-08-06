@@ -1043,7 +1043,16 @@ static void ui_info_init(lv_obj_t *father)
 static void value_change_tab(lv_event_t *e)
 {
     // 进入按键组
-    uint16_t id = lv_tabview_get_tab_act(settingTabview);
+    // uint16_t id = lv_tabview_get_tab_act(settingTabview);
+    
+    uint16_t id = lv_btnmatrix_get_selected_btn(lv_tabview_get_tab_btns(settingTabview));
+
+    if (pageId != id)
+    {
+        // 界面未刷机，本次不绑定案件组
+        return;
+    }
+
     LV_LOG_USER("value_change_tab id = %d", id);
 
     switch (id)
@@ -1083,6 +1092,7 @@ static void value_change_tab(lv_event_t *e)
     }
 }
 
+// 暂时废弃
 static void focused_tab(lv_event_t *e)
 {
     // uint16_t id = lv_tabview_get_tab_act(settingTabview);
@@ -1152,8 +1162,6 @@ static void dispPage_timeout(lv_timer_t *timer)
     {
         return;
     }
-    pageId = id;
-    LV_LOG_USER("my focused id = %d, pageId = %d", id, pageId);
 
     lv_obj_clean(ui_tabSystem);
     lv_obj_clean(ui_tabSoder);
@@ -1205,6 +1213,9 @@ static void dispPage_timeout(lv_timer_t *timer)
     default:
         break;
     }
+
+    pageId = id;
+    LV_LOG_USER("my focused id = %d, pageId = %d", id, pageId);
 }
 
 static bool settingPageUI_init_1(lv_obj_t *father)

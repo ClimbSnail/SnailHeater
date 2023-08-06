@@ -303,21 +303,6 @@ static bool solderPageUI_init(lv_obj_t *father)
     }
     lv_obj_align(solder_type_text, LV_ALIGN_CENTER, 118, -58);
 
-#ifdef TEST_VER
-    // 类型值
-    // if (false)
-    {
-        solder_type_val_text = lv_label_create(ui_ButtonTmp);
-        lv_obj_set_align(solder_type_val_text, LV_ALIGN_CENTER);
-        lv_obj_set_pos(solder_type_val_text, 0, 0);
-        lv_label_set_text_fmt(solder_type_val_text, "%d mV", solderModel.typeValue);
-        lv_obj_set_size(solder_type_val_text, 100, 20);
-        lv_obj_add_flag(solder_type_val_text, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
-        lv_obj_clear_flag(solder_type_val_text, LV_OBJ_FLAG_SCROLLABLE);
-        lv_obj_set_style_text_font(solder_type_val_text, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-#endif
-
     // 功率bar
     ui_powerBar = lv_bar_create(ui_ButtonTmp);
     lv_obj_set_size(ui_powerBar, 250, 6);
@@ -356,16 +341,30 @@ static bool solderPageUI_init(lv_obj_t *father)
     }
 
 #ifdef TEST_VER
+    // 类型值
+    // if (false)
+    {
+        solder_type_val_text = lv_label_create(ui_ButtonTmp);
+        lv_obj_set_align(solder_type_val_text, LV_ALIGN_CENTER);
+        lv_obj_set_pos(solder_type_val_text, 0, 75);
+        lv_label_set_text_fmt(solder_type_val_text, "%d mV", solderModel.typeValue);
+        lv_obj_set_size(solder_type_val_text, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+        lv_obj_add_flag(solder_type_val_text, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+        lv_obj_clear_flag(solder_type_val_text, LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_set_style_text_color(solder_type_val_text, AIR_HOT_THEME_COLOR1, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_font(solder_type_val_text, &lv_font_montserrat_48, LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
     // if (false)
     {
         vol_val_text = lv_label_create(ui_ButtonTmp);
         lv_obj_set_align(vol_val_text, LV_ALIGN_CENTER);
-        lv_obj_set_pos(vol_val_text, 0, 40);
+        lv_obj_set_pos(vol_val_text, 0, 30);
         lv_label_set_text_fmt(vol_val_text, "%.2lf V", solderModel.volValue / 1000.0);
         lv_obj_set_size(vol_val_text, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
         lv_obj_add_flag(vol_val_text, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
         lv_obj_clear_flag(vol_val_text, LV_OBJ_FLAG_SCROLLABLE);
-        lv_obj_set_style_text_color(vol_val_text, SOLDER_THEME_COLOR1, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(vol_val_text, AIR_HOT_THEME_COLOR1, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_text_font(vol_val_text, &lv_font_montserrat_48, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 #endif

@@ -63,6 +63,7 @@ void SnailHeater_UI()
         model.utilConfig.quickSetupTemp_2 = 400;
         model.utilConfig.targetTemp = 0;
         model.curTemp = 0;
+        model.utilConfig.workAirSpeed = 30;
         model.powerRatio = 0;
         setHeatplatformInfo(&model);
     }

@@ -257,35 +257,11 @@ static bool hpPageUI_init(lv_obj_t *father)
     lv_obj_center(ui_targetTempLabel);
     lv_label_set_text_fmt(ui_targetTempLabel, "%d°C", heatplatformModel.utilConfig.targetTemp);
 
-    ui_setAirTextLabel = lv_label_create(ui_ButtonTmp);
-    lv_label_set_text(ui_setAirTextLabel, TEXT_AIR_SPEED);
-    lv_obj_align(ui_setAirTextLabel, LV_ALIGN_TOP_LEFT, 220, 12);
-    lv_obj_add_style(ui_setAirTextLabel, &label_text_style, 0);
-
-    ui_setAirDutyButton = lv_btn_create(ui_ButtonTmp);
-    lv_obj_remove_style_all(ui_setAirDutyButton);
-    lv_obj_set_size(ui_setAirDutyButton, 64, 30);
-    lv_obj_align(ui_setAirDutyButton, LV_ALIGN_CENTER, 102, -65);
-    lv_obj_add_flag(ui_setAirDutyButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
-    lv_obj_clear_flag(ui_setAirDutyButton, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_radius(ui_setAirDutyButton, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(ui_setAirDutyButton, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(ui_setAirDutyButton, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_setAirDutyButton, &FontJost_24, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_add_style(ui_setAirDutyButton, &btn_type1_focused_style, LV_STATE_FOCUSED);
-    lv_obj_add_style(ui_setAirDutyButton, &btn_type1_pressed_style, LV_STATE_EDITED);
-
-    ui_setAirDutyLabel = lv_label_create(ui_setAirDutyButton);
-    lv_obj_set_size(ui_setAirDutyLabel, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-    lv_obj_center(ui_setAirDutyLabel);
-    lv_label_set_text_fmt(ui_setAirDutyLabel, "%d%%", heatplatformModel.utilConfig.workAirSpeed);
-    // 上面的模型要改
-
     // 使能开关
     ui_enableSwitch = lv_switch_create(ui_ButtonTmp);
     lv_obj_add_flag(ui_enableSwitch, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_set_size(ui_enableSwitch, 40, 20);
-    lv_obj_align(ui_enableSwitch, LV_ALIGN_CENTER, 104, -36);
+    lv_obj_align(ui_enableSwitch, LV_ALIGN_CENTER, 104, -86);
 
     if (heatplatformModel.enable == ENABLE_STATE_OPEN)
     {
@@ -304,11 +280,37 @@ static bool hpPageUI_init(lv_obj_t *father)
             lv_obj_clear_state(ui_enableSwitch, LV_STATE_CHECKED);
         }
     }
-
     // 注意，这里触发的是3个状态 CHECKED 、LV_STATE_FOCUS 、 和 LV_STATE_FOCUS_KEY，必须设置成KEY才有效
     lv_obj_set_style_outline_color(ui_enableSwitch, HEAT_PLAT_THEME_COLOR1, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
     lv_obj_set_style_outline_opa(ui_enableSwitch, 255, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
     lv_obj_set_style_outline_pad(ui_enableSwitch, 4, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
+
+    // 风速字样
+    ui_setAirTextLabel = lv_label_create(ui_ButtonTmp);
+    lv_label_set_text(ui_setAirTextLabel, TEXT_AIR_SPEED);
+    lv_obj_align(ui_setAirTextLabel, LV_ALIGN_CENTER, 106, -57);
+    lv_obj_add_style(ui_setAirTextLabel, &label_text_style, 0);
+
+    // 风速调节按钮
+    ui_setAirDutyButton = lv_btn_create(ui_ButtonTmp);
+    lv_obj_remove_style_all(ui_setAirDutyButton);
+    lv_obj_set_size(ui_setAirDutyButton, 64, 30);
+    // lv_obj_align(ui_setAirDutyButton, LV_ALIGN_CENTER, 102, -65);
+    lv_obj_align(ui_setAirDutyButton, LV_ALIGN_CENTER, 102, -36);
+    lv_obj_add_flag(ui_setAirDutyButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+    lv_obj_clear_flag(ui_setAirDutyButton, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_radius(ui_setAirDutyButton, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_setAirDutyButton, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_setAirDutyButton, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_setAirDutyButton, &FontJost_24, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_add_style(ui_setAirDutyButton, &btn_type1_focused_style, LV_STATE_FOCUSED);
+    lv_obj_add_style(ui_setAirDutyButton, &btn_type1_pressed_style, LV_STATE_EDITED);
+
+    ui_setAirDutyLabel = lv_label_create(ui_setAirDutyButton);
+    lv_obj_set_size(ui_setAirDutyLabel, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+    lv_obj_center(ui_setAirDutyLabel);
+    lv_label_set_text_fmt(ui_setAirDutyLabel, "%d%%", heatplatformModel.utilConfig.workAirSpeed);
+    // 上面的模型要改
 
     ui_powerBar = lv_bar_create(ui_ButtonTmp);
     lv_obj_set_size(ui_powerBar, 250, 6);
