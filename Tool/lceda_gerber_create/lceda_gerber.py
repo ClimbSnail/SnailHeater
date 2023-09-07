@@ -2,6 +2,8 @@ import os
 import yaml
 import datetime
 
+# 打包 pyinstaller -F lceda_gerber.py
+
 def getLegalFileName(filPathList, rule, newFileName):
     '''
     获取符合指定后缀名的文件 返回路劲列表
@@ -34,6 +36,9 @@ def addHeaderToFile(srcFilePath, dstFilePath, header):
 
 
 if __name__ == "__main__":
+    author_info = "\n作者：ClimbSnail\n\n免责声明：本程序仅共参考学习，使用本程序造成的后果均与作者无关，在条件允许下请支持官方的付费打板方式！"
+    print(author_info)
+    input("\n同意以上声明，可按回车自动生成gerber文件\n")
     try:
         nowTime = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         taskFile = open("task.yaml", "r", encoding="utf-8")
