@@ -15,6 +15,7 @@ import os
 import time
 import threading
 import re
+import json
 import requests
 import traceback
 
@@ -34,18 +35,26 @@ from esptoolpy import esptool
 from download import Ui_SanilHeaterTool
 import common
 
+SH_SN = None
+if SH_SN == None and os.path.exists("SnailHeater_SN.py"):
+    import SnailHeater_SN as SH_SN
+    print("激活模块已添加")
+
 COLOR_RED = '<span style=\" color: #ff0000;\">%s</span>'
 BAUD_RATE = 921600
 INFO_BAUD_RATE = 115200
 
 # 读取配置信息
-config = open("SnailHeater_WinTool.cfg", 'r', encoding="utf-8")
-config_info = config.readlines()
-sn_recode_path = config_info[0].strip()
-sn_url = config_info[1].strip()
-sn_super_url = config_info[2].strip()
-config.close()
+cfg_fp = open("SnailHeater_Tool.cfg", "r", encoding = "utf-8")
+cfg = json.load(cfg_fp)["windows_tool"]
+temp_sn_recode_path = cfg["temp_sn_recode_path"] \
+    if "temp_sn_recode_path" in cfg.keys() else None
+search_sn_url = cfg["search_sn_url"] \
+    if "search_sn_url" in cfg.keys() else None
+activate_sn_url = cfg["activate_sn_url"] \
+    if "activate_sn_url" in cfg.keys() else None
 
+cfg_fp.close()
 
 class DownloadController(object):
 
@@ -195,7 +204,7 @@ class DownloadController(object):
                     print(str(traceback.format_exc()))
 
             if act_ret == True:
-                # sn_record = open(sn_recode_path, 'a', encoding="utf-8")
+                # sn_record = open(temp_sn_recode_path, 'a', encoding="utf-8")
                 # sn_record.write(value+"\n")
                 # sn_record.close()
                 self.print_log("激活成功")
@@ -219,9 +228,13 @@ class DownloadController(object):
         sn = self.get_sn()
         # 尝试联网查询
         if sn == "":
-            self.print_log("联网查询激活码...")
             try:
-                response = requests.get(sn_url + machine_code, timeout=3)  # , verify=False
+                if activate_sn_url != None and activate_sn_url != "":
+                    self.print_log("联网查询激活码（管理员模式）...")
+                    response = requests.get(activate_sn_url + machine_code, timeout=3)  # , verify=False
+                else:
+                    self.print_log("联网查询激活码...")
+                    response = requests.get(search_sn_url + machine_code, timeout=3)  # , verify=False
                 # sn = re.findall(r'\d+', response.text)
                 sn = response.text.strip()
                 self.print_log("sn " + str(sn))
@@ -229,22 +242,10 @@ class DownloadController(object):
                 print(str(traceback.format_exc()))
                 self.print_log("联网异常")
 
-        # 批量生产使用的自动激活
-        if sn == "" and sn_super_url != "":
-            self.print_log("联网查询激活码(生产模式)...")
-            try:
-                response = requests.get(sn_super_url + machine_code, timeout=3)  # , verify=False
-                # sn = re.findall(r'\d+', response.text)
-                sn = response.text.strip()
-                self.print_log("sn " + str(sn))
-            except Exception as err:
-                print(str(traceback.format_exc()))
-                self.print_log("联网异常(生产模式)")
-
         self.form.SNLineEdit.setText(sn)
 
         if sn != "":
-            sn_record = open(sn_recode_path, 'a', encoding="utf-8")
+            sn_record = open(temp_sn_recode_path, 'a', encoding="utf-8")
             sn_record.write(machine_code + "\t" + sn + "\n")
             sn_record.close()
 
@@ -346,6 +347,18 @@ class DownloadController(object):
             self.ser = None
             self.print_log(COLOR_RED % "未释放资源，请15s后再试。如无法触发下载，拔插type-c接口再试。")
             print(err)
+
+        if SH_SN != None:
+            # 自动激活
+            time.sleep(22)
+            self.print_log("获取机器码（用户识别码）...")
+            machine_code = self.get_machine_code()
+            self.form.UICLineEdit.setText(machine_code)
+
+            ecdata = SH_SN.getSnForMachineCode(machine_code)
+            self.print_log("\n生成的序列号为: " + ecdata)
+            self.form.SNLineEdit.setText(ecdata)
+            self.act_button_click()
 
         self.progress_bar_time_cnt = 0  # 复位进度条
 
@@ -497,11 +510,22 @@ class DownloadController(object):
         if select_com == None:
             return None
         self.ser = serial.Serial(select_com, BAUD_RATE, timeout=10)
-        self.ser.setRTS(True)  # EN->LOW
-        self.ser.setDTR(self.ser.dtr)
-        time.sleep(0.2)
-        self.ser.setRTS(False)
-        self.ser.setDTR(self.ser.dtr)
+
+        # self.ser.setRTS(True)  # EN->LOW
+        # self.ser.setDTR(self.ser.dtr)
+        # time.sleep(0.2)
+        # self.ser.setRTS(False)
+        # self.ser.setDTR(self.ser.dtr) 
+              
+        self._setDTR(False)  # IO0=HIGH
+        self._setRTS(True)   # EN=LOW, chip in reset
+        time.sleep(0.1)
+        self._setDTR(True)   # IO0=LOW
+        self._setRTS(False)  # EN=HIGH, chip out of reset
+        # 0.5 needed for ESP32 rev0 and rev1
+        time.sleep(0.05) # 0.5 / 0.05
+        self._setDTR(False)  # IO0=HIGH, done
+    
         self.ser.close()  # 关闭串口
         del self.ser
         self.ser = None
