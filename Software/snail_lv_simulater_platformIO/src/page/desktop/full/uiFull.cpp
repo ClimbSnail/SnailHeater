@@ -30,6 +30,7 @@ lv_obj_t *ui_PanelTopBgImg;
 
 static lv_timer_t *sysInfoTimer = NULL;  // 系统消息窗的定时器
 static lv_obj_t *sysInfoLabel = NULL;    // 系统消息
+static lv_group_t *pre_group = NULL;     // 临时保存之前的按键组
 static lv_obj_t *lockScreenImage = NULL; // 锁屏壁纸
 static int lockScreenImageIndex = 0;     // 锁屏壁纸播放的下标
 #define WALLPAPER_NUM 6
@@ -84,7 +85,7 @@ lv_chart_series_t *chartSer1;
 lv_indev_t *knobs_indev;
 static lv_group_t *menu_btn_group = NULL;
 
-static FE_UI_OBJ *ui_Page[UI_OBJ_NUM];
+static FE_UI_OBJ *ui_Page[PAGE_INDEX_MAXSIZE];
 
 static bool is_menu_show = false;
 static lv_anim_t menu_anim;
@@ -389,7 +390,7 @@ void update_top_info()
     // 顶部状态栏
     // 测试数据，到时候删除
     // solderModel.curTemp = lv_rand(250, 380);
-    // airhotModel.curTemp = lv_rand(280, 360);
+    // airhotModel.curTemp = lv_rand(SH_SCREEN_WIDTH, 360);
     // heatplatformModel.curTemp = lv_rand(150, 250);
     // adjPowerModel.voltage = lv_rand(8000, 24000);
 
@@ -483,10 +484,10 @@ void top_layer_init()
     lv_img_set_src(ui_PanelTopBgImg, IS_WHITE_THEME ? &img_top_bar_white : &img_top_bar_black);
     lv_obj_center(ui_PanelTopBgImg);
 
-    uint8_t x_pos = 70;
-    ui_topLabel1 = lv_label_create(ui_PanelTop);
+    uint8_t x_pos = -48;
+    ui_topLabel1 = lv_label_create(ui_PanelTopBgImg);
     lv_obj_set_size(ui_topLabel1, 47, 24);
-    lv_obj_align(ui_topLabel1, LV_ALIGN_TOP_LEFT, x_pos, 0);
+    lv_obj_align(ui_topLabel1, LV_ALIGN_TOP_MID, -48, 0);
     lv_obj_set_style_pad_top(ui_topLabel1, 4, 0);
     lv_obj_set_style_text_align(ui_topLabel1, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_style_text_opa(ui_topLabel1, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -497,11 +498,9 @@ void top_layer_init()
     // lv_obj_set_style_border_side(ui_topLabel1,LV_BORDER_SIDE_RIGHT,0);
     // lv_obj_set_style_border_color(ui_topLabel1,isWhiteTheme ? lv_color_hex(0xe0e0e0) : lv_color_hex(0x666666),0);
 
-    x_pos += 48;
-
-    ui_topLabel2 = lv_label_create(ui_PanelTop);
+    ui_topLabel2 = lv_label_create(ui_PanelTopBgImg);
     lv_obj_set_size(ui_topLabel2, 47, 24);
-    lv_obj_align(ui_topLabel2, LV_ALIGN_TOP_LEFT, x_pos, 0);
+    lv_obj_align(ui_topLabel2, LV_ALIGN_TOP_MID, 0, 0);
     lv_obj_set_style_pad_top(ui_topLabel2, 4, 0);
     lv_obj_set_style_text_align(ui_topLabel2, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_style_text_opa(ui_topLabel2, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -513,9 +512,9 @@ void top_layer_init()
     // lv_obj_set_style_border_color(ui_topLabel2,isWhiteTheme ? lv_color_hex(0xe0e0e0) : lv_color_hex(0x666666),0);
     x_pos += 48;
 
-    ui_topLabel3 = lv_label_create(ui_PanelTop);
+    ui_topLabel3 = lv_label_create(ui_PanelTopBgImg);
     lv_obj_set_size(ui_topLabel3, 47, 24);
-    lv_obj_align(ui_topLabel3, LV_ALIGN_TOP_LEFT, x_pos, 0);
+    lv_obj_align(ui_topLabel3, LV_ALIGN_TOP_MID, 48, 0);
     lv_obj_set_style_pad_top(ui_topLabel3, 4, 0);
     lv_obj_set_style_text_align(ui_topLabel3, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_style_text_opa(ui_topLabel3, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -777,7 +776,7 @@ static void autoChangePage_timeout(lv_timer_t *timer)
     LV_UNUSED(timer);
     if (targerChangePageInd != PAGE_INDEX_MAXSIZE)
     {
-        if (currPageIndex != targerChangePageInd)
+        if (currPageIndex != targerChangePageInd && currPageIndex != PAGE_INDEX_SETTING)
         {
             ui_Page[currPageIndex]->ui_release();
             currPageIndex = targerChangePageInd;
@@ -847,7 +846,7 @@ void main_screen_init(lv_indev_t *indev)
 
     ui_PanelMain = lv_obj_create(desktop_screen);
     lv_obj_remove_style_all(ui_PanelMain);
-    lv_obj_set_size(ui_PanelMain, 280, 216);
+    lv_obj_set_size(ui_PanelMain, SH_SCREEN_WIDTH, 216);
     lv_obj_align(ui_PanelMain, LV_ALIGN_CENTER, 0, 12);
     lv_obj_set_style_radius(ui_PanelMain, 0, LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(ui_PanelMain, 0, 0);
@@ -855,16 +854,16 @@ void main_screen_init(lv_indev_t *indev)
     lv_obj_clear_flag(ui_PanelMain, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_opa(ui_PanelMain, 0, 0);
 
-    ui_Page[0] = &solderUIObj;
-    ui_Page[1] = &airhotUIObj;
-    ui_Page[2] = &hpUIObj;
-    ui_Page[3] = &adjPowerUIObj;
-    ui_Page[4] = &settingUIObj;
+    ui_Page[PAGE_INDEX_SOLDER] = &solderUIObj;
+    ui_Page[PAGE_INDEX_AIR_HOT] = &airhotUIObj;
+    ui_Page[PAGE_INDEX_HEAT_PLAT] = &hpUIObj;
+    ui_Page[PAGE_INDEX_ADJ_POWER] = &adjPowerUIObj;
+    ui_Page[PAGE_INDEX_SETTING] = &settingUIObj;
 
     ui_PanelTop = lv_obj_create(desktop_screen);
     lv_obj_remove_style_all(ui_PanelTop);
     lv_obj_clear_flag(ui_PanelTop, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_size(ui_PanelTop, 280, 24);
+    lv_obj_set_size(ui_PanelTop, SH_SCREEN_WIDTH, 24);
     lv_obj_align(ui_PanelTop, LV_ALIGN_TOP_LEFT, 0, 0);
     lv_obj_set_style_bg_opa(ui_PanelTop, 0, 0);
     top_layer_init();
@@ -935,6 +934,8 @@ static void sysInfoTimer_timeout(lv_timer_t *timer)
         // 锁屏壁纸
         if (NULL == lockScreenImage)
         {
+            pre_group = knobs_indev->group;
+            lv_indev_set_group(knobs_indev, NULL);
             lockScreenImage = lv_img_create(lv_layer_top());
             lv_img_set_src(lockScreenImage, &wallpaperList[lockScreenImageIndex]);
             lv_obj_align(lockScreenImage, LV_ALIGN_CENTER, 0, -240);
@@ -970,6 +971,8 @@ static void sysInfoTimer_timeout(lv_timer_t *timer)
         {
             lv_obj_del(lockScreenImage);
             lockScreenImage = NULL;
+
+            lv_indev_set_group(knobs_indev, pre_group);
         }
     }
 

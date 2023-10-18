@@ -20,6 +20,7 @@ extern "C"
 #include "./uiObjBase.h"
 #include "../language_info.h"
 #include "resource/images/ico.h"
+
 // 菜单风格，1，最老的，2，roller 3，最新的圆盘
 #define USE_MENU_STYLE 3
 
@@ -34,8 +35,19 @@ extern "C"
 
 #define DATA_REFRESH_MS 300 // 数据刷新的时间
 
-#define UI_OBJ_NUM 5
-#define EACH_PAGE_SIZE_X 280
+    typedef enum
+    {
+        PAGE_INDEX_SOLDER = 0,
+        PAGE_INDEX_AIR_HOT,
+        PAGE_INDEX_HEAT_PLAT,
+        PAGE_INDEX_ADJ_POWER,
+        PAGE_INDEX_SETTING,
+        PAGE_INDEX_MAXSIZE
+
+    } PAGE_INDEX;
+
+#define UI_OBJ_NUM PAGE_INDEX_MAXSIZE
+#define EACH_PAGE_SIZE_X SH_SCREEN_WIDTH
 #define EACH_PAGE_SIZE_Y 216
     LV_FONT_DECLARE(FontDeyi_16);
     LV_FONT_DECLARE(FontDeyi_24);
@@ -77,17 +89,6 @@ extern "C"
 
     extern lv_style_t bar_style_bg; // 功率bar的样式
     extern lv_style_t bar_style_indic;
-
-    typedef enum
-    {
-        PAGE_INDEX_SOLDER = 0,
-        PAGE_INDEX_AIR_HOT,
-        PAGE_INDEX_HEAT_PLAT,
-        PAGE_INDEX_ADJ_POWER,
-        PAGE_INDEX_SETTING,
-        PAGE_INDEX_MAXSIZE
-
-    } PAGE_INDEX;
 
     typedef enum
     {
@@ -158,10 +159,10 @@ extern "C"
     void ui_release();                          // 基本不会调用此函数
     void ui_page_move_center_by_ind(int index); // 后台请求主动页面切换
 
-    void ui_updateSolderCurTempAndPowerDuty(void);
-    void ui_updateHeatplatformCurTempAndPowerDuty(void);
-    void ui_updateAirhotCurTempAndPowerDuty(void);
-    void ui_updateAdjPowerCurVoltage(void);
+    void ui_updateSolderData(void);
+    void ui_updateHeatplatformData(void);
+    void ui_updateAirhotData(void);
+    void ui_updateAdjPowerData(void);
     void ui_updateAdjPowerWorkState(void);
     void top_layer_set_name();
 

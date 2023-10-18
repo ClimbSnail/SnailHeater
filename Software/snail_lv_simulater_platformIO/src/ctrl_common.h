@@ -22,6 +22,14 @@ enum VERSION_INFO
     VERSION_INFO_CORE_V25,
     VERSION_INFO_OUT_BOARD_V25,
 
+    VERSION_INFO_SRCEEN_V26,
+    VERSION_INFO_CORE_V26,
+    VERSION_INFO_OUT_BOARD_V26,
+
+    VERSION_INFO_SRCEEN_V27,
+    VERSION_INFO_CORE_V27,
+    VERSION_INFO_OUT_BOARD_V27,
+
     VERSION_INFO_MAX
 };
 
@@ -41,7 +49,9 @@ enum CTRL_WORK_EN : unsigned char
 const char version_info[VERSION_INFO_MAX][8] = {
     "v2.0", "v2.0", "v2.0",
     "v2.1", "v2.1", "v2.1",
-    "v2.5", "v2.5", "v2.5"};
+    "v2.5", "v2.5", "v2.5",
+    "v2.6", "v2.6", "v2.6",
+    "v2.7", "v2.7", "v2.7"};
 
 enum ENABLE_STATE
 {
@@ -242,19 +252,37 @@ enum SOLDER_SHAKE_TYPE
     SOLDER_SHAKE_TYPE_CHANGE    // 高低变化休眠
 };
 
-const char solder_type_str[3][8] = {
-    "T12", "C210", "C245"};
+const char solder_type_str[4][8] = {
+    "UNHNOWN", "T12", "C210", "C245"};
 
 enum SOLDER_TYPE
 {
-    SOLDER_TYPE_T12 = 0,
+    SOLDER_TYPE_UNHNOWN = 0,
+    SOLDER_TYPE_T12,
     SOLDER_TYPE_JBC210,
     SOLDER_TYPE_JBC245
 };
 
+// 烙铁芯的管理动作
+enum SOLDER_CORE_MANAGE_ACTION
+{
+    SOLDER_CORE_MANAGE_ACTION_IDLE = 0,
+    SOLDER_CORE_MANAGE_ACTION_CREATE,
+    SOLDER_CORE_MANAGE_ACTION_CREATE_OK,
+    SOLDER_CORE_MANAGE_ACTION_READ,
+    SOLDER_CORE_MANAGE_ACTION_READ_OK,
+    SOLDER_CORE_MANAGE_ACTION_WRITE,
+    SOLDER_CORE_MANAGE_ACTION_WRITE_OK,
+    SOLDER_CORE_MANAGE_ACTION_DELETE,
+    SOLDER_CORE_MANAGE_ACTION_DELETE_OK
+};
+
 enum SOLDER_STATE
 {
-    SOLDER_STATE_DEEP_SLEEP = 0, // 深度休眠
+    SOLDER_STATE_DISCONNECT = 0, // 断开连接
+    SOLDER_STATE_CONNECT,        // 连接
+    SOLDER_STATE_RECO_CORE,      // 烙铁芯（手柄）类型识别
+    SOLDER_STATE_DEEP_SLEEP,     // 深度休眠
     SOLDER_STATE_SLEEP,          // 轻度休眠
     SOLDER_STATE_NORMAL          // 正常工作状态
 };

@@ -59,10 +59,10 @@ extern "C"
     extern FE_UI_OBJ adjPowerUIObj;
     extern FE_UI_OBJ sysInfoUIObj;
 
-    void ui_updateSolderCurTempAndPowerDuty(void);
-    void ui_updateAirhotCurTempAndPowerDuty(void);
-    void ui_updateHeatplatformCurTempAndPowerDuty(void);
-    void ui_updateAdjPowerCurVoltage(void);
+    void ui_updateSolderData(void);
+    void ui_updateAirhotData(void);
+    void ui_updateHeatplatformData(void);
+    void ui_updateAdjPowerData(void);
     void ui_updateAdjPowerWorkState(void);
 
 #ifdef __cplusplus

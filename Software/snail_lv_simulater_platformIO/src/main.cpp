@@ -20,7 +20,7 @@
 #include <SDL2/SDL_timer.h>
 #include "demos/lv_demos.h"
 
-#define SNAILHEATER_VERSION "1.6.12"
+#define SNAILHEATER_VERSION "1.9.0"
 
 int saveSettingAPI(void *parameter)
 {
@@ -33,7 +33,8 @@ void SnailHeater_UI()
 {
     // 开机动画
     startupInitScreen();
-    startupUI(SNAILHEATER_VERSION);
+    startupUI(SNAILHEATER_VERSION,
+              version_info[SH_HARDWARE_VER * 3]);
     SDL_Delay(5000);
     startupDel();
 
@@ -73,7 +74,7 @@ void SnailHeater_UI()
         SolderModel model;
         model.workState = SOLDER_STATE_DEEP_SLEEP;
         model.utilConfig.curCoreID = 0;
-        model.coreNameList = "0_T12\n1_C210\n2_C245";
+        model.coreNameList = "0_NUKNOWN\n1_T12\n2_C210\n3_C245";
         model.coreConfig.solderType = SOLDER_TYPE_T12;
         model.coreConfig.wakeSwitchType = SOLDER_SHAKE_TYPE_CHANGE;
         model.tempEnable.allValue = 0x01;
@@ -82,8 +83,10 @@ void SnailHeater_UI()
         model.utilConfig.quickSetupTemp_2 = 400;
         model.fineAdjTemp = 300;
         model.utilConfig.targetTemp = 0;
+        model.utilConfig.autoTypeSwitch = ENABLE_STATE::ENABLE_STATE_OPEN;
         model.curTemp = 0;
         model.powerRatio = 0;
+        model.manageCoreAction = SOLDER_CORE_MANAGE_ACTION::SOLDER_CORE_MANAGE_ACTION_IDLE;
         setSolderInfo(&model);
     }
 
@@ -112,7 +115,7 @@ void SnailHeater_UI()
         snprintf(model.sn, 32, "%s", "");
         model.srceenVersion = VERSION_INFO_SRCEEN_V20;
         model.coreVersion = VERSION_INFO_CORE_V20;
-        model.outBoardVersion = VERSION_INFO_OUT_BOARD_V20;
+        model.outBoardVersion = VERSION_INFO_OUT_BOARD_V25;
         snprintf(model.softwareVersion, 16, "%s", SNAILHEATER_VERSION);
         model.knobDir = KNOBS_DIR_POS;
         model.lockScreenDelayTime = 10;

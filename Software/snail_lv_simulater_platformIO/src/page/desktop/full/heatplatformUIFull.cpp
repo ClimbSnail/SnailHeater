@@ -139,7 +139,7 @@ static void draw_event_cb(lv_event_t *e)
 static void hpTimer_timeout(lv_timer_t *timer)
 {
     LV_UNUSED(timer);
-    ui_updateHeatplatformCurTempAndPowerDuty();
+    ui_updateHeatplatformData();
 }
 
 static bool hpPageUI_init(lv_obj_t *father)
@@ -313,7 +313,7 @@ static bool hpPageUI_init(lv_obj_t *father)
     // 上面的模型要改
 
     ui_powerBar = lv_bar_create(ui_ButtonTmp);
-    lv_obj_set_size(ui_powerBar, 250, 6);
+    lv_obj_set_size(ui_powerBar, SH_SCREEN_WIDTH - 30, 6);
     lv_obj_align(ui_powerBar, LV_ALIGN_CENTER, 0, -5);
     lv_bar_set_range(ui_powerBar, 0, 1000);
     lv_bar_set_value(ui_powerBar, 0, LV_ANIM_ON);
@@ -327,7 +327,7 @@ static bool hpPageUI_init(lv_obj_t *father)
     lv_obj_remove_style_all(chartTemp);
     lv_obj_set_style_bg_color(chartTemp, IS_WHITE_THEME ? WHITE_THEME_CHART_COLOR1 : BLACK_THEME_CHART_COLOR1, LV_PART_MAIN);
     lv_obj_set_style_bg_opa(chartTemp, LV_OPA_COVER, LV_PART_MAIN);
-    lv_obj_set_size(chartTemp, 280, 100);
+    lv_obj_set_size(chartTemp, SH_SCREEN_WIDTH, 100);
     lv_obj_align(chartTemp, LV_ALIGN_BOTTOM_MID, 0, 0);
     lv_chart_set_type(chartTemp, LV_CHART_TYPE_LINE);
     // lv_obj_set_style_size(chartTemp, 0, LV_PART_INDICATOR);
@@ -414,7 +414,7 @@ static void ui_enable_switch_pressed(lv_event_t *e)
     }
 }
 
-void ui_updateHeatplatformCurTempAndPowerDuty(void)
+void ui_updateHeatplatformData(void)
 {
     if (NULL == hpPageUI)
     {

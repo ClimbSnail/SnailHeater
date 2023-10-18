@@ -13,7 +13,7 @@ extern "C"
         lv_task_handler(); //等待动画完成
 
     void startupInitScreen(void);
-    void startupUI(const char *ver);
+    void startupUI(const char *sw_ver, const char *hw_ver);
     void startupDel(void);
 
 #ifdef __cplusplus

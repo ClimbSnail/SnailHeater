@@ -53,13 +53,13 @@ void startupInitScreen()
     if (NULL == screen1)
     {
         screen1 = lv_obj_create(NULL);
-        // lv_obj_clear_flag(screen1, LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_clear_flag(screen1, LV_OBJ_FLAG_SCROLLABLE);
         lv_obj_set_style_bg_color(screen1, lv_color_black(), 0);
         lv_scr_load(screen1);
     }
 }
 
-void startupUI(const char *ver)
+void startupUI(const char *sw_ver, const char *hw_ver)
 {
     lv_obj_t *hostName = lv_label_create(screen1);
     lv_obj_set_size(hostName, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
@@ -70,12 +70,21 @@ void startupUI(const char *ver)
     lv_label_set_recolor(hostName, true); // 先得使能文本重绘色功能
     lv_label_set_text(hostName, "#FFFFFF SnailHeater#");
 
-    lv_obj_t *version = lv_label_create(screen1);
-    lv_obj_set_size(version, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-    lv_obj_set_align(version, LV_ALIGN_BOTTOM_MID);
-    lv_label_set_recolor(version, true); // 先得使能文本重绘色功能
-    lv_obj_set_style_text_font(version, &lv_font_montserrat_12, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_label_set_text_fmt(version, "#FF0000 Ver %s#", ver);
+    lv_obj_t *sw_version = lv_label_create(screen1);
+    lv_obj_set_size(sw_version, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+    lv_obj_set_align(sw_version, LV_ALIGN_BOTTOM_LEFT);
+    lv_obj_set_pos(sw_version, 20, -5);
+    lv_label_set_recolor(sw_version, true); // 先得使能文本重绘色功能
+    lv_obj_set_style_text_font(sw_version, &lv_font_montserrat_12, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_label_set_text_fmt(sw_version, "#FF0000 SW_Ver %s#", sw_ver);
+
+    lv_obj_t *hw_version = lv_label_create(screen1);
+    lv_obj_set_size(hw_version, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+    lv_obj_set_align(hw_version, LV_ALIGN_BOTTOM_RIGHT);
+    lv_obj_set_pos(hw_version, -20, -5);
+    lv_label_set_recolor(hw_version, true); // 先得使能文本重绘色功能
+    lv_obj_set_style_text_font(hw_version, &lv_font_montserrat_12, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_label_set_text_fmt(hw_version, "#FF0000 HW_Ver %s#", hw_ver);
 
     startupAnim(hostName);
 

@@ -28,7 +28,7 @@ static void ui_back_btn_pressed(lv_event_t *e);
 static void ui_mode_bnt_pressed(lv_event_t *e);
 static void ui_enable_switch_pressed(lv_event_t *e);
 static void adjPowerTimer_timeout(lv_timer_t *timer);
-void ui_updateAdjPowerCurVoltage(void);
+void ui_updateAdjPowerData(void);
 
 static bool adjPowerPageUI_init(lv_obj_t *father)
 {
@@ -223,7 +223,7 @@ static void adjPowerTimer_timeout(lv_timer_t *timer)
 {
     LV_UNUSED(timer);
     // 更新电压电流功率的函数
-    ui_updateAdjPowerCurVoltage();
+    ui_updateAdjPowerData();
 }
 
 static void adjPowerPageUI_release()
@@ -299,7 +299,7 @@ static void ui_enable_switch_pressed(lv_event_t *e)
     }
 }
 
-void ui_updateAdjPowerCurVoltage(void)
+void ui_updateAdjPowerData(void)
 {
     if (NULL == adjPowerPageUI)
     {

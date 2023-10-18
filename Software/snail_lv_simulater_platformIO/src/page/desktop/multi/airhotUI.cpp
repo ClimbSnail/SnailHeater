@@ -36,7 +36,7 @@ static void ui_set_temp_btn_pressed(lv_event_t *e);
 static void ui_set_air_btn_pressed(lv_event_t *e);
 static void ui_back_btn_pressed(lv_event_t *e);
 static void airhotTimer_timeout(lv_timer_t *timer);
-void ui_updateAirhotCurTempAndPowerDuty(void);
+void ui_updateAirhotData(void);
 
 static bool airhotPageUI_init(lv_obj_t *father)
 {
@@ -239,7 +239,7 @@ static bool airhotPageUI_init(lv_obj_t *father)
 static void airhotTimer_timeout(lv_timer_t *timer)
 {
     LV_UNUSED(timer);
-    ui_updateAirhotCurTempAndPowerDuty();
+    ui_updateAirhotData();
 }
 
 static void airhotPageUI_release()
@@ -252,7 +252,7 @@ static void airhotPageUI_release()
     }
 }
 
-void ui_updateAirhotCurTempAndPowerDuty(void)
+void ui_updateAirhotData(void)
 {
     if (NULL == airhotPageUI)
     {

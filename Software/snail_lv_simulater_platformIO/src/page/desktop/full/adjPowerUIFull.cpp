@@ -295,7 +295,7 @@ static void ui_enable_switch_pressed(lv_event_t *e)
     }
 }
 
-void ui_updateAdjPowerCurVoltage(void)
+void ui_updateAdjPowerData(void)
 {
     if (NULL == adjPowerPageUI)
     {

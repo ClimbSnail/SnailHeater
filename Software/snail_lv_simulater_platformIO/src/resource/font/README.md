@@ -2,6 +2,10 @@
 https://www.zitijia.com/
 
 # 本工程使用的字体都在 Doc/font 目录下
+> Jost-SemiBoldItalic.ttf
+> Roboto-BlackItalic.ttf
+> RobotoMono-SemiBoldItalic.ttf
+> SmileySans-Oblique.ttf
 
 # 字体转换教程
 https://blog.csdn.net/sinat_36568888/article/details/125180743
@@ -18,15 +22,15 @@ https://blog.csdn.net/sinat_36568888/article/details/125180743
 系统设置信息正反向
 
 
-# FontDeyi_16.c 字库 得意黑16px
+# FontDeyi_16.c 字库 得意黑16px SmileySans-Oblique
 0x20-0x7f
-电烙铁热风枪加热台可调电源设置旋钮反向自动主题白/黑曲线网格-烙铁硬件版本风扇烙铁芯型号休眠方式温度预设定散热风速一键快速细调目标系统返回<尚未开发提示反馈音系统唤醒触摸开关未激活错误：接入时，带电拔插风枪、加热台可能易烧毁主机可调电源过流提醒设置中心已保存归零静态
+电烙铁热风枪加热台可调电源设置旋钮反向自动主题白/黑曲线网格-烙铁硬件版本风扇烙铁芯型号休眠方式温度预设定散热风速一键快速细调目标系统返回<尚未开发提示反馈音系统唤醒触摸开关未激活错误：接入时，带电拔插风枪、加热台可能易烧毁主机可调电源过流提醒设置中心已保存归零静态识别管理进入编放弃修改生效保存退出功能，必须使用蜗牛台批量的手柄 或者按教程安装了合适的电阻确
 
-# FontDeyi_24.c 字库 得意黑24px
+# FontDeyi_24.c 字库 得意黑24px SmileySans-Oblique
 0x20-0x7f
-未激活错误：接入时，带电拔插风枪、加热台可能易烧毁主机可调电源过流提醒设置中心已保存烙铁短路系统已关闭输出
+未激活错误：接入时，带电拔插风枪、加热台可能易烧毁主机可调电源过流提醒设置中心已保存烙铁短路系统已关闭输出识别成功率
 
-# FontDeyi_36.c 字库 得意黑36px
+# FontDeyi_36.c 字库 得意黑36px SmileySans-Oblique
 未激活!
 
 # FontRoboto_36.c 字库

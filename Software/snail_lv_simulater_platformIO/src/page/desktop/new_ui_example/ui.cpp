@@ -78,4 +78,10 @@ void touch_event(unsigned int value)
     // }
 }
 
+// 界面激活 可用于解除锁屏状态
+void ui_activate(unsigned int value)
+{
+
+}
+
 #endif

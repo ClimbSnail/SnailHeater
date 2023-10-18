@@ -36,7 +36,7 @@ static void ui_wake_type_changed(lv_event_t *e);
 static void ui_set_temp_btn_pressed(lv_event_t *e);
 static void ui_back_btn_pressed(lv_event_t *e);
 static void solderTimer_timeout(lv_timer_t *timer);
-void ui_updateSolderCurTempAndPowerDuty(void);
+void ui_updateSolderData(void);
 
 static void setSolderType(lv_obj_t *obj, unsigned char type)
 {
@@ -337,7 +337,7 @@ static bool solderPageUI_init(lv_obj_t *father)
 static void solderTimer_timeout(lv_timer_t *timer)
 {
     LV_UNUSED(timer);
-    ui_updateSolderCurTempAndPowerDuty();
+    ui_updateSolderData();
 }
 
 void solderPageUI_release()
@@ -350,7 +350,7 @@ void solderPageUI_release()
     }
 }
 
-void ui_updateSolderCurTempAndPowerDuty(void)
+void ui_updateSolderData(void)
 {
     if (NULL == solderPageUI)
     {

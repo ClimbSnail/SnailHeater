@@ -10,6 +10,17 @@
 #define FULL_UI
 // #define NEW_UI_EXAMPLE
 
+#if SH_HARDWARE_VER == SH_ESP32S2_WROOM_V26
+#define SH_SCREEN_WIDTH 320
+#define SH_SCREEN_HEIGHT 240
+#elif SH_HARDWARE_VER == SH_ESP32S3_FN8_V27
+#define SH_SCREEN_WIDTH 320
+#define SH_SCREEN_HEIGHT 240
+#else
+#define SH_SCREEN_WIDTH 280
+#define SH_SCREEN_HEIGHT 240
+#endif
+
 // 触摸事件处理
 void touch_event(unsigned int value = 0);
 

@@ -33,7 +33,7 @@ static void ui_set_temp_btn_pressed(lv_event_t *e);
 static void ui_back_btn_pressed(lv_event_t *e);
 static void ui_enable_switch_pressed(lv_event_t *e);
 static void hpTimer_timeout(lv_timer_t *timer);
-void ui_updateHeatplatformCurTempAndPowerDuty(void);
+void ui_updateHeatplatformData(void);
 
 static bool hpPageUI_init(lv_obj_t *father)
 {
@@ -200,7 +200,7 @@ static bool hpPageUI_init(lv_obj_t *father)
 static void hpTimer_timeout(lv_timer_t *timer)
 {
     LV_UNUSED(timer);
-    ui_updateHeatplatformCurTempAndPowerDuty();
+    ui_updateHeatplatformData();
 }
 
 static void hpPageUI_release()
@@ -260,7 +260,7 @@ static void hpPageUI_pressed(lv_event_t *e)
     lv_indev_set_group(knobs_indev, btn_group);
 }
 
-void ui_updateHeatplatformCurTempAndPowerDuty(void)
+void ui_updateHeatplatformData(void)
 {
     if (NULL == hpPageUI)
     {

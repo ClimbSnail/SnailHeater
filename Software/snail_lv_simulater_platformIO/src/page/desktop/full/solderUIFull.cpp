@@ -145,6 +145,34 @@ static void draw_event_cb(lv_event_t *e)
     }
 }
 
+static void setSolderType()
+{
+    if (NULL == solder_type_text)
+    {
+        return;
+    }
+
+    switch (solderModel.coreConfig.solderType)
+    {
+    case SOLDER_TYPE_UNHNOWN:
+        lv_img_set_src(solder_type_text, &img_text_noc);
+        break;
+    case SOLDER_TYPE_T12:
+        lv_img_set_src(solder_type_text, &img_text_t12);
+        break;
+    case SOLDER_TYPE_JBC210:
+        lv_img_set_src(solder_type_text, &img_text_c210);
+        break;
+    case SOLDER_TYPE_JBC245:
+        lv_img_set_src(solder_type_text, &img_text_c245);
+        break;
+    default:
+        lv_img_set_src(solder_type_text, &img_text_noc);
+        break;
+    }
+    lv_obj_align(solder_type_text, LV_ALIGN_CENTER, 118, -58);
+}
+
 static void solderTimer_timeout(lv_timer_t *timer)
 {
     LV_UNUSED(timer);
@@ -157,7 +185,7 @@ static void solderTimer_timeout(lv_timer_t *timer)
     {
         lv_label_set_text_fmt(vol_val_text, "%.2lf V", solderModel.volValue / 1000.0);
     }
-    ui_updateSolderCurTempAndPowerDuty();
+    ui_updateSolderData();
 }
 
 static bool solderPageUI_init(lv_obj_t *father)
@@ -286,26 +314,11 @@ static bool solderPageUI_init(lv_obj_t *father)
     lv_obj_set_style_img_recolor(soldering_icon, lv_color_hex(0xff3964), 0);
 
     solder_type_text = lv_img_create(ui_ButtonTmp);
-    switch (solderModel.coreConfig.solderType)
-    {
-    case SOLDER_TYPE_T12:
-        lv_img_set_src(solder_type_text, &img_text_t12);
-        break;
-    case SOLDER_TYPE_JBC210:
-        lv_img_set_src(solder_type_text, &img_text_c210);
-        break;
-    case SOLDER_TYPE_JBC245:
-        lv_img_set_src(solder_type_text, &img_text_c245);
-        break;
-    default:
-        lv_img_set_src(solder_type_text, &img_text_noc);
-        break;
-    }
-    lv_obj_align(solder_type_text, LV_ALIGN_CENTER, 118, -58);
+    setSolderType();
 
     // 功率bar
     ui_powerBar = lv_bar_create(ui_ButtonTmp);
-    lv_obj_set_size(ui_powerBar, 250, 6);
+    lv_obj_set_size(ui_powerBar, SH_SCREEN_WIDTH - 30, 6);
     lv_obj_align(ui_powerBar, LV_ALIGN_CENTER, 0, -5);
     lv_bar_set_range(ui_powerBar, 0, 1000);
     lv_bar_set_value(ui_powerBar, 0, LV_ANIM_ON);
@@ -320,7 +333,7 @@ static bool solderPageUI_init(lv_obj_t *father)
     lv_obj_remove_style_all(chartTemp);
     lv_obj_set_style_bg_color(chartTemp, IS_WHITE_THEME ? WHITE_THEME_CHART_COLOR1 : BLACK_THEME_CHART_COLOR1, LV_PART_MAIN);
     lv_obj_set_style_bg_opa(chartTemp, LV_OPA_COVER, LV_PART_MAIN);
-    lv_obj_set_size(chartTemp, 280, 100);
+    lv_obj_set_size(chartTemp, SH_SCREEN_WIDTH, 100);
     lv_obj_align(chartTemp, LV_ALIGN_BOTTOM_MID, 0, 0);
     lv_chart_set_type(chartTemp, LV_CHART_TYPE_LINE);
     // lv_obj_set_style_size(chartTemp, 0, LV_PART_INDICATOR);
@@ -418,7 +431,7 @@ void solderPageUI_release()
     }
 }
 
-void ui_updateSolderCurTempAndPowerDuty(void)
+void ui_updateSolderData(void)
 {
     if (NULL == solderPageUI)
     {
@@ -433,6 +446,8 @@ void ui_updateSolderCurTempAndPowerDuty(void)
     else
     {
         lv_label_set_text_fmt(ui_curTempLabel, "%d", solderModel.curTemp);
+
+        setSolderType();
         uint8_t opa = 0;
         if (solderModel.curTemp >= solderModel.utilConfig.targetTemp)
         {
@@ -459,7 +474,7 @@ static void ui_type_pressed(lv_event_t *e)
     if (LV_EVENT_VALUE_CHANGED == event_code)
     {
         uint16_t index = lv_dropdown_get_selected(ui_solderTypeDropdown); // 获取索引
-        solderModel.coreConfig.solderType = (SOLDER_TYPE)index;
+        solderModel.coreConfig.solderType = (SOLDER_TYPE)(index + 1);
     }
 }
 

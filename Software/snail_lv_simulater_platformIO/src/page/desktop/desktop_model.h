@@ -36,11 +36,13 @@ struct SolderModel
     } tempEnable;
     int fineAdjTemp; // 精调温度
 
-    SolderUtilConfig utilConfig; // 通用设置
-    SolderCoreConfig coreConfig; // 发热芯参数
+    SolderUtilConfig utilConfig;     // 通用设置
+    SolderCoreConfig coreConfig;     // 发热芯参数
+    SolderCoreConfig editCoreConfig; // 正在编辑的发热芯参数
 
-    int16_t curTemp;     // 当前的温度
-    uint16_t powerRatio; // 供电能量占比
+    int16_t curTemp;                            // 当前的温度
+    uint16_t powerRatio;                        // 供电能量占比
+    SOLDER_CORE_MANAGE_ACTION manageCoreAction; // 烙铁芯的管理动作
 
     char curCoreName[16];     // 发热名字 格式 id+'_'+type
     const char *coreNameList; // 发热芯的名字列表
