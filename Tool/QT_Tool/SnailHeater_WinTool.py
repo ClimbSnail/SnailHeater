@@ -551,20 +551,23 @@ class DownloadController(object):
         '''
         刷写壁纸
         '''
-        self.form.WriteWallpaperButton.setEnabled(False)
         select_com = self.getSafeCom()
         if select_com == None:
             return False
 
+        self.form.WriteWallpaperButton.setEnabled(False)
         try:
             os.makedirs(wallpaper_cache_path)
         except Exception as e:
+            self.form.WriteWallpaperButton.setEnabled(True)
             pass
 
         if self.trans_format() == False:
+            self.form.WriteWallpaperButton.setEnabled(True)
             return False
 
         if self.generateWallpaperBin() == None:
+            self.form.WriteWallpaperButton.setEnabled(True)
             return False
 
         if os.path.getsize(wallpaper_name) > 2097152:
