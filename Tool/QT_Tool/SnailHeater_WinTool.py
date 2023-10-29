@@ -18,13 +18,14 @@ import re
 import json
 import requests
 import traceback
+import struct
 
 import serial  # pip install pyserial
 import serial.tools.list_ports
 # from PyQt5.Qt import *
 from PyQt5.Qt import QWidget, QApplication
 from PyQt5 import uic, QtCore
-from PyQt5.QtWidgets import QMessageBox, QApplication, QMainWindow
+from PyQt5.QtWidgets import QMessageBox, QApplication, QMainWindow, QFileDialog
 from PyQt5.QtGui import QGuiApplication
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import Qt
@@ -38,14 +39,27 @@ import common
 SH_SN = None
 if SH_SN == None and os.path.exists("SnailHeater_SN.py"):
     import SnailHeater_SN as SH_SN
+
     print("激活模块已添加")
 
 COLOR_RED = '<span style=\" color: #ff0000;\">%s</span>'
 BAUD_RATE = 921600
 INFO_BAUD_RATE = 115200
 
+cur_dir = os.getcwd()  # 当前目录
+# 文件缓存目录
+wallpaper_cache_path = os.path.join(cur_dir, "Wallpaper", "Cache")
+# 文件生存目录
+wallpaper_path = os.path.join(cur_dir, "Wallpaper")
+# 壁纸文件
+wallpaper_name = os.path.join(wallpaper_path, "Wallpaper.bin")
+wallpaperAddrInFlash = '0x00200000'
+TYPE_JPG = 0
+TYPE_MJPEG = 1
+IMAGE_FORMAT = ["jpg", "JPG", "jpeg", "JPEG", "png", "PNG"]
+
 # 读取配置信息
-cfg_fp = open("SnailHeater_Tool.cfg", "r", encoding = "utf-8")
+cfg_fp = open("SnailHeater_Tool.cfg", "r", encoding="utf-8")
 cfg = json.load(cfg_fp)["windows_tool"]
 temp_sn_recode_path = cfg["temp_sn_recode_path"] \
     if "temp_sn_recode_path" in cfg.keys() else None
@@ -55,6 +69,7 @@ activate_sn_url = cfg["activate_sn_url"] \
     if "activate_sn_url" in cfg.keys() else None
 
 cfg_fp.close()
+
 
 class DownloadController(object):
 
@@ -78,7 +93,7 @@ class DownloadController(object):
 
         _translate = QtCore.QCoreApplication.translate
         self.win_main.setWindowTitle(_translate("SanilHeaterTool",
-                                                "蜗牛台SnailHeater刷机工具 " + common.VERSION))
+                                                "蜗牛台SnailHeater管理工具 " + common.VERSION))
 
         # 设置文本可复制
         self.form.LinkInfolabel.setTextInteractionFlags(Qt.TextSelectableByMouse)
@@ -89,16 +104,37 @@ class DownloadController(object):
         self.form.ComComboBox.clicked.connect(self.scan_com)  # 信号与槽函数的绑定
         self.form.FirmwareComboBox.clicked.connect(self.scan_firmware)
         self.form.QueryPushButton.clicked.connect(self.query_button_click)
+        self.form.WriteWallpaperButton.clicked.connect(self.writeWallpaper)
+        self.form.reflushWallpaperButton.clicked.connect(self.cleanWallpaper)
+        self.form.chooseWPButton.clicked.connect(self.chooseFile)
         self.form.ActivatePushButton.clicked.connect(self.act_button_click)
         # self.form.UpdatePushButton.clicked.connect(self.update_button_click)
         self.form.UpdatePushButton.clicked.connect(self.show_message)
         self.form.CanclePushButton.clicked.connect(self.cancle_button_click)
 
         # 设置提示信息
-        self.form.QueryPushButton.setToolTip("获取机器码、SN")
+        self.form.QueryPushButton.setToolTip("获取机器码(SN)")
         self.form.ActivatePushButton.setToolTip("填入SN，点此激活")
         self.form.UpdateModeMethodRadioButton.setToolTip("保留用户的设置信息，只在固件上做更新")
         self.form.ClearModeMethodRadioButton.setToolTip("将会清空芯片内所有可清空的信息，想要完全纯净的刷固件可选此项")
+        self.form.autoScaleBox.setToolTip("自适应长宽。若未勾选则以指定长宽比截取中心区域")
+        self.form.chooseWPButton.setToolTip("选择素材文件的路径（可选多项）")
+        self.form.WriteWallpaperButton.setToolTip("将选择好的素材转换并刷写到焊台上")
+        self.form.reflushWallpaperButton.setToolTip("清除焊台上的壁纸信息")
+        self.form.timeLabel_0.setToolTip("只允许填写正整数。全量截取请设置\"0 0\"")
+        self.form.qualitylabel.setToolTip("1质量最高")
+        self.form.qualityComboBox.setToolTip("1质量最高")
+        self.form.fpslabel.setToolTip("性能一定，帧率越大越卡顿")
+        self.form.fpsEdit.setToolTip("性能一定，帧率越大越卡顿")
+        self.form.startTimeEdit.setToolTip("需要截取时间范围才需要设置")
+        self.form.endTimeEdit.setToolTip("需要截取时间范围才需要设置")
+
+        self.form.resolutionComboBox.addItems(["280x240 (一、二车)", "320x240 (三车)"])
+        self.form.qualityComboBox.addItems([str(num) for num in range(1, 10)])
+        self.form.qualityComboBox.setCurrentText("5");
+        self.form.fpsEdit.setText("20")
+        self.form.startTimeEdit.setText("0")
+        self.form.endTimeEdit.setText("0")
 
         #
         self.form.UICLineEdit.setReadOnly(True)
@@ -244,10 +280,14 @@ class DownloadController(object):
 
         self.form.SNLineEdit.setText(sn)
 
-        if sn != "":
-            sn_record = open(temp_sn_recode_path, 'a', encoding="utf-8")
-            sn_record.write(machine_code + "\t" + sn + "\n")
-            sn_record.close()
+        try:
+            if sn != "":
+                sn_record = open(temp_sn_recode_path, 'a', encoding="utf-8")
+                sn_record.write(machine_code + "\t" + sn + "\n")
+                sn_record.close()
+        except Exception as err:
+            print(str(traceback.format_exc()))
+            self.print_log("获取异常异常")
 
     def update_button_click(self):
         """
@@ -435,7 +475,7 @@ class DownloadController(object):
                 print(machine_code)
 
             if machine_code == "查询失败":
-                self.print_log("机器码查询失败")
+                self.print_log((COLOR_RED % "机器码查询失败"))
             else:
                 self.print_log("机器码查询成功")
 
@@ -486,13 +526,251 @@ class DownloadController(object):
                 print(sn)
 
             if sn == "":
-                self.print_log("SN查询失败")
+                self.print_log((COLOR_RED % "SN查询失败"))
             else:
                 self.print_log("SN查询成功")
         self.ser.close()  # 关闭串口
         del self.ser
         self.ser = None
         return sn
+
+    def chooseFile(self):
+        '''
+        打开资源管理器 选择文件
+        '''
+        fileNames, fileType = QFileDialog.getOpenFileNames(None, '选择素材文件', os.getcwd(),
+              '视频文件(*.mp4 *.MP4 *.avi *.AVI *.mov *.MOV *.gif *.GIF, *.jpg *.png *.jpeg);;所有文件(*)')
+        self.print_log((COLOR_RED % "已选择以下素材：\n") + str(fileNames))
+
+        path_text = ""
+        for fileName in fileNames:
+            path_text = path_text + fileName + ";"
+        self.form.choosePathEdit.setText(path_text)
+
+    def writeWallpaper(self):
+        '''
+        刷写壁纸
+        '''
+        self.form.WriteWallpaperButton.setEnabled(False)
+        select_com = self.getSafeCom()
+        if select_com == None:
+            return False
+
+        try:
+            os.makedirs(wallpaper_cache_path)
+        except Exception as e:
+            pass
+
+        if self.trans_format() == False:
+            return False
+
+        if self.generateWallpaperBin() == None:
+            return False
+
+        if os.path.getsize(wallpaper_name) > 2097152:
+            self.print_log(COLOR_RED % "异常终止：壁纸数据过大，请适当降低帧率或截取更短的时间。")
+
+        cmd = ['SnailHeater_TOOL.py', '--port', select_com,
+               '--baud', str(BAUD_RATE),
+               'write_flash',
+               wallpaperAddrInFlash, wallpaper_name
+               ]
+
+        self.print_log("正在烧入壁纸数据到主机......")
+        esptool.main(cmd[1:])
+        self.print_log("成功烧入壁纸数据到主机")
+        self.form.WriteWallpaperButton.setEnabled(True)
+
+        return True
+
+    def generateWallpaperBin(self):
+        """
+        生成壁纸的bin文件
+        """
+        self.print_log("正在生成壁纸文件......")
+        param = self.get_output_param()
+        if param == False:
+            self.print_log((COLOR_RED % "请检查参数设置"))
+            return None
+
+        wallpapers = param["dst_path"]
+        total = len(wallpapers)  # 壁纸总数（1字节）
+        type = []  # 壁纸类型（1字节）jpg图片0 mjpeg视频1
+        startAddr = []  # 4字节
+        dataLen = []  # 4字节
+        dataAddrOffset = 256  # 标记当前的数据可存地址
+        for ind in range(total):
+            suffix = os.path.basename(wallpapers[ind]).split(".")[-1]
+            if suffix == "mjpeg":
+                type.append(TYPE_MJPEG)
+            else:
+                type.append(TYPE_JPG)
+            startAddr.append(dataAddrOffset)
+            fileSize = os.path.getsize(wallpapers[ind])
+            dataLen.append(fileSize)  # 壁纸数据长度
+            dataAddrOffset += fileSize
+
+        print(wallpaper_name)
+        self.print_log("数据长度->" + str(dataLen))
+        try:
+            os.remove(wallpaper_name)
+        except Exception as err:
+            pass
+
+        with open(wallpaper_name, "wb") as fbin:
+            binaryData = b'' + struct.pack('=' + "1B", *[total])
+            for ind in range(total):
+                format = "1B1I1I"
+                byteOrder = '='
+                params = [type[ind], startAddr[ind], dataLen[ind]]
+                binaryData = binaryData + struct.pack(byteOrder + format, *params)
+
+            binaryData = binaryData + b'\x00' * (256 - len(binaryData))
+            for wallpaper in wallpapers:
+                with open(wallpaper, "rb") as f:
+                    binaryData = binaryData + f.read()
+            fbin.write(binaryData)
+
+        self.print_log("壁纸文件生成成功")
+        return wallpaper_name
+
+    def trans_format(self):
+        """
+        格式转化
+        """
+        self.print_log((COLOR_RED % "正在转换（注:若视频比较大，界面会卡顿一段时间）"))
+        param = self.get_output_param()
+        if param == False:
+            self.print_log((COLOR_RED % "请检查参数设置"))
+            return False
+
+        cmd_resize = 'ffmpeg -i "%s" -vf scale=%s:%s "%s"'  # 缩放转化
+        # cmd_to_rgb 的倒数第二个参数其实没什么作用，因为rgb本身就是实际的像素点
+        # （这个是为了跟cmd_to_mjpeg统一格式才加的参数）
+        cmd_to_rgb = 'ffmpeg -i "%s" -vf "fps=%s,scale=-1:%s:flags=lanczos,crop=%s:in_h:(in_w-%s)/2:0" -c:v rawvideo -pix_fmt rgb565be -q:v %s "%s"'
+        cmd_to_mjpeg = 'ffmpeg -i "%s" -vf "fps=%s,scale=-1:%s:flags=lanczos,crop=%s:in_h:(in_w-%s)/2:0" -q:v %s "%s"'
+        cmd_to_mjpeg_time = 'ffmpeg -i "%s" -vf "fps=%s,scale=-1:%s:flags=lanczos,crop=%s:in_h:(in_w-%s)/2:0" -q:v %s -ss %s -to %s "%s"'
+
+        for src_path, dst_path in zip(param["src_path"], param["dst_path"]):
+            name = os.path.basename(dst_path).split(".")[0]
+            suffix = os.path.basename(src_path).split(".")[-1]  # 后缀名
+            # 生成的中间文件名
+            wallpaper_cache_name = name + "_cache." + suffix
+            # 带上路径
+            wallpaper_cache = os.path.join(wallpaper_cache_path, wallpaper_cache_name)
+
+            # 清理之前的记录
+            try:
+                os.remove(wallpaper_cache)
+            except Exception as err:
+                pass
+
+            try:
+                os.remove(dst_path)
+            except Exception as err:
+                pass
+
+            if param["auto"]:
+                middle_cmd = cmd_resize % (src_path, param["width"],
+                                           param["height"], wallpaper_cache)
+                print(middle_cmd)
+                os.system(middle_cmd)
+            else:
+                # 未设置缩放
+                wallpaper_cache = src_path
+
+            # 最终输出的文件
+            if param["end_time"] != 0 and suffix not in IMAGE_FORMAT:
+                trans_cmd = cmd_to_mjpeg_time  # 最后的转换命令                
+                out_cmd = trans_cmd % (wallpaper_cache, param["fps"], param["height"],
+                                       param["width"], param["width"], param["quality"],
+                                       param["start_time"], param["end_time"], dst_path)
+            else:
+                trans_cmd = cmd_to_mjpeg  # 最后的转换命令
+                out_cmd = trans_cmd % (wallpaper_cache, param["fps"], param["height"],
+                                       param["width"], param["width"], param["quality"],
+                                       dst_path)
+            print(out_cmd)
+            os.system(out_cmd)
+            try:
+                if os.path.getsize(dst_path) == 0:
+                    self.print_log((COLOR_RED % "生成文件失败：") + src_path)
+                    return False
+            except Exception as err:
+                pass
+                return False
+
+        self.print_log("转换完成")
+
+        return True
+
+    def get_output_param(self):
+        """
+        得到输出参数
+        """
+        resolutionW, resolutionH = self.form.resolutionComboBox.currentText().split(" ")[0].split("x")
+
+        fileNameText = self.form.choosePathEdit.text().strip()
+        if fileNameText == "":
+            self.print_log(COLOR_RED % "未选择素材文件")
+            return False
+        fileNames = fileNameText.split(";")[0:-1]
+        outFileNames = []
+        # 文件转化的创建输出目录
+        for fileName in fileNames:
+            name_suffix = os.path.basename(fileName).split(".")
+            if name_suffix[1] not in IMAGE_FORMAT:
+                outFileNames.append(
+                    os.path.join(wallpaper_cache_path, name_suffix[0] + "_" + resolutionW + "x" + resolutionH + ".mjpeg"))
+            else:
+                outFileNames.append(
+                    os.path.join(wallpaper_cache_path, name_suffix[0] + "_" + resolutionW + "x" + resolutionH + ".jpg"))
+
+        print(fileNames)
+        print(outFileNames)
+
+        auto = self.form.autoScaleBox.isChecked()
+
+        startTime = 0
+        endTime = 0
+        try:
+            startTime = int(self.form.startTimeEdit.text().strip())
+            endTime = int(self.form.endTimeEdit.text().strip())
+        except Exception as err:
+            self.print_log((COLOR_RED % "截取时间填写错误\n"))
+            return False
+
+        if startTime > endTime:
+            self.print_log((COLOR_RED % "不允许开始时间大于结束时间\n"))
+            return False
+
+        return {
+            "src_path": fileNames,
+            "dst_path": outFileNames,
+            "width": resolutionW,
+            "height": resolutionH,
+            "start_time": startTime,
+            "end_time": endTime,
+            "auto": auto,  # 自动缩放
+            "fps": self.form.fpsEdit.text().strip(),
+            "quality": self.form.qualityComboBox.currentText().strip(),
+            "format": "mjpeg"
+        }
+
+    def cleanWallpaper(self):
+        '''
+        清空壁纸
+        '''
+        select_com = self.getSafeCom()
+        if select_com == None:
+            return None
+
+        self.print_log("正在清空壁纸...")
+        # esptool.py erase_region 0x20000 0x4000
+        # esptool.py erase_flash
+        cmd = ['--port', select_com, 'erase_region', wallpaperAddrInFlash, '0x200000']
+        esptool.main(cmd)
+        self.print_log("成功清空壁纸.")
 
     def print_log(self, info):
         self.form.LogInfoTextBrowser.append(info + '\n')
@@ -516,16 +794,16 @@ class DownloadController(object):
         # time.sleep(0.2)
         # self.ser.setRTS(False)
         # self.ser.setDTR(self.ser.dtr) 
-              
+
         self._setDTR(False)  # IO0=HIGH
-        self._setRTS(True)   # EN=LOW, chip in reset
+        self._setRTS(True)  # EN=LOW, chip in reset
         time.sleep(0.1)
-        self._setDTR(True)   # IO0=LOW
+        self._setDTR(True)  # IO0=LOW
         self._setRTS(False)  # EN=HIGH, chip out of reset
         # 0.5 needed for ESP32 rev0 and rev1
-        time.sleep(0.05) # 0.5 / 0.05
+        time.sleep(0.05)  # 0.5 / 0.05
         self._setDTR(False)  # IO0=HIGH, done
-    
+
         self.ser.close()  # 关闭串口
         del self.ser
         self.ser = None
