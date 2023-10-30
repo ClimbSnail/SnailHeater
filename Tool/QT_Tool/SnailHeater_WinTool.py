@@ -47,6 +47,8 @@ BAUD_RATE = 921600
 INFO_BAUD_RATE = 115200
 
 cur_dir = os.getcwd()  # 当前目录
+# 默认壁纸
+default_wallpaper = os.path.join(cur_dir, "Wallpaper.bin")
 # 文件缓存目录
 wallpaper_cache_path = os.path.join(cur_dir, "Wallpaper", "Cache")
 # 文件生存目录
@@ -130,7 +132,7 @@ class DownloadController(object):
         self.form.endTimeEdit.setToolTip("需要截取时间范围才需要设置")
 
         self.form.resolutionComboBox.addItems(["280x240 (一、二车)", "320x240 (三车)"])
-        self.form.qualityComboBox.addItems([str(num) for num in range(1, 10)])
+        self.form.qualityComboBox.addItems([str(num) for num in range(1, 20)])
         self.form.qualityComboBox.setCurrentText("5");
         self.form.fpsEdit.setText("20")
         self.form.startTimeEdit.setText("0")
@@ -318,9 +320,9 @@ class DownloadController(object):
 
         all_time = 0  # 粗略认为连接并复位芯片需要0.5s钟
         if mode == "清空式":
-            all_time += 23
+            all_time += 24
         else:
-            all_time += 4
+            all_time += 5
         file_list = ["./boot_app0.bin",
                      "./bootloader.bin",
                      "./partitions.bin",
@@ -329,7 +331,10 @@ class DownloadController(object):
         for filepath in file_list:
             all_time = all_time + os.path.getsize(filepath) * 10 / BAUD_RATE
 
-        self.print_log("刷机预计需要：" + str(all_time)[0:5] + "s")
+        if os.path.exists(default_wallpaper):
+            all_time = all_time + os.path.getsize(default_wallpaper) * 10 / BAUD_RATE + 2
+
+        self.print_log("刷机预计需要：" + (COLOR_RED % (str(all_time)[0:5] + "s")))
 
         # 进度条进程要在下载进程之前启动（为了在下载失败时可以立即查杀进度条进程）
         self.download_thread = threading.Thread(target=self.down_action,
@@ -363,22 +368,35 @@ class DownloadController(object):
                 self.print_log("完成清空！")
 
             #  --port COM7 --baud 921600 write_flash -fm dio -fs 4MB 0x1000 bootloader_dio_40m.bin 0x00008000 partitions.bin 0x0000e000 boot_app0.bin 0x00010000
-            cmd = ['SnailHeater_TOOL.py', '--port', select_com,
-                   '--baud', str(BAUD_RATE),
-                   'write_flash',
-                   '0x00001000', "bootloader.bin",
-                   '0x00008000', "partitions.bin",
-                   '0x0000e000', "boot_app0.bin",
-                   '0x002d0000', "tinyuf2.bin",
-                   '0x00010000', firmware_path
-                   ]
+            cmd = None
+            if os.path.exists(default_wallpaper):
+                cmd = ['SnailHeater_TOOL.py', '--port', select_com,
+                       '--baud', str(BAUD_RATE),
+                       'write_flash',
+                       '0x00001000', "bootloader.bin",
+                       '0x00008000', "partitions.bin",
+                       '0x0000e000', "boot_app0.bin",
+                       # '0x002d0000', "tinyuf2.bin",
+                       '0x00010000', firmware_path,
+                       wallpaperAddrInFlash, default_wallpaper
+                       ]
+            else:
+                cmd = ['SnailHeater_TOOL.py', '--port', select_com,
+                       '--baud', str(BAUD_RATE),
+                       'write_flash',
+                       '0x00001000', "bootloader.bin",
+                       '0x00008000', "partitions.bin",
+                       '0x0000e000', "boot_app0.bin",
+                       '0x002d0000', "tinyuf2.bin",
+                       '0x00010000', firmware_path
+                       ]
 
             self.print_log("开始刷写固件...")
             # sys.argv = cmd
             esptool.main(cmd[1:])
             self.ser = None
 
-            self.esp_reboot()  # 手动复位芯片
+            # self.esp_reboot()  # 手动复位芯片
             self.print_log(COLOR_RED % "刷机结束！")
             self.print_log("刷机流程完毕，请保持typec通电等待焊台屏幕将会亮起后才能断电。")
             self.print_log((COLOR_RED % "注：") + "更新式刷机一般刷机完成后2s就能亮屏，清空式刷机则需等待25s左右。")
@@ -539,7 +557,7 @@ class DownloadController(object):
         '''
         打开资源管理器 选择文件
         '''
-        fileNames, fileType = QFileDialog.getOpenFileNames(None, '选择素材文件', os.getcwd(),
+        fileNames, fileType = QFileDialog.getOpenFileNames(None, '可选择多个素材文件', os.getcwd(),
                                                            '视频文件(*.mp4 *.MP4 *.avi *.AVI *.mov *.MOV *.gif *.GIF, *.jpg *.png *.jpeg);;所有文件(*)')
         self.print_log((COLOR_RED % "已选择以下素材：\n") + str(fileNames))
 
@@ -659,9 +677,12 @@ class DownloadController(object):
         cmd_to_mjpeg = 'ffmpeg -i "%s" -vf "fps=%s,scale=-1:%s:flags=lanczos,crop=%s:in_h:(in_w-%s)/2:0" -q:v %s "%s"'
         cmd_to_mjpeg_time = 'ffmpeg -i "%s" -vf "fps=%s,scale=-1:%s:flags=lanczos,crop=%s:in_h:(in_w-%s)/2:0" -q:v %s -ss %s -to %s "%s"'
 
-        for src_path, dst_path in zip(param["src_path"], param["dst_path"]):
-            name = os.path.basename(dst_path).split(".")[0]
-            suffix = os.path.basename(src_path).split(".")[-1]  # 后缀名
+        # for src_path, dst_path in zip(param["src_path"], param["dst_path"]):
+
+        for ind in range(len(param["src_path"])):
+
+            name = os.path.basename(param["src_path"][ind]).split(".")[0]
+            suffix = os.path.basename(param["src_path"][ind]).split(".")[-1]  # 后缀名
             # 生成的中间文件名
             wallpaper_cache_name = name + "_cache." + suffix
             # 带上路径
@@ -674,35 +695,38 @@ class DownloadController(object):
                 pass
 
             try:
-                os.remove(dst_path)
+                os.remove(param["dst_path"][ind])
             except Exception as err:
                 pass
 
             if param["auto"]:
-                middle_cmd = cmd_resize % (src_path, param["width"],
+                middle_cmd = cmd_resize % (param["src_path"][ind], param["width"],
                                            param["height"], wallpaper_cache)
                 print(middle_cmd)
                 os.system(middle_cmd)
             else:
                 # 未设置缩放
-                wallpaper_cache = src_path
+                wallpaper_cache = param["src_path"][ind]
 
             # 最终输出的文件
-            if param["end_time"] != 0 and suffix not in IMAGE_FORMAT:
-                trans_cmd = cmd_to_mjpeg_time  # 最后的转换命令                
+            if param["end_time"] != '0' and param["format"][ind] == "mjpeg":
+                trans_cmd = cmd_to_mjpeg_time
+                # 最后的转换命令                
                 out_cmd = trans_cmd % (wallpaper_cache, param["fps"], param["height"],
-                                       param["width"], param["width"], param["quality"],
-                                       param["start_time"], param["end_time"], dst_path)
+                                       param["width"], param["width"], param["quality"][ind],
+                                       param["start_time"], param["end_time"],
+                                       param["dst_path"][ind])
             else:
-                trans_cmd = cmd_to_mjpeg  # 最后的转换命令
+                trans_cmd = cmd_to_mjpeg
+                # 最后的转换命令
                 out_cmd = trans_cmd % (wallpaper_cache, param["fps"], param["height"],
-                                       param["width"], param["width"], param["quality"],
-                                       dst_path)
+                                       param["width"], param["width"], param["quality"][ind],
+                                       param["dst_path"][ind])
             print(out_cmd)
             os.system(out_cmd)
             try:
-                if os.path.getsize(dst_path) == 0:
-                    self.print_log((COLOR_RED % "生成文件失败：") + src_path)
+                if os.path.getsize(param["dst_path"][ind]) == 0:
+                    self.print_log((COLOR_RED % "生成文件失败：") + param["src_path"][ind])
                     return False
             except Exception as err:
                 pass
@@ -724,6 +748,8 @@ class DownloadController(object):
             return False
         fileNames = fileNameText.split(";")[0:-1]
         outFileNames = []
+        qualitys = []
+        formats = []
         # 文件转化的创建输出目录
         for fileName in fileNames:
             name_suffix = os.path.basename(fileName).split(".")
@@ -731,9 +757,13 @@ class DownloadController(object):
                 outFileNames.append(
                     os.path.join(wallpaper_cache_path,
                                  name_suffix[0] + "_" + resolutionW + "x" + resolutionH + ".mjpeg"))
+                formats.append("mjpeg")
+                qualitys.append(self.form.qualityComboBox.currentText().strip())
             else:
                 outFileNames.append(
                     os.path.join(wallpaper_cache_path, name_suffix[0] + "_" + resolutionW + "x" + resolutionH + ".jpg"))
+                formats.append("jpg")
+                qualitys.append("10")
 
         print(fileNames)
         print(outFileNames)
@@ -758,12 +788,12 @@ class DownloadController(object):
             "dst_path": outFileNames,
             "width": resolutionW,
             "height": resolutionH,
-            "start_time": startTime,
-            "end_time": endTime,
+            "start_time": str(startTime),
+            "end_time": str(endTime),
             "auto": auto,  # 自动缩放
             "fps": self.form.fpsEdit.text().strip(),
-            "quality": self.form.qualityComboBox.currentText().strip(),
-            "format": "mjpeg"
+            "quality": qualitys,
+            "format": formats
         }
 
     def cleanWallpaper(self):
