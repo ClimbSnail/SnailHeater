@@ -135,6 +135,7 @@ class DownloadController(object):
         self.form.fpsEdit.setText("20")
         self.form.startTimeEdit.setText("0")
         self.form.endTimeEdit.setText("0")
+        self.form.autoScaleBox.setChecked(True)
 
         #
         self.form.UICLineEdit.setReadOnly(True)
@@ -539,7 +540,7 @@ class DownloadController(object):
         打开资源管理器 选择文件
         '''
         fileNames, fileType = QFileDialog.getOpenFileNames(None, '选择素材文件', os.getcwd(),
-              '视频文件(*.mp4 *.MP4 *.avi *.AVI *.mov *.MOV *.gif *.GIF, *.jpg *.png *.jpeg);;所有文件(*)')
+                                                           '视频文件(*.mp4 *.MP4 *.avi *.AVI *.mov *.MOV *.gif *.GIF, *.jpg *.png *.jpeg);;所有文件(*)')
         self.print_log((COLOR_RED % "已选择以下素材：\n") + str(fileNames))
 
         path_text = ""
@@ -570,8 +571,12 @@ class DownloadController(object):
             self.form.WriteWallpaperButton.setEnabled(True)
             return False
 
+        rate = int(os.path.getsize(wallpaper_name) / 2097152 * 100)
+        self.print_log((COLOR_RED % "本次壁纸占用全容量的 ") + str(rate) + "%")
         if os.path.getsize(wallpaper_name) > 2097152:
             self.print_log(COLOR_RED % "异常终止：壁纸数据过大，请适当降低帧率或截取更短的时间。")
+            self.form.WriteWallpaperButton.setEnabled(True)
+            return False
 
         cmd = ['SnailHeater_TOOL.py', '--port', select_com,
                '--baud', str(BAUD_RATE),
@@ -724,7 +729,8 @@ class DownloadController(object):
             name_suffix = os.path.basename(fileName).split(".")
             if name_suffix[1] not in IMAGE_FORMAT:
                 outFileNames.append(
-                    os.path.join(wallpaper_cache_path, name_suffix[0] + "_" + resolutionW + "x" + resolutionH + ".mjpeg"))
+                    os.path.join(wallpaper_cache_path,
+                                 name_suffix[0] + "_" + resolutionW + "x" + resolutionH + ".mjpeg"))
             else:
                 outFileNames.append(
                     os.path.join(wallpaper_cache_path, name_suffix[0] + "_" + resolutionW + "x" + resolutionH + ".jpg"))
