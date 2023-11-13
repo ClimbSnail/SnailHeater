@@ -602,7 +602,7 @@ class DownloadController(object):
         # 50为预留值
         rate = int(os.path.getsize(wallpaper_name) / (2097152 - 50) * 100)
         self.print_log((COLOR_RED % "本次壁纸占用全容量的 ") + str(rate) + "%")
-        if os.path.getsize(wallpaper_name) > 2097152:
+        if os.path.getsize(wallpaper_name) > (2097152 - 50):
             self.print_log(COLOR_RED % "异常终止：壁纸数据过大，请适当降低帧率或截取更短的时间。")
             self.form.WriteWallpaperButton.setEnabled(True)
             return False
