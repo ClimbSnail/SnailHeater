@@ -48,7 +48,9 @@ INFO_BAUD_RATE = 115200
 
 cur_dir = os.getcwd()  # 当前目录
 # 默认壁纸
-default_wallpaper = os.path.join(cur_dir, "Wallpaper.bin")
+default_wallpaper_280 = os.path.join(cur_dir, "Wallpaper_280x240.bin")
+default_wallpaper_320 = os.path.join(cur_dir, "Wallpaper_320x240.bin")
+default_wallpaper = default_wallpaper_280
 # 文件缓存目录
 wallpaper_cache_path = os.path.join(cur_dir, "Wallpaper", "Cache")
 # 文件生存目录
@@ -119,7 +121,7 @@ class DownloadController(object):
         self.form.ActivatePushButton.setToolTip("填入SN，点此激活")
         self.form.UpdateModeMethodRadioButton.setToolTip("保留用户的设置信息，只在固件上做更新")
         self.form.ClearModeMethodRadioButton.setToolTip("将会清空芯片内所有可清空的信息，想要完全纯净的刷固件可选此项")
-        self.form.autoScaleBox.setToolTip("自适应长宽。若未勾选则以指定长宽比截取中心区域")
+        # self.form.autoScaleBox.setToolTip("自适应长宽。若未勾选则以指定长宽比截取中心区域")
         self.form.chooseWPButton.setToolTip("选择素材文件的路径（可选多项）")
         self.form.WriteWallpaperButton.setToolTip("将选择好的素材转换并刷写到焊台上")
         self.form.reflushWallpaperButton.setToolTip("清除焊台上的壁纸信息")
@@ -137,7 +139,7 @@ class DownloadController(object):
         self.form.fpsEdit.setText("20")
         self.form.startTimeEdit.setText("0")
         self.form.endTimeEdit.setText("0")
-        self.form.autoScaleBox.setChecked(True)
+        # self.form.autoScaleBox.setChecked(True)
 
         #
         self.form.UICLineEdit.setReadOnly(True)
@@ -331,6 +333,13 @@ class DownloadController(object):
         for filepath in file_list:
             all_time = all_time + os.path.getsize(filepath) * 10 / BAUD_RATE
 
+        if "③" in firmware_path:
+            default_wallpaper = default_wallpaper_320
+        else:
+            default_wallpaper = default_wallpaper_280
+
+        print(default_wallpaper)
+
         if os.path.exists(default_wallpaper):
             all_time = all_time + os.path.getsize(default_wallpaper) * 10 / BAUD_RATE + 2
 
@@ -369,6 +378,7 @@ class DownloadController(object):
 
             #  --port COM7 --baud 921600 write_flash -fm dio -fs 4MB 0x1000 bootloader_dio_40m.bin 0x00008000 partitions.bin 0x0000e000 boot_app0.bin 0x00010000
             cmd = None
+
             if os.path.exists(default_wallpaper):
                 cmd = ['SnailHeater_TOOL.py', '--port', select_com,
                        '--baud', str(BAUD_RATE),
@@ -589,7 +599,8 @@ class DownloadController(object):
             self.form.WriteWallpaperButton.setEnabled(True)
             return False
 
-        rate = int(os.path.getsize(wallpaper_name) / 2097152 * 100)
+        # 50为预留值
+        rate = int(os.path.getsize(wallpaper_name) / (2097152 - 50) * 100)
         self.print_log((COLOR_RED % "本次壁纸占用全容量的 ") + str(rate) + "%")
         if os.path.getsize(wallpaper_name) > 2097152:
             self.print_log(COLOR_RED % "异常终止：壁纸数据过大，请适当降低帧率或截取更短的时间。")
@@ -670,14 +681,17 @@ class DownloadController(object):
             self.print_log((COLOR_RED % "请检查参数设置"))
             return False
 
-        cmd_resize = 'ffmpeg -i "%s" -vf scale=%s:%s "%s"'  # 缩放转化
-        # cmd_to_rgb 的倒数第二个参数其实没什么作用，因为rgb本身就是实际的像素点
-        # （这个是为了跟cmd_to_mjpeg统一格式才加的参数）
-        cmd_to_rgb = 'ffmpeg -i "%s" -vf "fps=%s,scale=-1:%s:flags=lanczos,crop=%s:in_h:(in_w-%s)/2:0" -c:v rawvideo -pix_fmt rgb565be -q:v %s "%s"'
-        cmd_to_mjpeg = 'ffmpeg -i "%s" -vf "fps=%s,scale=-1:%s:flags=lanczos,crop=%s:in_h:(in_w-%s)/2:0" -q:v %s "%s"'
-        cmd_to_mjpeg_time = 'ffmpeg -i "%s" -vf "fps=%s,scale=-1:%s:flags=lanczos,crop=%s:in_h:(in_w-%s)/2:0" -q:v %s -ss %s -to %s "%s"'
+        cmd_resize = 'ffmpeg -i "%s" -vf "scale=-1:%s:flags=lanczos" "%s"'  # 缩放转化
+        cmd_time = 'ffmpeg -i "%s" -ss %s -to %s "%s"'  # 时间片截取 -c copy
 
-        # for src_path, dst_path in zip(param["src_path"], param["dst_path"]):
+        # cmd_to_rgb 的倒数第二个参数其实没什么作用，因为rgb本身就是实际的像素点
+        cmd_to_rgb = 'ffmpeg -i "%s" -vf "fps=%s,scale=-1:%s:flags=lanczos,crop=%s:in_h:(in_w-%s)/2:0" -c:v rawvideo -pix_fmt rgb565be -q:v %s "%s"'
+
+        # （这个是为了跟cmd_to_mjpeg统一格式才加的参数）
+        # fps 帧率过滤器
+        # scale 缩放过滤器
+        # crop 裁剪过滤器
+        cmd_to_mjpeg = 'ffmpeg -i "%s" -vf "fps=%s,scale=-1:%s:flags=lanczos,crop=%s:in_h:(in_w-%s)/2:0" -q:v %s "%s"'
 
         for ind in range(len(param["src_path"])):
 
@@ -699,9 +713,10 @@ class DownloadController(object):
             except Exception as err:
                 pass
 
-            if param["auto"]:
-                middle_cmd = cmd_resize % (param["src_path"][ind], param["width"],
-                                           param["height"], wallpaper_cache)
+            if param["end_time"] != '0' and param["format"][ind] == "mjpeg":
+                middle_cmd = cmd_time % (param["src_path"][ind],
+                                         param["start_time"], param["end_time"],
+                                         wallpaper_cache)
                 print(middle_cmd)
                 os.system(middle_cmd)
             else:
@@ -709,24 +724,17 @@ class DownloadController(object):
                 wallpaper_cache = param["src_path"][ind]
 
             # 最终输出的文件
-            if param["end_time"] != '0' and param["format"][ind] == "mjpeg":
-                trans_cmd = cmd_to_mjpeg_time
-                # 最后的转换命令                
-                out_cmd = trans_cmd % (wallpaper_cache, param["fps"], param["height"],
-                                       param["width"], param["width"], param["quality"][ind],
-                                       param["start_time"], param["end_time"],
-                                       param["dst_path"][ind])
-            else:
-                trans_cmd = cmd_to_mjpeg
-                # 最后的转换命令
-                out_cmd = trans_cmd % (wallpaper_cache, param["fps"], param["height"],
-                                       param["width"], param["width"], param["quality"][ind],
-                                       param["dst_path"][ind])
+            trans_cmd = cmd_to_mjpeg
+            # 最后的转换命令
+            out_cmd = trans_cmd % (wallpaper_cache, param["fps"], param["height"],
+                                   param["width"], param["width"], param["quality"][ind],
+                                   param["dst_path"][ind])
             print(out_cmd)
             os.system(out_cmd)
             try:
                 if os.path.getsize(param["dst_path"][ind]) == 0:
                     self.print_log((COLOR_RED % "生成文件失败：") + param["src_path"][ind])
+                    self.print_log((COLOR_RED % "注：") + "要求原视频的宽高比大于屏幕的宽高比")
                     return False
             except Exception as err:
                 pass
@@ -768,8 +776,6 @@ class DownloadController(object):
         print(fileNames)
         print(outFileNames)
 
-        auto = self.form.autoScaleBox.isChecked()
-
         startTime = 0
         endTime = 0
         try:
@@ -790,7 +796,6 @@ class DownloadController(object):
             "height": resolutionH,
             "start_time": str(startTime),
             "end_time": str(endTime),
-            "auto": auto,  # 自动缩放
             "fps": self.form.fpsEdit.text().strip(),
             "quality": qualitys,
             "format": formats
