@@ -19,6 +19,7 @@ import json
 import requests
 import traceback
 import struct
+import shutil
 
 import serial  # pip install pyserial
 import serial.tools.list_ports
@@ -50,6 +51,7 @@ cur_dir = os.getcwd()  # 当前目录
 # 默认壁纸
 default_wallpaper_280 = os.path.join(cur_dir, "Wallpaper_280x240.bin")
 default_wallpaper_320 = os.path.join(cur_dir, "Wallpaper_320x240.bin")
+default_wallpaper_clean = os.path.join(cur_dir, "WallpaperClean.bin")
 default_wallpaper = default_wallpaper_280
 # 文件缓存目录
 wallpaper_cache_path = os.path.join(cur_dir, "Wallpaper", "Cache")
@@ -61,6 +63,7 @@ wallpaperAddrInFlash = '0x00200000'
 TYPE_JPG = 0
 TYPE_MJPEG = 1
 IMAGE_FORMAT = ["jpg", "JPG", "jpeg", "JPEG", "png", "PNG"]
+MOVIE_FORMAT = ["mp4", "MP4", "avi", "AVI", "mov", "MOV"]
 
 # 读取配置信息
 cfg_fp = open("SnailHeater_Tool.cfg", "r", encoding="utf-8")
@@ -568,7 +571,7 @@ class DownloadController(object):
         打开资源管理器 选择文件
         '''
         fileNames, fileType = QFileDialog.getOpenFileNames(None, '可选择多个素材文件', os.getcwd(),
-                                                           '视频文件(*.mp4 *.MP4 *.avi *.AVI *.mov *.MOV *.gif *.GIF, *.jpg *.png *.jpeg);;所有文件(*)')
+                                                           '视频文件(*.mp4 *.MP4 *.avi *.AVI *.mov *.MOV *.gif *.GIF, *.jpg *.png *.jpeg *.bin);;所有文件(*)')
         self.print_log((COLOR_RED % "已选择以下素材：\n") + str(fileNames))
 
         path_text = ""
@@ -591,13 +594,22 @@ class DownloadController(object):
             self.form.WriteWallpaperButton.setEnabled(True)
             pass
 
-        if self.trans_format() == False:
+        param = self.get_output_param()
+        if param == False:
+            self.print_log((COLOR_RED % "请检查参数设置"))
             self.form.WriteWallpaperButton.setEnabled(True)
             return False
+        if param["format"][0] == "bin":
+            self.print_log((COLOR_RED % "正在使用已打包好的壁纸文件"))
+            shutil.copy(param["src_path"][0], wallpaper_name)
+        else:
+            if self.trans_format() == False:
+                self.form.WriteWallpaperButton.setEnabled(True)
+                return False
 
-        if self.generateWallpaperBin() == None:
-            self.form.WriteWallpaperButton.setEnabled(True)
-            return False
+            if self.generateWallpaperBin() == None:
+                self.form.WriteWallpaperButton.setEnabled(True)
+                return False
 
         # 50为预留值
         rate = int(os.path.getsize(wallpaper_name) / (2097152 - 50) * 100)
@@ -613,7 +625,7 @@ class DownloadController(object):
                wallpaperAddrInFlash, wallpaper_name
                ]
 
-        self.print_log("正在烧入壁纸数据到主机......")
+        self.print_log("正在烧入壁纸数据到主机，请等待......")
         esptool.main(cmd[1:])
         self.print_log("成功烧入壁纸数据到主机")
         self.form.WriteWallpaperButton.setEnabled(True)
@@ -761,17 +773,23 @@ class DownloadController(object):
         # 文件转化的创建输出目录
         for fileName in fileNames:
             name_suffix = os.path.basename(fileName).split(".")
-            if name_suffix[1] not in IMAGE_FORMAT:
+            if name_suffix[1] in MOVIE_FORMAT:
                 outFileNames.append(
                     os.path.join(wallpaper_cache_path,
                                  name_suffix[0] + "_" + resolutionW + "x" + resolutionH + ".mjpeg"))
                 formats.append("mjpeg")
                 qualitys.append(self.form.qualityComboBox.currentText().strip())
-            else:
+            elif name_suffix[1] in IMAGE_FORMAT:
                 outFileNames.append(
                     os.path.join(wallpaper_cache_path, name_suffix[0] + "_" + resolutionW + "x" + resolutionH + ".jpg"))
                 formats.append("jpg")
                 qualitys.append("10")
+            elif name_suffix[1] == "bin":
+                outFileNames.append(
+                    os.path.join(wallpaper_cache_path, name_suffix[0] + "_" + resolutionW + "x" + resolutionH + ".bin"))
+                formats.append("bin")
+                qualitys.append("10")
+
 
         print(fileNames)
         print(outFileNames)
@@ -814,6 +832,15 @@ class DownloadController(object):
         # esptool.py erase_flash
         cmd = ['--port', select_com, 'erase_region', wallpaperAddrInFlash, '0x200000']
         esptool.main(cmd)
+
+        
+        cmd = ['SnailHeater_TOOL.py', '--port', select_com,
+               '--baud', str(BAUD_RATE),
+               'write_flash',
+               wallpaperAddrInFlash, default_wallpaper_clean
+               ]
+        esptool.main(cmd[1:])
+
         self.print_log("成功清空壁纸.")
 
     def print_log(self, info):
