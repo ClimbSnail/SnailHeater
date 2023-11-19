@@ -7,11 +7,11 @@
     <x>0</x>
     <y>0</y>
     <width>746</width>
-    <height>404</height>
+    <height>553</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>蜗牛台SnailHeater刷机工具</string>
+   <string>蜗牛台SnailHeater管理工具</string>
   </property>
   <property name="windowIcon">
    <iconset>
@@ -535,6 +535,265 @@
    <property name="openExternalLinks">
     <bool>true</bool>
    </property>
+  </widget>
+  <widget class="QGroupBox" name="wallpaperGroupBox">
+   <property name="geometry">
+    <rect>
+     <x>6</x>
+     <y>399</y>
+     <width>731</width>
+     <height>159</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>壁纸</string>
+   </property>
+   <widget class="QPushButton" name="WriteWallpaperButton">
+    <property name="geometry">
+     <rect>
+      <x>605</x>
+      <y>34</y>
+      <width>79</width>
+      <height>35</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微软雅黑</family>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>写入壁纸</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="reflushWallpaperButton">
+    <property name="geometry">
+     <rect>
+      <x>605</x>
+      <y>86</y>
+      <width>79</width>
+      <height>35</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微软雅黑</family>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>清除壁纸</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="choosePathEdit">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>23</y>
+      <width>260</width>
+      <height>27</height>
+     </rect>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="chooseWPButton">
+    <property name="geometry">
+     <rect>
+      <x>280</x>
+      <y>21</y>
+      <width>70</width>
+      <height>30</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>选择壁纸</string>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="resolutionComboBox">
+    <property name="geometry">
+     <rect>
+      <x>72</x>
+      <y>68</y>
+      <width>155</width>
+      <height>25</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="resolutionlabel">
+    <property name="geometry">
+     <rect>
+      <x>12</x>
+      <y>66</y>
+      <width>53</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微软雅黑</family>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>分辨率</string>
+    </property>
+    <property name="textFormat">
+     <enum>Qt::AutoText</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="timeLabel_1">
+    <property name="geometry">
+     <rect>
+      <x>90</x>
+      <y>108</y>
+      <width>27</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微软雅黑</family>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>s到</string>
+    </property>
+    <property name="textFormat">
+     <enum>Qt::AutoText</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="timeLabel_0">
+    <property name="geometry">
+     <rect>
+      <x>8</x>
+      <y>108</y>
+      <width>37</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微软雅黑</family>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>从第</string>
+    </property>
+    <property name="textFormat">
+     <enum>Qt::AutoText</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="timeLabel_2">
+    <property name="geometry">
+     <rect>
+      <x>165</x>
+      <y>108</y>
+      <width>47</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微软雅黑</family>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>s截取</string>
+    </property>
+    <property name="textFormat">
+     <enum>Qt::AutoText</enum>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="startTimeEdit">
+    <property name="geometry">
+     <rect>
+      <x>44</x>
+      <y>108</y>
+      <width>40</width>
+      <height>25</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="endTimeEdit">
+    <property name="geometry">
+     <rect>
+      <x>120</x>
+      <y>108</y>
+      <width>40</width>
+      <height>25</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="fpslabel">
+    <property name="geometry">
+     <rect>
+      <x>236</x>
+      <y>108</y>
+      <width>67</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微软雅黑</family>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>帧率(fps)</string>
+    </property>
+    <property name="textFormat">
+     <enum>Qt::AutoText</enum>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="fpsEdit">
+    <property name="geometry">
+     <rect>
+      <x>304</x>
+      <y>108</y>
+      <width>35</width>
+      <height>25</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="qualitylabel">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>66</y>
+      <width>37</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微软雅黑</family>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>质量</string>
+    </property>
+    <property name="textFormat">
+     <enum>Qt::AutoText</enum>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="qualityComboBox">
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>68</y>
+      <width>39</width>
+      <height>25</height>
+     </rect>
+    </property>
+   </widget>
   </widget>
  </widget>
  <resources>

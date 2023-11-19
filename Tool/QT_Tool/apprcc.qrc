@@ -1,6 +1,6 @@
 <RCC>
   <qresource>
     <file alias="images/climbsnail_big.jpg">images/climbsnail_big.jpg</file>
-    <file alias="images/SnailHeater_256.jpg">images/SnailHeater_256.jpg</file>
+    <file alias="images/SnailHeater_256.jpg">images/SnailHeater_256.png</file>
   </qresource>
 </RCC>
