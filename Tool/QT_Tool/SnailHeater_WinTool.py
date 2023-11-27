@@ -20,6 +20,7 @@ import requests
 import traceback
 import struct
 import shutil
+from PIL import Image
 
 import serial  # pip install pyserial
 import serial.tools.list_ports
@@ -54,7 +55,7 @@ default_wallpaper_320 = os.path.join(cur_dir, "Wallpaper_320x240.bin")
 default_wallpaper_clean = os.path.join(cur_dir, "WallpaperClean.bin")
 default_wallpaper = default_wallpaper_280
 # 文件缓存目录
-wallpaper_cache_path = os.path.join(cur_dir, "Wallpaper", "Cache")
+wallpaper_cache_dir = os.path.join(cur_dir, "Wallpaper", "Cache")
 # 文件生存目录
 wallpaper_path = os.path.join(cur_dir, "Wallpaper")
 # 壁纸文件
@@ -129,8 +130,8 @@ class DownloadController(object):
         self.form.WriteWallpaperButton.setToolTip("将选择好的素材转换并刷写到焊台上")
         self.form.reflushWallpaperButton.setToolTip("清除焊台上的壁纸信息")
         self.form.timeLabel_0.setToolTip("只允许填写正整数。全量截取请设置\"0 0\"")
-        self.form.qualitylabel.setToolTip("1质量最高")
-        self.form.qualityComboBox.setToolTip("1质量最高")
+        self.form.qualitylabel.setToolTip("数字越小，质量最高")
+        self.form.qualityComboBox.setToolTip("数字越小，质量最高")
         self.form.fpslabel.setToolTip("性能一定，帧率越大越卡顿")
         self.form.fpsEdit.setToolTip("性能一定，帧率越大越卡顿")
         self.form.startTimeEdit.setToolTip("需要截取时间范围才需要设置")
@@ -376,8 +377,12 @@ class DownloadController(object):
                 # esptool.py erase_region 0x20000 0x4000
                 # esptool.py erase_flash
                 cmd = ['--port', select_com, 'erase_flash']
-                esptool.main(cmd)
-                self.print_log("完成清空！")
+                try:
+                    esptool.main(cmd)
+                    self.print_log("完成清空！")
+                except Exception as e:
+                    self.print_log(COLOR_RED % "错误：通讯异常。")
+                    pass
 
             #  --port COM7 --baud 921600 write_flash -fm dio -fs 4MB 0x1000 bootloader_dio_40m.bin 0x00008000 partitions.bin 0x0000e000 boot_app0.bin 0x00010000
             cmd = None
@@ -405,15 +410,18 @@ class DownloadController(object):
                        ]
 
             self.print_log("开始刷写固件...")
-            # sys.argv = cmd
-            esptool.main(cmd[1:])
+            try:
+                esptool.main(cmd[1:])
+            except Exception as e:
+                self.print_log(COLOR_RED % "错误：通讯异常。")
+                return False
             self.ser = None
 
             # self.esp_reboot()  # 手动复位芯片
             self.print_log(COLOR_RED % "刷机结束！")
             self.print_log("刷机流程完毕，请保持typec通电等待焊台屏幕将会亮起后才能断电。")
-            self.print_log((COLOR_RED % "注：") + "更新式刷机一般刷机完成后2s就能亮屏，清空式刷机则需等待25s左右。")
-            self.print_log("如25s后始终未能自动亮屏，请手动拔插一次typec接口再次等待25s。\n")
+            self.print_log((COLOR_RED % "注：") + "更新式刷机一般刷机完成后2s就能亮屏，清空式刷机则需等待10s左右。")
+            self.print_log("如25s后始终未能自动亮屏，请手动拔插一次typec接口再次等待10s。\n")
 
         except Exception as err:
             self.ser = None
@@ -589,7 +597,7 @@ class DownloadController(object):
 
         self.form.WriteWallpaperButton.setEnabled(False)
         try:
-            os.makedirs(wallpaper_cache_path)
+            os.makedirs(wallpaper_cache_dir)
         except Exception as e:
             self.form.WriteWallpaperButton.setEnabled(True)
             pass
@@ -626,8 +634,12 @@ class DownloadController(object):
                ]
 
         self.print_log("正在烧入壁纸数据到主机，请等待......")
-        esptool.main(cmd[1:])
-        self.print_log("成功烧入壁纸数据到主机")
+        try:
+            esptool.main(cmd[1:])
+            self.print_log("成功烧入壁纸数据到主机")
+        except Exception as e:
+            self.print_log(COLOR_RED % "错误：通讯异常。")
+            pass
         self.form.WriteWallpaperButton.setEnabled(True)
 
         return True
@@ -712,11 +724,11 @@ class DownloadController(object):
             # 生成的中间文件名
             wallpaper_cache_name = name + "_cache." + suffix
             # 带上路径
-            wallpaper_cache = os.path.join(wallpaper_cache_path, wallpaper_cache_name)
+            wallpaper_cache_path = os.path.join(wallpaper_cache_dir, wallpaper_cache_name)
 
             # 清理之前的记录
             try:
-                os.remove(wallpaper_cache)
+                os.remove(wallpaper_cache_path)
             except Exception as err:
                 pass
 
@@ -725,24 +737,35 @@ class DownloadController(object):
             except Exception as err:
                 pass
 
-            if param["end_time"] != '0' and param["format"][ind] == "mjpeg":
-                middle_cmd = cmd_time % (param["src_path"][ind],
-                                         param["start_time"], param["end_time"],
-                                         wallpaper_cache)
-                print(middle_cmd)
-                os.system(middle_cmd)
-            else:
-                # 未设置缩放
-                wallpaper_cache = param["src_path"][ind]
+            if param["format"][ind] == "mjpeg":
+                if param["end_time"] != '0':
+                    middle_cmd = cmd_time % (param["src_path"][ind],
+                                            param["start_time"], param["end_time"],
+                                            wallpaper_cache_path)
+                    print(middle_cmd)
+                    os.system(middle_cmd)
+                else:
+                    # 未剪切时间
+                    wallpaper_cache_path = param["src_path"][ind]
 
-            # 最终输出的文件
-            trans_cmd = cmd_to_mjpeg
-            # 最后的转换命令
-            out_cmd = trans_cmd % (wallpaper_cache, param["fps"], param["height"],
-                                   param["width"], param["width"], param["quality"][ind],
-                                   param["dst_path"][ind])
-            print(out_cmd)
-            os.system(out_cmd)
+                    # 最终输出的文件
+                    trans_cmd = cmd_to_mjpeg
+                    # 最后的转换命令
+                    out_cmd = trans_cmd % (wallpaper_cache_path, param["fps"], param["height"],
+                                        param["width"], param["width"], param["quality"][ind],
+                                        param["dst_path"][ind])
+                    print(out_cmd)
+                    os.system(out_cmd)
+            elif param["format"][ind] in IMAGE_FORMAT:
+                wallpaper_cache_path = param["src_path"][ind]
+                src_im: Image.Image = Image.open(wallpaper_cache_path)
+                if suffix == "png" or  suffix == "PNG": 
+                    # 由于PNG是RGBA四个通道 而jpg只有RGB三个通道
+                    src_im = src_im.convert('RGB')
+                new_im = src_im.resize((int(param["width"]), int(param["height"])))
+                new_im.save(param["dst_path"][ind])  # , format='JPEG', quality=95
+
+
             try:
                 if os.path.getsize(param["dst_path"][ind]) == 0:
                     self.print_log((COLOR_RED % "生成文件失败：") + param["src_path"][ind])
@@ -775,18 +798,18 @@ class DownloadController(object):
             name_suffix = os.path.basename(fileName).split(".")
             if name_suffix[1] in MOVIE_FORMAT:
                 outFileNames.append(
-                    os.path.join(wallpaper_cache_path,
+                    os.path.join(wallpaper_cache_dir,
                                  name_suffix[0] + "_" + resolutionW + "x" + resolutionH + ".mjpeg"))
                 formats.append("mjpeg")
                 qualitys.append(self.form.qualityComboBox.currentText().strip())
             elif name_suffix[1] in IMAGE_FORMAT:
                 outFileNames.append(
-                    os.path.join(wallpaper_cache_path, name_suffix[0] + "_" + resolutionW + "x" + resolutionH + ".jpg"))
-                formats.append("jpg")
+                    os.path.join(wallpaper_cache_dir, name_suffix[0] + "_" + resolutionW + "x" + resolutionH + ".jpeg"))
+                formats.append("jpeg")
                 qualitys.append("10")
             elif name_suffix[1] == "bin":
                 outFileNames.append(
-                    os.path.join(wallpaper_cache_path, name_suffix[0] + "_" + resolutionW + "x" + resolutionH + ".bin"))
+                    os.path.join(wallpaper_cache_dir, name_suffix[0] + "_" + resolutionW + "x" + resolutionH + ".bin"))
                 formats.append("bin")
                 qualitys.append("10")
 
@@ -832,6 +855,11 @@ class DownloadController(object):
         # esptool.py erase_flash
         cmd = ['--port', select_com, 'erase_region', wallpaperAddrInFlash, '0x200000']
         esptool.main(cmd)
+        try:
+            esptool.main(cmd[1:])
+        except Exception as e:
+            self.print_log(COLOR_RED % "错误：通讯异常。")
+            pass
 
         
         cmd = ['SnailHeater_TOOL.py', '--port', select_com,
@@ -839,7 +867,12 @@ class DownloadController(object):
                'write_flash',
                wallpaperAddrInFlash, default_wallpaper_clean
                ]
-        esptool.main(cmd[1:])
+        try:
+            esptool.main(cmd[1:])
+            self.print_log("成功清空壁纸.")
+        except Exception as e:
+            self.print_log(COLOR_RED % "错误：通讯异常。")
+            pass
 
         self.print_log("成功清空壁纸.")
 

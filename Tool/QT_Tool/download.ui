@@ -617,7 +617,7 @@
      <rect>
       <x>72</x>
       <y>68</y>
-      <width>155</width>
+      <width>131</width>
       <height>25</height>
      </rect>
     </property>
@@ -755,7 +755,7 @@
    <widget class="QLineEdit" name="fpsEdit">
     <property name="geometry">
      <rect>
-      <x>304</x>
+      <x>305</x>
       <y>108</y>
       <width>35</width>
       <height>25</height>
@@ -765,9 +765,9 @@
    <widget class="QLabel" name="qualitylabel">
     <property name="geometry">
      <rect>
-      <x>260</x>
+      <x>234</x>
       <y>66</y>
-      <width>37</width>
+      <width>63</width>
       <height>31</height>
      </rect>
     </property>
@@ -778,7 +778,7 @@
      </font>
     </property>
     <property name="text">
-     <string>质量</string>
+     <string>视频质量</string>
     </property>
     <property name="textFormat">
      <enum>Qt::AutoText</enum>
@@ -787,7 +787,7 @@
    <widget class="QComboBox" name="qualityComboBox">
     <property name="geometry">
      <rect>
-      <x>300</x>
+      <x>305</x>
       <y>68</y>
       <width>39</width>
       <height>25</height>
