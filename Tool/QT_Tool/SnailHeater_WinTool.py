@@ -303,6 +303,7 @@ class DownloadController(object):
         按下 刷机 按键后触发的检查、刷机操作
         :return: None
         """
+        global default_wallpaper
         self.print_log("准备更新固件...")
         self.form.UpdateModeMethodRadioButton.setEnabled(False)
         self.form.ClearModeMethodRadioButton.setEnabled(False)
@@ -339,10 +340,13 @@ class DownloadController(object):
 
         if "③" in firmware_path:
             default_wallpaper = default_wallpaper_320
-        else:
+        elif "①" in firmware_path or "②" in firmware_path :
             default_wallpaper = default_wallpaper_280
+        else:
+            default_wallpaper = default_wallpaper_clean
 
-        print(default_wallpaper)
+        if not os.path.exists(default_wallpaper):
+            default_wallpaper = default_wallpaper_clean
 
         if os.path.exists(default_wallpaper):
             all_time = all_time + os.path.getsize(default_wallpaper) * 10 / BAUD_RATE + 2
@@ -352,7 +356,7 @@ class DownloadController(object):
         # 进度条进程要在下载进程之前启动（为了在下载失败时可以立即查杀进度条进程）
         self.download_thread = threading.Thread(target=self.down_action,
                                                 args=(mode, select_com, firmware_path))
-        self.progress_bar_timer.start(all_time / 0.1)
+        self.progress_bar_timer.start(int(all_time / 0.1))
 
         self.download_thread.setDaemon(True)  # 设置守护线程目的尽量防止意外中断掉主线程程序
         self.download_thread.start()
@@ -365,6 +369,7 @@ class DownloadController(object):
         :param firmware_path:固件文件路径
         :return:None
         """
+        global default_wallpaper
         try:
             if self.ser != None:
                 return
@@ -385,29 +390,18 @@ class DownloadController(object):
                     pass
 
             #  --port COM7 --baud 921600 write_flash -fm dio -fs 4MB 0x1000 bootloader_dio_40m.bin 0x00008000 partitions.bin 0x0000e000 boot_app0.bin 0x00010000
-            cmd = None
-
-            if os.path.exists(default_wallpaper):
-                cmd = ['SnailHeater_TOOL.py', '--port', select_com,
-                       '--baud', str(BAUD_RATE),
-                       'write_flash',
-                       '0x00001000', "bootloader.bin",
-                       '0x00008000', "partitions.bin",
-                       '0x0000e000', "boot_app0.bin",
-                       # '0x002d0000', "tinyuf2.bin",
-                       '0x00010000', firmware_path,
-                       wallpaperAddrInFlash, default_wallpaper
-                       ]
-            else:
-                cmd = ['SnailHeater_TOOL.py', '--port', select_com,
-                       '--baud', str(BAUD_RATE),
-                       'write_flash',
-                       '0x00001000', "bootloader.bin",
-                       '0x00008000', "partitions.bin",
-                       '0x0000e000', "boot_app0.bin",
-                       '0x002d0000', "tinyuf2.bin",
-                       '0x00010000', firmware_path
-                       ]
+            cmd = ['SnailHeater_TOOL.py', '--port', select_com,
+                    '--baud', str(BAUD_RATE),
+                    'write_flash',
+                    '0x00001000', "bootloader.bin",
+                    '0x00008000', "partitions.bin",
+                    '0x0000e000', "boot_app0.bin",
+                    # '0x002d0000', "tinyuf2.bin",
+                    '0x00010000', firmware_path,
+                    wallpaperAddrInFlash, default_wallpaper
+                    ]
+            
+            # self.print_log("cmd = "+ str(cmd))
 
             self.print_log("开始刷写固件...")
             try:
@@ -619,6 +613,7 @@ class DownloadController(object):
                 self.form.WriteWallpaperButton.setEnabled(True)
                 return False
 
+
         # 50为预留值
         rate = int(os.path.getsize(wallpaper_name) / (2097152 - 50) * 100)
         self.print_log((COLOR_RED % "本次壁纸占用全容量的 ") + str(rate) + "%")
@@ -671,9 +666,9 @@ class DownloadController(object):
             dataLen.append(fileSize)  # 壁纸数据长度
             dataAddrOffset += fileSize
 
-        print(wallpaper_name)
         self.print_log("数据长度->" + str(dataLen))
         try:
+            print(wallpaper_name)
             os.remove(wallpaper_name)
         except Exception as err:
             pass
@@ -809,7 +804,7 @@ class DownloadController(object):
                 qualitys.append("10")
             elif name_suffix[1] == "bin":
                 outFileNames.append(
-                    os.path.join(wallpaper_cache_dir, name_suffix[0] + "_" + resolutionW + "x" + resolutionH + ".bin"))
+                    os.path.join(wallpaper_cache_dir, wallpaper_name))
                 formats.append("bin")
                 qualitys.append("10")
 
