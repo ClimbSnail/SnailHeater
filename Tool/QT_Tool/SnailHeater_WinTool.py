@@ -140,7 +140,7 @@ class DownloadController(object):
         self.form.resolutionComboBox.addItems(["280x240 (一、二车)", "320x240 (三车)"])
         self.form.qualityComboBox.addItems([str(num) for num in range(1, 20)])
         self.form.qualityComboBox.setCurrentText("5");
-        self.form.fpsEdit.setText("20")
+        self.form.fpsEdit.setText("12")
         self.form.startTimeEdit.setText("0")
         self.form.endTimeEdit.setText("0")
         # self.form.autoScaleBox.setChecked(True)
@@ -701,7 +701,9 @@ class DownloadController(object):
             return False
 
         cmd_resize = 'ffmpeg -i "%s" -vf "scale=-1:%s:flags=lanczos" "%s"'  # 缩放转化
-        cmd_time = 'ffmpeg -i "%s" -ss %s -to %s "%s"'  # 时间片截取 -c copy
+        #  -c:v libx264 -crf 18
+        #  -c copy
+        cmd_time = 'ffmpeg -ss %s -to %s -i "%s" -c:v copy "%s"'  # 时间片截取 -i一定要放在时间参数后
 
         # cmd_to_rgb 的倒数第二个参数其实没什么作用，因为rgb本身就是实际的像素点
         cmd_to_rgb = 'ffmpeg -i "%s" -vf "fps=%s,scale=-1:%s:flags=lanczos,crop=%s:in_h:(in_w-%s)/2:0" -c:v rawvideo -pix_fmt rgb565be -q:v %s "%s"'
@@ -734,8 +736,9 @@ class DownloadController(object):
 
             if param["format"][ind] == "mjpeg":
                 if param["end_time"] != '0':
-                    middle_cmd = cmd_time % (param["src_path"][ind],
+                    middle_cmd = cmd_time % (
                                             param["start_time"], param["end_time"],
+                                            param["src_path"][ind],
                                             wallpaper_cache_path)
                     print(middle_cmd)
                     os.system(middle_cmd)
@@ -743,14 +746,14 @@ class DownloadController(object):
                     # 未剪切时间
                     wallpaper_cache_path = param["src_path"][ind]
 
-                    # 最终输出的文件
-                    trans_cmd = cmd_to_mjpeg
-                    # 最后的转换命令
-                    out_cmd = trans_cmd % (wallpaper_cache_path, param["fps"], param["height"],
-                                        param["width"], param["width"], param["quality"][ind],
-                                        param["dst_path"][ind])
-                    print(out_cmd)
-                    os.system(out_cmd)
+                # 最终输出的文件
+                trans_cmd = cmd_to_mjpeg
+                # 最后的转换命令
+                out_cmd = trans_cmd % (wallpaper_cache_path, param["fps"], param["height"],
+                                    param["width"], param["width"], param["quality"][ind],
+                                    param["dst_path"][ind])
+                print(out_cmd)
+                os.system(out_cmd)
             elif param["format"][ind] in IMAGE_FORMAT:
                 wallpaper_cache_path = param["src_path"][ind]
                 src_im: Image.Image = Image.open(wallpaper_cache_path)
