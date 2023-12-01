@@ -50,16 +50,16 @@ INFO_BAUD_RATE = 115200
 
 cur_dir = os.getcwd()  # 当前目录
 # 默认壁纸
-default_wallpaper_280 = os.path.join(cur_dir, "Wallpaper_280x240.bin")
-default_wallpaper_320 = os.path.join(cur_dir, "Wallpaper_320x240.bin")
-default_wallpaper_clean = os.path.join(cur_dir, "WallpaperClean.bin")
+default_wallpaper_280 = os.path.join(cur_dir, "./base_data/Wallpaper_280x240.lsw")
+default_wallpaper_320 = os.path.join(cur_dir, "./base_data/Wallpaper_320x240.lsw")
+default_wallpaper_clean = os.path.join(cur_dir, "./base_data/WallpaperClean.lsw")
 default_wallpaper = default_wallpaper_280
 # 文件缓存目录
 wallpaper_cache_dir = os.path.join(cur_dir, "Wallpaper", "Cache")
 # 文件生存目录
 wallpaper_path = os.path.join(cur_dir, "Wallpaper")
 # 壁纸文件
-wallpaper_name = os.path.join(wallpaper_path, "Wallpaper.bin")
+wallpaper_name = os.path.join(wallpaper_path, "Wallpaper.lsw")
 wallpaperAddrInFlash = '0x00200000'
 TYPE_JPG = 0
 TYPE_MJPEG = 1
@@ -325,19 +325,6 @@ class DownloadController(object):
         self.print_log("固件文件：" + (COLOR_RED % firmware_path))
         self.print_log("刷机模式：" + (COLOR_RED % mode))
 
-        all_time = 0  # 粗略认为连接并复位芯片需要0.5s钟
-        if mode == "清空式":
-            all_time += 24
-        else:
-            all_time += 5
-        file_list = ["./boot_app0.bin",
-                     "./bootloader.bin",
-                     "./partitions.bin",
-                     "./tinyuf2.bin",
-                     firmware_path]
-        for filepath in file_list:
-            all_time = all_time + os.path.getsize(filepath) * 10 / BAUD_RATE
-
         if "③" in firmware_path:
             default_wallpaper = default_wallpaper_320
         elif "①" in firmware_path or "②" in firmware_path :
@@ -347,6 +334,20 @@ class DownloadController(object):
 
         if not os.path.exists(default_wallpaper):
             default_wallpaper = default_wallpaper_clean
+
+        all_time = 0  # 粗略认为连接并复位芯片需要0.5s钟
+        if mode == "清空式":
+            all_time += 24
+        else:
+            all_time += 5
+        file_list = ["./base_data/boot_app0.bin",
+                     "./base_data/bootloader.bin",
+                     "./base_data/partitions.bin",
+                    #  "./base_data/tinyuf2.bin",
+                     firmware_path,
+                     default_wallpaper]
+        for filepath in file_list:
+            all_time = all_time + os.path.getsize(filepath) * 10 / BAUD_RATE
 
         if os.path.exists(default_wallpaper):
             all_time = all_time + os.path.getsize(default_wallpaper) * 10 / BAUD_RATE + 2
@@ -393,10 +394,10 @@ class DownloadController(object):
             cmd = ['SnailHeater_TOOL.py', '--port', select_com,
                     '--baud', str(BAUD_RATE),
                     'write_flash',
-                    '0x00001000', "bootloader.bin",
-                    '0x00008000', "partitions.bin",
-                    '0x0000e000', "boot_app0.bin",
-                    # '0x002d0000', "tinyuf2.bin",
+                    '0x00001000', "./base_data/bootloader.bin",
+                    '0x00008000', "./base_data/partitions.bin",
+                    '0x0000e000', "./base_data/boot_app0.bin",
+                    # '0x002d0000', "./base_data/tinyuf2.bin",
                     '0x00010000', firmware_path,
                     wallpaperAddrInFlash, default_wallpaper
                     ]
@@ -573,7 +574,7 @@ class DownloadController(object):
         打开资源管理器 选择文件
         '''
         fileNames, fileType = QFileDialog.getOpenFileNames(None, '可选择多个素材文件', os.getcwd(),
-                                                           '视频文件(*.mp4 *.MP4 *.avi *.AVI *.mov *.MOV *.gif *.GIF, *.jpg *.png *.jpeg *.bin);;所有文件(*)')
+                                                           '视频文件(*.mp4 *.MP4 *.avi *.AVI *.mov *.MOV *.gif *.GIF, *.jpg *.png *.jpeg *.lsw);;所有文件(*)')
         self.print_log((COLOR_RED % "已选择以下素材：\n") + str(fileNames))
 
         path_text = ""
@@ -601,7 +602,7 @@ class DownloadController(object):
             self.print_log((COLOR_RED % "请检查参数设置"))
             self.form.WriteWallpaperButton.setEnabled(True)
             return False
-        if param["format"][0] == "bin":
+        if param["format"][0] == "lsw":
             self.print_log((COLOR_RED % "正在使用已打包好的壁纸文件"))
             shutil.copy(param["src_path"][0], wallpaper_name)
         else:
@@ -628,7 +629,7 @@ class DownloadController(object):
                wallpaperAddrInFlash, wallpaper_name
                ]
 
-        self.print_log("正在烧入壁纸数据到主机，请等待......")
+        self.print_log("正在烧入壁纸数据到主机，请等待（35s）......")
         try:
             esptool.main(cmd[1:])
             self.print_log("成功烧入壁纸数据到主机")
@@ -687,7 +688,7 @@ class DownloadController(object):
                     binaryData = binaryData + f.read()
             fbin.write(binaryData)
 
-        self.print_log("壁纸文件生成成功")
+        self.print_log("壁纸文件生成成功：" + wallpaper_name)
         return wallpaper_name
 
     def trans_format(self):
@@ -760,7 +761,7 @@ class DownloadController(object):
                 if suffix == "png" or  suffix == "PNG": 
                     # 由于PNG是RGBA四个通道 而jpg只有RGB三个通道
                     src_im = src_im.convert('RGB')
-                new_im = src_im.resize((int(param["width"]), int(param["height"])))
+                new_im = src_im.resize((int(param["width"]), int(param["height"])), Image.BICUBIC)
                 new_im.save(param["dst_path"][ind])  # , format='JPEG', quality=95
 
 
@@ -805,10 +806,10 @@ class DownloadController(object):
                     os.path.join(wallpaper_cache_dir, name_suffix[0] + "_" + resolutionW + "x" + resolutionH + ".jpeg"))
                 formats.append("jpeg")
                 qualitys.append("10")
-            elif name_suffix[1] == "bin":
+            elif name_suffix[1] == "lsw":
                 outFileNames.append(
                     os.path.join(wallpaper_cache_dir, wallpaper_name))
-                formats.append("bin")
+                formats.append("lsw")
                 qualitys.append("10")
 
 
@@ -851,15 +852,14 @@ class DownloadController(object):
         self.print_log("正在清空壁纸...")
         # esptool.py erase_region 0x20000 0x4000
         # esptool.py erase_flash
-        cmd = ['--port', select_com, 'erase_region', wallpaperAddrInFlash, '0x200000']
-        esptool.main(cmd)
+        cmd = ['SnailHeater_TOOL.py', '--port', select_com, 
+               'erase_region', wallpaperAddrInFlash, '0x200000']
         try:
             esptool.main(cmd[1:])
         except Exception as e:
             self.print_log(COLOR_RED % "错误：通讯异常。")
             pass
 
-        
         cmd = ['SnailHeater_TOOL.py', '--port', select_com,
                '--baud', str(BAUD_RATE),
                'write_flash',
@@ -871,8 +871,6 @@ class DownloadController(object):
         except Exception as e:
             self.print_log(COLOR_RED % "错误：通讯异常。")
             pass
-
-        self.print_log("成功清空壁纸.")
 
     def print_log(self, info):
         self.form.LogInfoTextBrowser.append(info + '\n')
