@@ -423,17 +423,18 @@ class DownloadController(object):
             self.print_log(COLOR_RED % "未释放资源，请15s后再试。如无法触发下载，拔插type-c接口再试。")
             print(err)
 
-        if SH_SN != None:
-            # 自动激活
-            time.sleep(22)
-            self.print_log("获取机器码（用户识别码）...")
-            machine_code = self.get_machine_code()
-            self.form.UICLineEdit.setText(machine_code)
+        # global SH_SN
+        # if SH_SN != None:
+        #     # 自动激活
+        #     time.sleep(22)
+        #     self.print_log("获取机器码（用户识别码）...")
+        #     machine_code = self.get_machine_code()
+        #     self.form.UICLineEdit.setText(machine_code)
 
-            ecdata = SH_SN.getSnForMachineCode(machine_code)
-            self.print_log("\n生成的序列号为: " + ecdata)
-            self.form.SNLineEdit.setText(ecdata)
-            self.act_button_click()
+        #     ecdata = SH_SN.getSnForMachineCode(machine_code)
+        #     self.print_log("\n生成的序列号为: " + ecdata)
+        #     self.form.SNLineEdit.setText(ecdata)
+        #     self.act_button_click()
 
         self.progress_bar_time_cnt = 0  # 复位进度条
 
