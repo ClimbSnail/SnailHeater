@@ -75,6 +75,8 @@ search_sn_url = cfg["search_sn_url"] \
     if "search_sn_url" in cfg.keys() else None
 activate_sn_url = cfg["activate_sn_url"] \
     if "activate_sn_url" in cfg.keys() else None
+get_firmware_new_ver_url = cfg["get_firmware_new_ver_url"] \
+    if "get_firmware_new_ver_url" in cfg.keys() else None
 
 cfg_fp.close()
 
@@ -112,12 +114,14 @@ class DownloadController(object):
         self.form.ComComboBox.clicked.connect(self.scan_com)  # 信号与槽函数的绑定
         self.form.FirmwareComboBox.clicked.connect(self.scan_firmware)
         self.form.QueryPushButton.clicked.connect(self.query_button_click)
-        self.form.WriteWallpaperButton.clicked.connect(self.writeWallpaper)
-        self.form.reflushWallpaperButton.clicked.connect(self.cleanWallpaper)
         self.form.chooseWPButton.clicked.connect(self.chooseFile)
         self.form.ActivatePushButton.clicked.connect(self.act_button_click)
         # self.form.UpdatePushButton.clicked.connect(self.update_button_click)
-        self.form.UpdatePushButton.clicked.connect(self.show_message)
+        self.form.UpdatePushButton.clicked.connect(self.UpdatePushButton_show_message)
+        # self.form.WriteWallpaperButton.clicked.connect(self.writeWallpaper)
+        self.form.WriteWallpaperButton.clicked.connect(self.WriteWallpaperButton_show_message)
+        # self.form.reflushWallpaperButton.clicked.connect(self.cleanWallpaper)
+        self.form.reflushWallpaperButton.clicked.connect(self.reflushWallpaperButton_show_message)
         self.form.CanclePushButton.clicked.connect(self.cancle_button_click)
 
         # 设置提示信息
@@ -128,6 +132,9 @@ class DownloadController(object):
         # self.form.autoScaleBox.setToolTip("自适应长宽。若未勾选则以指定长宽比截取中心区域")
         self.form.chooseWPButton.setToolTip("选择素材文件的路径（可选多项）")
         self.form.WriteWallpaperButton.setToolTip("将选择好的素材转换并刷写到焊台上")
+        self.form.PictureModeRadioButton_0.setToolTip("保持指定的分辨率比例，在中心区域最大面积裁剪")
+        self.form.PictureModeRadioButton_1.setToolTip("全图范围内适配最佳比例缩放，使每个区域都会保存")
+
         self.form.reflushWallpaperButton.setToolTip("清除焊台上的壁纸信息")
         self.form.timeLabel_0.setToolTip("只允许填写正整数。全量截取请设置\"0 0\"")
         self.form.qualitylabel.setToolTip("数字越小，质量最高")
@@ -143,6 +150,7 @@ class DownloadController(object):
         self.form.fpsEdit.setText("12")
         self.form.startTimeEdit.setText("0")
         self.form.endTimeEdit.setText("0")
+        self.form.VerInfolabel.setStyleSheet('color: red')
         # self.form.autoScaleBox.setChecked(True)
 
         #
@@ -175,6 +183,7 @@ class DownloadController(object):
         """
         搜索固件
         """
+        ver = self.get_firmware_version()
         self.print_log("搜索同目录下的可用固件...")
         self.form.FirmwareComboBox.clear()
         # 列出文件夹下所有的目录与文件
@@ -327,7 +336,7 @@ class DownloadController(object):
 
         if "③" in firmware_path:
             default_wallpaper = default_wallpaper_320
-        elif "①" in firmware_path or "②" in firmware_path :
+        elif "①" in firmware_path or "②" in firmware_path:
             default_wallpaper = default_wallpaper_280
         else:
             default_wallpaper = default_wallpaper_clean
@@ -343,7 +352,7 @@ class DownloadController(object):
         file_list = ["./base_data/boot_app0.bin",
                      "./base_data/bootloader.bin",
                      "./base_data/partitions.bin",
-                    #  "./base_data/tinyuf2.bin",
+                     #  "./base_data/tinyuf2.bin",
                      firmware_path,
                      default_wallpaper]
         for filepath in file_list:
@@ -392,16 +401,16 @@ class DownloadController(object):
 
             #  --port COM7 --baud 921600 write_flash -fm dio -fs 4MB 0x1000 bootloader_dio_40m.bin 0x00008000 partitions.bin 0x0000e000 boot_app0.bin 0x00010000
             cmd = ['SnailHeater_TOOL.py', '--port', select_com,
-                    '--baud', str(BAUD_RATE),
-                    'write_flash',
-                    '0x00001000', "./base_data/bootloader.bin",
-                    '0x00008000', "./base_data/partitions.bin",
-                    '0x0000e000', "./base_data/boot_app0.bin",
-                    # '0x002d0000', "./base_data/tinyuf2.bin",
-                    '0x00010000', firmware_path,
-                    wallpaperAddrInFlash, default_wallpaper
-                    ]
-            
+                   '--baud', str(BAUD_RATE),
+                   'write_flash',
+                   '0x00001000', "./base_data/bootloader.bin",
+                   '0x00008000', "./base_data/partitions.bin",
+                   '0x0000e000', "./base_data/boot_app0.bin",
+                   # '0x002d0000', "./base_data/tinyuf2.bin",
+                   '0x00010000', firmware_path,
+                   wallpaperAddrInFlash, default_wallpaper
+                   ]
+
             # self.print_log("cmd = "+ str(cmd))
 
             self.print_log("开始刷写固件...")
@@ -468,6 +477,29 @@ class DownloadController(object):
         self.form.UpdatePushButton.setEnabled(True)
         self.form.UpdateModeMethodRadioButton.setEnabled(True)
         self.form.ClearModeMethodRadioButton.setEnabled(True)
+
+    def get_firmware_version(self):
+        """
+        获取最新版
+        """
+        global get_firmware_new_ver_url
+        new_ver = None
+        try:
+            self.print_log("联网查询最新固件版本...")
+            response = requests.get(get_firmware_new_ver_url, timeout=3)  # , verify=False
+            # sn = re.findall(r'\d+', response.text)
+            if 'SnailHeater_v' in response.text.strip() or 'SH_SW_v' in response.text.strip():
+                new_ver = response.text.strip()
+                self.form.VerInfolabel.setText("最新固件版本 " + str(new_ver))
+                self.print_log("最新固件版本 " + (COLOR_RED % str(new_ver)))
+            else:
+                self.print_log((COLOR_RED % "最新固件版本查询异常"))
+
+        except Exception as err:
+            print(str(traceback.format_exc()))
+            self.print_log((COLOR_RED % "联网异常"))
+        
+        return new_ver
 
     def get_machine_code(self):
         '''
@@ -615,7 +647,6 @@ class DownloadController(object):
                 self.form.WriteWallpaperButton.setEnabled(True)
                 return False
 
-
         # 50为预留值
         rate = int(os.path.getsize(wallpaper_name) / (2097152 - 50) * 100)
         self.print_log((COLOR_RED % "本次壁纸占用全容量的 ") + str(rate) + "%")
@@ -739,9 +770,9 @@ class DownloadController(object):
             if param["format"][ind] == "mjpeg":
                 if param["end_time"] != '0':
                     middle_cmd = cmd_time % (
-                                            param["start_time"], param["end_time"],
-                                            param["src_path"][ind],
-                                            wallpaper_cache_path)
+                        param["start_time"], param["end_time"],
+                        param["src_path"][ind],
+                        wallpaper_cache_path)
                     print(middle_cmd)
                     os.system(middle_cmd)
                 else:
@@ -752,19 +783,28 @@ class DownloadController(object):
                 trans_cmd = cmd_to_mjpeg
                 # 最后的转换命令
                 out_cmd = trans_cmd % (wallpaper_cache_path, param["fps"], param["height"],
-                                    param["width"], param["width"], param["quality"][ind],
-                                    param["dst_path"][ind])
+                                       param["width"], param["width"], param["quality"][ind],
+                                       param["dst_path"][ind])
                 print(out_cmd)
                 os.system(out_cmd)
             elif param["format"][ind] in IMAGE_FORMAT:
                 wallpaper_cache_path = param["src_path"][ind]
                 src_im: Image.Image = Image.open(wallpaper_cache_path)
-                if suffix == "png" or  suffix == "PNG": 
+                
+                mode = "保持比例裁剪" if self.form.PictureModeRadioButton_0.isChecked() else "全尺寸缩放"
+                if mode == "保持比例裁剪":
+                    # 裁剪
+                    new_width = src_im.size[1] * (int(param["width"]) / int(param["height"]))
+                    # self.print_log((COLOR_RED % "宽高") + str(src_im.size[0]) + " " + str(src_im.size[1]))
+                    # self.print_log((COLOR_RED % "新的宽") + str(new_width) + " " + str(src_im.size[1]))
+                    rect = ((src_im.size[0] - new_width) / 2, 0, new_width, src_im.size[1])
+                    src_im = src_im.crop(rect)
+                if suffix == "png" or suffix == "PNG":
                     # 由于PNG是RGBA四个通道 而jpg只有RGB三个通道
                     src_im = src_im.convert('RGB')
+                # 缩放
                 new_im = src_im.resize((int(param["width"]), int(param["height"])), Image.BICUBIC)
                 new_im.save(param["dst_path"][ind])  # , format='JPEG', quality=95
-
 
             try:
                 if os.path.getsize(param["dst_path"][ind]) == 0:
@@ -813,7 +853,6 @@ class DownloadController(object):
                 formats.append("lsw")
                 qualitys.append("10")
 
-
         print(fileNames)
         print(outFileNames)
 
@@ -853,7 +892,7 @@ class DownloadController(object):
         self.print_log("正在清空壁纸...")
         # esptool.py erase_region 0x20000 0x4000
         # esptool.py erase_flash
-        cmd = ['SnailHeater_TOOL.py', '--port', select_com, 
+        cmd = ['SnailHeater_TOOL.py', '--port', select_com,
                'erase_region', wallpaperAddrInFlash, '0x200000']
         try:
             esptool.main(cmd[1:])
@@ -914,7 +953,7 @@ class DownloadController(object):
             self.progress_bar_time_cnt += 1
         self.form.progressBar.setValue(self.progress_bar_time_cnt)
 
-    def show_message(self):
+    def UpdatePushButton_show_message(self):
         """
         警告拔掉AC220V消息框
         :return: None
@@ -934,6 +973,40 @@ class DownloadController(object):
         # 设置消息框中内容前面的图标
         self.mbox.setIcon(2)
         do.clicked.connect(self.update_button_click)
+        self.mbox.show()
+
+    def WriteWallpaperButton_show_message(self):
+        """
+        警告拔掉AC220V消息框
+        :return: None
+        """
+
+        # 创建自定义消息框
+        self.mbox = QMessageBox(QMessageBox.Warning, "重要提示",
+                                COLOR_RED % "管理壁纸前一定要拔掉220V电源线！")
+        # 添加自定义按钮
+        do = self.mbox.addButton('确定', QMessageBox.YesRole)
+        cancle = self.mbox.addButton('取消', QMessageBox.NoRole)
+        # 设置消息框中内容前面的图标
+        self.mbox.setIcon(2)
+        do.clicked.connect(self.writeWallpaper)
+        self.mbox.show()
+
+    def reflushWallpaperButton_show_message(self):
+        """
+        警告拔掉AC220V消息框
+        :return: None
+        """
+
+        # 创建自定义消息框
+        self.mbox = QMessageBox(QMessageBox.Warning, "重要提示",
+                                COLOR_RED % "管理壁纸前一定要拔掉220V电源线！")
+        # 添加自定义按钮
+        do = self.mbox.addButton('确定', QMessageBox.YesRole)
+        cancle = self.mbox.addButton('取消', QMessageBox.NoRole)
+        # 设置消息框中内容前面的图标
+        self.mbox.setIcon(2)
+        do.clicked.connect(self.cleanWallpaper)
         self.mbox.show()
 
 
