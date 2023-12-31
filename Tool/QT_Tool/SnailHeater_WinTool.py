@@ -683,12 +683,13 @@ class DownloadController(object):
             return None
 
         wallpapers = param["dst_path"]
-        total = len(wallpapers)  # 壁纸总数（1字节）
+        total = 0  # 壁纸总数（1字节）
         type = []  # 壁纸类型（1字节）jpg图片0 mjpeg视频1
         startAddr = []  # 4字节
         dataLen = []  # 4字节
+        isLegal = []  # 处理过程中的标志位
         dataAddrOffset = 256  # 标记当前的数据可存地址
-        for ind in range(total):
+        for ind in range(len(wallpapers)):
             suffix = os.path.basename(wallpapers[ind]).split(".")[-1]
             if suffix == "mjpeg":
                 type.append(TYPE_MJPEG)
@@ -697,9 +698,17 @@ class DownloadController(object):
             startAddr.append(dataAddrOffset)
             fileSize = os.path.getsize(wallpapers[ind])
             dataLen.append(fileSize)  # 壁纸数据长度
-            dataAddrOffset += fileSize
+            if fileSize >= 20000:
+                # 超出最大长度
+                isLegal.append(False)
+                self.print_log(COLOR_RED % ("此图片文件过大（已被忽略）：" + param["src_path"][ind]))
+            else:
+                isLegal.append(True)
+                dataAddrOffset += fileSize
+                total += 1
 
         self.print_log("数据长度->" + str(dataLen))
+        self.print_log("即将刷入%s张壁纸文件" % str(total))
         try:
             print(wallpaper_name)
             os.remove(wallpaper_name)
@@ -708,15 +717,19 @@ class DownloadController(object):
 
         with open(wallpaper_name, "wb") as fbin:
             binaryData = b'' + struct.pack('=' + "1B", *[total])
-            for ind in range(total):
+            for ind in range(len(wallpapers)):
+                if isLegal[ind] == False:
+                    continue
                 format = "1B1I1I"
                 byteOrder = '='
                 params = [type[ind], startAddr[ind], dataLen[ind]]
                 binaryData = binaryData + struct.pack(byteOrder + format, *params)
 
             binaryData = binaryData + b'\x00' * (256 - len(binaryData))
-            for wallpaper in wallpapers:
-                with open(wallpaper, "rb") as f:
+            for ind in range(len(wallpapers)):
+                if isLegal[ind] == False:
+                    continue
+                with open(wallpapers[ind], "rb") as f:
                     binaryData = binaryData + f.read()
             fbin.write(binaryData)
 

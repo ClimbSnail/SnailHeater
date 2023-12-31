@@ -51,7 +51,7 @@ if __name__ == "__main__":
         NewFileNameDict = tastInfo["NewFileName"]
         gerberList = tastInfo["GerberList"]
 
-        BaseOutPath = ".\\SnailHeater_Gerber_" + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        BaseOutPath = ".\\New_Gerber_" + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         os.mkdir(BaseOutPath)
         # 解析多个Gerber
         for gerberInfo in gerberList:
