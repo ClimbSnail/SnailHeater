@@ -44,7 +44,7 @@ static void setknobsDir(lv_obj_t *obj, KNOBS_DIR dir)
         dirInd = 1;
     }
     break;
-    defualt:
+    default:
         break;
     }
     lv_dropdown_set_selected(obj, dirInd);
@@ -70,7 +70,7 @@ static void setHwVer(lv_obj_t *obj, VERSION_INFO ver)
         verInd = 2;
     }
     break;
-    defualt:
+    default:
         break;
     }
     lv_dropdown_set_selected(obj, verInd);
@@ -329,7 +329,7 @@ static void ui_hw_ver_pressed(lv_event_t *e)
         //     sysInfoModel.outBoardVersion = VERSION_INFO_OUT_BOARD_V25;
         // }
         // break;
-        // defualt:
+        // default:
         //     break;
         // }
     }

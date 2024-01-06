@@ -23,6 +23,7 @@ extern "C"
     LV_FONT_DECLARE(sh_ch_font_14);
 
     void verification_init(lv_indev_t *indev, const char *userId);
+    void verification_init_1(lv_indev_t *indev, const char *userId);
     void verification_release(void);
 
 #ifdef __cplusplus

@@ -58,7 +58,7 @@ static void setSolderType(lv_obj_t *obj, unsigned char type)
         typeInd = 2;
     }
     break;
-    defualt:
+    default:
         break;
     }
     lv_dropdown_set_selected(obj, typeInd);
@@ -89,7 +89,7 @@ static void setSolderSwitchType(lv_obj_t *obj, unsigned char type)
         typeInd = 3;
     }
     break;
-    defualt:
+    default:
         break;
     }
     lv_dropdown_set_selected(obj, typeInd);

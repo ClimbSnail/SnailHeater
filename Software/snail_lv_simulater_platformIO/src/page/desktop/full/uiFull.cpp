@@ -23,7 +23,7 @@ uint8_t cfgKey1 = 0b10111100;
 lv_style_t back_btn_style;          // 只用在返回按钮上
 lv_style_t back_btn_focused_style;  // 只用在返回按钮上
 lv_style_t black_white_theme_style; // 全局黑白样式
-static lv_obj_t *desktop_screen;
+static lv_obj_t *desktop_screen = NULL;
 static lv_obj_t *ui_PanelMain;
 lv_obj_t *ui_PanelTop;
 lv_obj_t *ui_PanelTopBgImg;
@@ -35,11 +35,29 @@ static lv_obj_t *lockScreenImage = NULL; // 锁屏壁纸
 static int lockScreenImageIndex = 0;     // 锁屏壁纸播放的下标
 #define WALLPAPER_NUM 6
 static int wallpaperSwitchLeaveTime = 0; // 锁屏切换的打点器
-static lv_img_dsc_t wallpaperList[] = {lighthouse, bridge, coast,
-                                       naturalScenery, night_view, sunsetGlow}; // 壁纸列表
+
+uint32_t lastTimeStamp = 0;
+
+// // 壁纸列表
+// #if SH_HARDWARE_VER >= SH_ESP32S2_WROOM_V26
+// static lv_img_dsc_t wallpaperList[] = {lighthouse_320x240, bridge_320x240,
+//                                        coast_320x240, naturalScenery_320x240,
+//                                        nightView_320x240, sunsetGlow_320x240};
+// #else
+// static lv_img_dsc_t wallpaperList[] = {lighthouse_280x240, bridge_280x240,
+//                                        coast_280x240, naturalScenery_280x240,
+//                                        nightView_280x240, sunsetGlow_280x240};
+// #endif
 
 lv_obj_t *ui_backBtn = NULL;
-lv_obj_t *ui_backBtnLabel;
+
+typedef enum
+{
+    MENU_HIDE,
+    MENU_SHOW,
+    MENU_HIDING,
+    MENU_SHOWING,
+} MENU_STATUS_ENUM;
 
 #if USE_MENU_STYLE == 3
 lv_obj_t *arcMenu;
@@ -87,7 +105,7 @@ static lv_group_t *menu_btn_group = NULL;
 
 static FE_UI_OBJ *ui_Page[PAGE_INDEX_MAXSIZE];
 
-static bool is_menu_show = false;
+static MENU_STATUS_ENUM menu_status = MENU_HIDE;
 static lv_anim_t menu_anim;
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////
@@ -99,6 +117,24 @@ static lv_anim_t menu_anim;
 #endif
 
 static void sysInfoTimer_timeout(lv_timer_t *timer);
+
+void ui_setIntellectRateFlag(lv_event_t *e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t *target = lv_event_get_target(e);
+    lv_obj_t *obj = (lv_obj_t *)lv_event_get_user_data(e);
+
+    if (LV_EVENT_PRESSED == event_code || LV_EVENT_DEFOCUSED == event_code)
+    {
+        LV_LOG_USER("ui_setIntellectRateFlag false event_code = %u\n", event_code);
+        sysInfoModel.setIntellectRateFlag(false);
+    }
+    else if (LV_EVENT_FOCUSED == event_code || LV_EVENT_KEY == event_code)
+    {
+        LV_LOG_USER("ui_setIntellectRateFlag true event_code = %u\n", event_code);
+        sysInfoModel.setIntellectRateFlag(true);
+    }
+}
 
 ///////////////////// SCREENS ////////////////////
 // 测试用
@@ -116,18 +152,19 @@ static void set_x_pos(void *menu, int32_t v)
 
 static void set_bg_opa(void *menu, int32_t v)
 {
+#if USE_MENU_STYLE == 3
     lv_obj_set_style_bg_opa(lv_layer_top(), v * 0.8, 0);
     lv_obj_set_style_arc_opa(arcMenu, v, LV_PART_MAIN);
     for (uint8_t i = 0; i < ARC_MENU_NUM; i++)
     {
         lv_obj_set_style_text_opa(arcMenuLabel[i], v, 0);
     }
+#endif
 }
 
 static void set_menu_focus_on(lv_anim_t *a)
 {
 #if USE_MENU_STYLE == 3
-    lv_arcmenu_set_value(arcMenu, currPageIndex);
     lv_indev_set_group(knobs_indev, menu_btn_group);
     lv_group_focus_obj(arcMenu);
     lv_group_set_editing(menu_btn_group, true);
@@ -142,6 +179,8 @@ static void set_menu_focus_on(lv_anim_t *a)
     lv_group_focus_obj(ui_MenuButton[currPageIndex]);
     lv_indev_set_group(knobs_indev, menu_btn_group);
 #endif
+
+    menu_status = MENU_SHOW;
 }
 
 static void set_menu_focus_out(lv_anim_t *a)
@@ -150,19 +189,21 @@ static void set_menu_focus_out(lv_anim_t *a)
     {
         ui_Page[currPageIndex]->selected_event_cb(NULL);
     }
+    menu_status = MENU_HIDE;
 }
 
-void hide_menu()
+void hide_arc_menu()
 {
-    if (is_menu_show)
+    if (MENU_SHOW == menu_status)
     {
-        is_menu_show = false;
+        menu_status = MENU_HIDING;
 #if USE_MENU_STYLE == 3
         lv_anim_del(&menu_anim, set_bg_opa);
         lv_anim_init(&menu_anim);
         lv_anim_set_exec_cb(&menu_anim, set_bg_opa);
         lv_anim_set_values(&menu_anim, 255, 0);
         lv_anim_set_ready_cb(&menu_anim, set_menu_focus_out);
+        lv_anim_set_deleted_cb(&menu_anim, set_menu_focus_out);
         lv_anim_set_repeat_count(&menu_anim, 0);
         lv_anim_set_time(&menu_anim, 300);
         lv_anim_set_var(&menu_anim, arcMenu);
@@ -194,25 +235,36 @@ void hide_menu()
     // memory_print();
 }
 
-void show_menu()
+void show_arc_menu()
 {
-    if (is_menu_show)
+    if (MENU_HIDE == menu_status)
     {
-        return;
-    }
-    else
-    {
-        is_menu_show = true;
+        menu_status = MENU_SHOWING;
+        // 关闭全局加速
+        sysInfoModel.setIntellectRateFlag(false);
+
+        // #ifndef SIMULATOR
+        //         lastTimeStamp = (uint32_t)GET_SYS_MILLIS();
+        //         LV_LOG_USER("show_arc_menu lastTimeStamp = %lu\n",
+        //                     lastTimeStamp);
+        // #endif
+
 #if USE_MENU_STYLE == 3
         lv_anim_del(&menu_anim, set_bg_opa);
         lv_anim_init(&menu_anim);
         lv_anim_set_exec_cb(&menu_anim, set_bg_opa);
         lv_anim_set_values(&menu_anim, 0, 255);
         lv_anim_set_ready_cb(&menu_anim, set_menu_focus_on);
+        lv_anim_set_deleted_cb(&menu_anim, set_menu_focus_on);
         lv_anim_set_repeat_count(&menu_anim, 0);
         lv_anim_set_time(&menu_anim, 300);
         lv_anim_set_var(&menu_anim, arcMenu);
         lv_anim_start(&menu_anim);
+        // if (lastTimeStamp > 99221709767064)
+        // {
+        //     lastTimeStamp = 0;
+        // }
+        // UART_PORT.printf("getState lastTimeStamp = %lu\n", lastTimeStamp);
 #endif
 #if USE_MENU_STYLE == 2
         lv_anim_del(&menu_anim, set_x_pos);
@@ -297,7 +349,7 @@ static void roller_menu_event_handler(lv_event_t *e)
             currPageIndex = index;
             ui_Page[currPageIndex]->ui_init(ui_PanelMain);
         }
-        hide_menu();
+        hide_arc_menu();
     }
 }
 #endif
@@ -310,7 +362,7 @@ static void ui_menu_btn_solder_pressed(lv_event_t *e)
         currPageIndex = PAGE_INDEX_SOLDER;
         ui_Page[currPageIndex]->ui_init(ui_PanelMain);
     }
-    hide_menu();
+    hide_arc_menu();
 }
 
 static void ui_menu_btn_airhot_pressed(lv_event_t *e)
@@ -321,7 +373,7 @@ static void ui_menu_btn_airhot_pressed(lv_event_t *e)
         currPageIndex = PAGE_INDEX_AIR_HOT;
         ui_Page[currPageIndex]->ui_init(ui_PanelMain);
     }
-    hide_menu();
+    hide_arc_menu();
 }
 
 static void ui_menu_btn_heatplat_pressed(lv_event_t *e)
@@ -332,7 +384,7 @@ static void ui_menu_btn_heatplat_pressed(lv_event_t *e)
         currPageIndex = PAGE_INDEX_HEAT_PLAT;
         ui_Page[currPageIndex]->ui_init(ui_PanelMain);
     }
-    hide_menu();
+    hide_arc_menu();
 }
 
 static void ui_menu_btn_adjpower_pressed(lv_event_t *e)
@@ -343,7 +395,7 @@ static void ui_menu_btn_adjpower_pressed(lv_event_t *e)
         currPageIndex = PAGE_INDEX_ADJ_POWER;
         ui_Page[currPageIndex]->ui_init(ui_PanelMain);
     }
-    hide_menu();
+    hide_arc_menu();
 }
 
 static void ui_menu_btn_setting_pressed(lv_event_t *e)
@@ -354,7 +406,7 @@ static void ui_menu_btn_setting_pressed(lv_event_t *e)
         currPageIndex = PAGE_INDEX_SETTING;
         ui_Page[currPageIndex]->ui_init(ui_PanelMain);
     }
-    hide_menu();
+    hide_arc_menu();
 }
 #endif
 
@@ -464,7 +516,7 @@ void top_layer_set_name()
 static void ui_back_btn_pressed(lv_event_t *e)
 {
     // 返回项被按下
-    show_menu();
+    show_arc_menu();
 }
 
 void top_layer_init()
@@ -528,7 +580,7 @@ void top_layer_init()
     lv_obj_add_style(ui_backBtn, &back_btn_style, LV_STATE_DEFAULT);
     lv_obj_add_style(ui_backBtn, &back_btn_focused_style, LV_STATE_FOCUSED);
 
-    ui_backBtnLabel = lv_label_create(ui_backBtn);
+    lv_obj_t *ui_backBtnLabel = lv_label_create(ui_backBtn);
     lv_obj_center(ui_backBtnLabel);
     lv_label_set_text(ui_backBtnLabel, LV_SYMBOL_LEFT);
 
@@ -542,22 +594,47 @@ void top_layer_init()
 static void arc_menu_event_handler(lv_event_t *e)
 {
     lv_event_code_t code = lv_event_get_code(e);
-    if (code == LV_EVENT_KEY)
+
+    if (code == LV_EVENT_KEY
+        // && menu_status == MENU_SHOW
+    )
     {
-        lv_obj_t *obj = lv_event_get_target(e);
-        char c = *((char *)lv_event_get_param(e));
-        if (c == LV_KEY_ENTER)
+        uint16_t index = lv_arcmenu_get_value(arcMenu);
+        // #ifndef SIMULATOR
+        //         // if (
+        //         //     // index != PAGE_INDEX_AIR_HOT ||
+        //         //     GET_SYS_MILLIS() - lastTimeStamp > 300)
+
+        //         if (true)
+        // #endif
+
         {
-            // 退出编辑模式并且隐藏菜单
-            uint16_t index = lv_arcmenu_get_value(arcMenu);
-            if (currPageIndex != index)
+            lv_obj_t *obj = lv_event_get_target(e);
+            char c = *((char *)lv_event_get_param(e));
+            if (c == LV_KEY_ENTER)
             {
-                ui_Page[currPageIndex]->ui_release();
-                currPageIndex = index;
-                ui_Page[currPageIndex]->ui_init(ui_PanelMain);
+                // 退出编辑模式并且隐藏菜单
+                if (currPageIndex != index &&
+                    ui_Page[index] != NULL)
+                {
+                    ui_Page[currPageIndex]->ui_release();
+                    currPageIndex = index;
+                    ui_Page[currPageIndex]->ui_init(ui_PanelMain);
+                }
+                // #ifndef SIMULATOR
+                //                 LV_LOG_USER("if lastTimeStamp = %lu, nowTimeStamp = %lu\n",
+                //                             lastTimeStamp, GET_SYS_MILLIS());
+                // #endif
+                hide_arc_menu();
             }
-            hide_menu();
         }
+        // #ifndef SIMULATOR
+        //         else
+        //         {
+        //             LV_LOG_USER("else lastTimeStamp = %lu, nowTimeStamp = %lu\n",
+        //                         lastTimeStamp, GET_SYS_MILLIS());
+        //         }
+        // #endif
     }
     else if (code == LV_EVENT_VALUE_CHANGED)
     {
@@ -572,57 +649,47 @@ static void arc_menu_event_handler(lv_event_t *e)
         }
     }
 }
+
 void arc_menu_init()
 {
     arcMenu = lv_arcmenu_create(lv_layer_top());
     lv_obj_align(arcMenu, LV_ALIGN_CENTER, 0, 0);
     lv_obj_set_size(arcMenu, ARC_MENU_WIDTH, ARC_MENU_HEIGHT);
-    lv_arcmenu_set_item_num(arcMenu, ARC_MENU_NUM);         // 菜单个数
-    lv_arcmenu_set_rotation(arcMenu, ARC_MENU_BEGIN_ANGLE); // 起始角度
+    lv_arcmenu_set_anim_time(arcMenu, 300);
+    lv_arcmenu_set_max_angle(arcMenu, 360);         // 菜单形状，全圆环，360,半圆180
+    lv_arcmenu_set_item_num(arcMenu, ARC_MENU_NUM); // 菜单个数
+    uint16_t begin_angle = 270 - (180 / ARC_MENU_NUM);
+    lv_arcmenu_set_rotation(arcMenu, begin_angle); // 计算起始角度，保证始终在正上方
+
+    // lv_arcmenu_set_type(arcMenu, LV_ARCMENU_MODE1);
+    // lv_arcmenu_set_item_pointer_index(arcMenu, 2); //选中项是第3项（0起） ,仅用在MODE2
     lv_obj_clear_flag(arcMenu, LV_OBJ_FLAG_CLICKABLE);
-
-    lv_style_init(&menu_arc_style);
-    lv_style_set_arc_color(&menu_arc_style, IS_WHITE_THEME ? WHITE_THEME_ARCMENU_BG_COLOR : BLACK_THEME_ARCMENU_BG_COLOR);
-
     lv_obj_set_style_arc_width(arcMenu, ARC_MENU_ARC_WIDTH, LV_PART_MAIN);
-    lv_obj_set_style_arc_opa(arcMenu, LV_OPA_TRANSP, LV_PART_MAIN); // 这个也关系到选中的OPA
-    lv_obj_add_style(arcMenu, &menu_arc_style, LV_PART_MAIN);
+    lv_obj_set_style_arc_opa(arcMenu, LV_OPA_TRANSP, LV_PART_MAIN);
+    lv_obj_set_style_arc_color(arcMenu, lv_color_hex(0x303030), LV_PART_MAIN);
     lv_obj_set_style_arc_rounded(arcMenu, false, LV_PART_MAIN);
 
-    lv_obj_remove_style(arcMenu, NULL, LV_PART_INDICATOR);
-    lv_obj_set_style_arc_width(arcMenu, ARC_MENU_ARC_WIDTH, LV_PART_INDICATOR);
-    lv_obj_set_style_arc_opa(arcMenu, LV_OPA_TRANSP, LV_PART_INDICATOR);
-    lv_obj_set_style_arc_rounded(arcMenu, false, LV_PART_INDICATOR);
-
     lv_obj_remove_style(arcMenu, NULL, LV_PART_KNOB);
-    lv_obj_set_style_pad_all(arcMenu, 20, LV_PART_KNOB);                           // 这里是为了增加绘制区域，因为选中的弧是个扇形比较大
-    lv_obj_set_style_bg_color(arcMenu, theme_color1[currPageIndex], LV_PART_KNOB); // 这个的颜色就是选中菜单的颜色
-    lv_obj_set_style_bg_opa(arcMenu, 0, LV_PART_KNOB);
-
-    lv_arcmenu_set_value(arcMenu, currPageIndex);
-
-    lv_style_init(&menu_button_style);
-    lv_style_set_text_color(&menu_button_style, IS_WHITE_THEME ? WHITE_THEME_ARCMENU_TEXT_COLOR : BLACK_THEME_ARCMENU_TEXT_COLOR);
-
-    lv_style_init(&menu_button_checked_style);
-    lv_style_set_text_color(&menu_button_checked_style, ARCMENU_ACTIVE_TEXT_COLOR);
+    // 这个的颜色就是选中菜单的颜色
+    lv_obj_set_style_bg_color(arcMenu, theme_color1[currPageIndex], LV_PART_KNOB);
 
     for (uint8_t i = 0; i < ARC_MENU_NUM; i++)
     {
-        arcMenuLabel[i] = lv_label_create(lv_layer_top());
-        // lv_obj_set_size(arcMenuLabel[i], 40, 20); //使用自动大小
+        arcMenuLabel[i] = lv_label_create(arcMenu);
         lv_label_set_text(arcMenuLabel[i], modeName[i]);
         // lv_obj_set_style_text_align(arcMenuLabel[i], LV_TEXT_ALIGN_CENTER, 0);
         lv_obj_set_style_text_font(arcMenuLabel[i], &FontDeyi_16, 0);
+        lv_obj_set_style_text_color(arcMenuLabel[i], lv_color_hex(0xaaaaaa), LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(arcMenuLabel[i], lv_color_hex(0xffffff), LV_STATE_CHECKED);
         lv_obj_set_style_text_opa(arcMenuLabel[i], LV_OPA_TRANSP, 0);
-        lv_obj_add_style(arcMenuLabel[i], &menu_button_style, LV_STATE_DEFAULT);
-        lv_obj_add_style(arcMenuLabel[i], &menu_button_checked_style, LV_STATE_CHECKED);
-        lv_arcmenu_add_item(arcMenu, arcMenuLabel[i], i, 0);
-        if (currPageIndex == i)
-            lv_obj_add_state(arcMenuLabel[i], LV_STATE_CHECKED);
     }
+    lv_arcmenu_set_item_map(arcMenu, arcMenuLabel, ARC_MENU_NUM, 0);
 
-    lv_obj_add_event_cb(arcMenu, arc_menu_event_handler, LV_EVENT_ALL, NULL);
+    // 这两个事件的先后顺序很重要，先绑定的先触发
+    // lv_obj_add_event_cb(lv_layer_top(), top_layer_event_handler, LV_EVENT_KEY, NULL);
+    // lv_obj_add_event_cb(arcMenu, arc_menu_event_handler, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(arcMenu, arc_menu_event_handler, LV_EVENT_KEY, NULL);
+    lv_obj_add_event_cb(arcMenu, arc_menu_event_handler, LV_EVENT_VALUE_CHANGED, NULL);
     menu_btn_group = lv_group_create();
     lv_group_add_obj(menu_btn_group, arcMenu);
 }
@@ -776,14 +843,20 @@ static void autoChangePage_timeout(lv_timer_t *timer)
     LV_UNUSED(timer);
     if (targerChangePageInd != PAGE_INDEX_MAXSIZE)
     {
-        if (currPageIndex != targerChangePageInd && currPageIndex != PAGE_INDEX_SETTING)
+        if (currPageIndex != targerChangePageInd &&
+            currPageIndex != PAGE_INDEX_SETTING &&
+            ui_Page[targerChangePageInd] != NULL)
         {
             ui_Page[currPageIndex]->ui_release();
             currPageIndex = targerChangePageInd;
             ui_Page[currPageIndex]->ui_init(ui_PanelMain);
+            // 设置菜单项
+#if USE_MENU_STYLE == 3
+            lv_arcmenu_set_value(arcMenu, currPageIndex, 100);
+#endif
         }
         targerChangePageInd = PAGE_INDEX_MAXSIZE; // 清楚标志
-        hide_menu();
+        hide_arc_menu();
     }
 }
 
@@ -858,6 +931,7 @@ void main_screen_init(lv_indev_t *indev)
     ui_Page[PAGE_INDEX_AIR_HOT] = &airhotUIObj;
     ui_Page[PAGE_INDEX_HEAT_PLAT] = &hpUIObj;
     ui_Page[PAGE_INDEX_ADJ_POWER] = &adjPowerUIObj;
+    // ui_Page[PAGE_INDEX_SPOTWELDER] = NULL;
     ui_Page[PAGE_INDEX_SETTING] = &settingUIObj;
 
     ui_PanelTop = lv_obj_create(desktop_screen);
@@ -908,19 +982,44 @@ void ui_init(lv_indev_t *indev)
     lv_disp_load_scr(desktop_screen);
 }
 
+void ui_reload()
+{
+    if (NULL != desktop_screen)
+    {
+        lv_scr_load(desktop_screen);
+        // lv_disp_load_scr(desktop_screen);
+    }
+}
+
 void ui_release()
 {
+    if (NULL != topLayerTimer)
+    {
+        lv_timer_del(topLayerTimer);
+        topLayerTimer = NULL;
+    }
+
+    if (NULL != autoChangePageTimer)
+    {
+        lv_timer_del(autoChangePageTimer);
+        autoChangePageTimer = NULL;
+    }
+
+    if (NULL != sysInfoTimer)
+    {
+        lv_timer_del(sysInfoTimer);
+        sysInfoTimer = NULL;
+    }
+
+    if (NULL != desktop_screen)
+    {
+        lv_obj_del(desktop_screen);
+        desktop_screen = NULL;
+    }
 }
 
 void ui_page_move_center_by_ind(int index)
 {
-    // if (currPageIndex != index)
-    // {
-    //     ui_Page[currPageIndex]->ui_release();
-    //     currPageIndex = index;
-    //     ui_Page[currPageIndex]->ui_init(ui_PanelMain);
-    // }
-    // hide_menu();
     targerChangePageInd = index; // 等待定时器切换 autoChangePageTimer
 }
 
@@ -928,53 +1027,54 @@ static void sysInfoTimer_timeout(lv_timer_t *timer)
 {
     LV_UNUSED(timer);
 
-    // 锁屏壁纸
-    if (sysInfoModel.lockScreenFlag)
-    {
-        // 锁屏壁纸
-        if (NULL == lockScreenImage)
-        {
-            pre_group = knobs_indev->group;
-            lv_indev_set_group(knobs_indev, NULL);
-            lockScreenImage = lv_img_create(lv_layer_top());
-            lv_img_set_src(lockScreenImage, &wallpaperList[lockScreenImageIndex]);
-            lv_obj_align(lockScreenImage, LV_ALIGN_CENTER, 0, -240);
+    // // 锁屏壁纸
+    // if (sysInfoModel.lockScreenFlag)
+    // {
+    //     // 锁屏壁纸
+    //     if (NULL == lockScreenImage)
+    //     {
+    //         pre_group = knobs_indev->group;
+    //         lv_indev_set_group(knobs_indev, NULL);
+    //         lockScreenImage = lv_img_create(lv_layer_top());
+    //         lv_img_set_src(lockScreenImage, &wallpaperList[lockScreenImageIndex]);
+    //         lv_obj_align(lockScreenImage, LV_ALIGN_CENTER, 0, -240);
 
-            lv_anim_t ls_anim;
-            lv_anim_init(&ls_anim);
-            lv_anim_set_exec_cb(&ls_anim, (lv_anim_exec_xcb_t)lv_obj_set_y);
-            lv_anim_set_var(&ls_anim, lockScreenImage);
-            /* 动画时长[ms] */
-            lv_anim_set_time(&ls_anim, 1500);
-            lv_anim_set_values(&ls_anim, -240, 0);
-            // lv_anim_path_overshoot lv_anim_path_bounce
-            lv_anim_set_path_cb(&ls_anim, lv_anim_path_bounce); // 设置一个动画的路径
-            lv_anim_set_early_apply(&ls_anim, true);
-            lv_anim_start(&ls_anim); /* 应用动画效果 */
+    //         lv_anim_t ls_anim;
+    //         lv_anim_init(&ls_anim);
+    //         lv_anim_set_exec_cb(&ls_anim, (lv_anim_exec_xcb_t)lv_obj_set_y);
+    //         lv_anim_set_var(&ls_anim, lockScreenImage);
+    //         /* 动画时长[ms] */
+    //         lv_anim_set_time(&ls_anim, 1500);
+    //         lv_anim_set_values(&ls_anim, -240, 0);
+    //         // lv_anim_path_overshoot lv_anim_path_bounce
+    //         lv_anim_set_path_cb(&ls_anim, lv_anim_path_bounce); // 设置一个动画的路径
+    //         lv_anim_set_early_apply(&ls_anim, true);
+    //         lv_anim_start(&ls_anim); /* 应用动画效果 */
 
-            wallpaperSwitchLeaveTime = sysInfoModel.wallpaperSwitchTime * 1000;
-        }
-        else
-        {
-            wallpaperSwitchLeaveTime -= DATA_REFRESH_MS;
-            if (wallpaperSwitchLeaveTime <= 0)
-            {
-                wallpaperSwitchLeaveTime = sysInfoModel.wallpaperSwitchTime * 1000;
-                lockScreenImageIndex = (lockScreenImageIndex + 1) % WALLPAPER_NUM;
-                lv_img_set_src(lockScreenImage, &wallpaperList[lockScreenImageIndex]);
-            }
-        }
-    }
-    else if (!sysInfoModel.lockScreenFlag)
-    {
-        if (NULL != lockScreenImage)
-        {
-            lv_obj_del(lockScreenImage);
-            lockScreenImage = NULL;
+    //         wallpaperSwitchLeaveTime = sysInfoModel.utilConfig.wallpaperSwitchTime * 1000;
+    //     }
+    //     else
+    //     {
+    //         wallpaperSwitchLeaveTime -= DATA_REFRESH_MS;
+    //         if (wallpaperSwitchLeaveTime <= 0)
+    //         {
+    //             wallpaperSwitchLeaveTime = sysInfoModel.utilConfig.wallpaperSwitchTime * 1000;
+    //             lockScreenImageIndex = (lockScreenImageIndex + 1) % WALLPAPER_NUM;
+    //             lv_img_set_src(lockScreenImage, &wallpaperList[lockScreenImageIndex]);
+    //         }
+    //     }
+    // }
+    // else
+    // if (!sysInfoModel.lockScreenFlag)
+    // {
+    //     if (NULL != lockScreenImage)
+    //     {
+    //         lv_obj_del(lockScreenImage);
+    //         lockScreenImage = NULL;
 
-            lv_indev_set_group(knobs_indev, pre_group);
-        }
-    }
+    //         lv_indev_set_group(knobs_indev, pre_group);
+    //     }
+    // }
 
     // 系统消息
     if (0 < sysInfoModel.sysInfoDispTime && NULL == sysInfoLabel)
@@ -995,6 +1095,11 @@ static void sysInfoTimer_timeout(lv_timer_t *timer)
         lv_obj_clear_flag(sysInfoLabel, LV_OBJ_FLAG_SCROLLABLE);
         lv_obj_set_style_text_color(sysInfoLabel, lv_color_hex(0xdb3156), LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_text_font(sysInfoLabel, &FontDeyi_24, LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+    else if (0 < sysInfoModel.sysInfoDispTime)
+    {
+        // 加强显示
+        lv_label_set_text_fmt(sysInfoLabel, "%s", sysInfoModel.sysInfo);
     }
 
     if (0 > sysInfoModel.sysInfoDispTime)
@@ -1018,13 +1123,13 @@ void touch_event(unsigned int value)
 {
     if (NULL != ui_backBtn)
     {
-        if (is_menu_show)
+        if (MENU_SHOW == menu_status)
         {
-            hide_menu();
+            hide_arc_menu();
         }
         else
         {
-            show_menu();
+            show_arc_menu();
         }
         // lv_event_send(ui_backBtn, LV_EVENT_PRESSED, 0);
     }

@@ -40,9 +40,13 @@ struct SolderModel
     SolderCoreConfig coreConfig;     // 发热芯参数
     SolderCoreConfig editCoreConfig; // 正在编辑的发热芯参数
 
-    int16_t curTemp;                            // 当前的温度
-    uint16_t powerRatio;                        // 供电能量占比
-    SOLDER_CORE_MANAGE_ACTION manageCoreAction; // 烙铁芯的管理动作
+    int16_t curTemp;                       // 当前的温度
+    uint16_t powerRatio;                   // 供电能量占比
+    INFO_MANAGE_ACTION manageCoreAction;   // 发热芯的管理动作
+    INFO_MANAGE_ACTION manageConfigAction; // 配置文件的管理动作
+    // 软件开关
+    // 唤醒模式为 None 时，可控制使能状态，其余唤醒模式保持使能开启
+    ENABLE_STATE softwareSwitch;
 
     char curCoreName[16];     // 发热名字 格式 id+'_'+type
     const char *coreNameList; // 发热芯的名字列表
@@ -57,11 +61,15 @@ struct AirhotModel
 {
     unsigned char workState; // 工作状态
 
-    HA_UtilConfig utilConfig; // 通用设置
-    HA_CoreConfig coreConfig; // 发热芯参数
+    HA_UtilConfig utilConfig;     // 通用设置
+    HA_CoreConfig coreConfig;     // 发热芯参数
+    HA_CoreConfig editCoreConfig; // 正在编辑的发热芯参数
 
-    int curTemp;         // 当前的温度
-    uint16_t powerRatio; // 供电能量占比
+    int curTemp;                           // 当前的温度
+    unsigned long curRunTime;              // 当前运行时间
+    uint16_t powerRatio;                   // 供电能量占比
+    INFO_MANAGE_ACTION manageCoreAction;   // 发热芯的管理动作
+    INFO_MANAGE_ACTION manageConfigAction; // 配置文件的管理动作
 
     char curCoreName[16];     // 发热名字 格式 id+'_'+type
     const char *coreNameList; // 发热芯的名字列表
@@ -74,10 +82,21 @@ struct HeatplatformModel
     unsigned char workState; // 工作状态
     unsigned char enable;    // 使能状态
 
-    HP_UtilConfig utilConfig; // 通用设置
+    HP_UtilConfig utilConfig;     // 通用设置
+    HP_CoreConfig coreConfig;     // 发热芯设置
+    HP_CoreConfig editCoreConfig; // 正在编辑的发热芯参数
+    HP_CurveConfig curveConfig;   // 温度曲线
 
-    int curTemp;         // 当前的温度
-    uint16_t powerRatio; // 供电能量占比
+    int curTemp;                           // 当前的温度
+    unsigned long curRunTime;              // 当前运行时间
+    uint16_t powerRatio;                   // 供电能量占比
+    INFO_MANAGE_ACTION manageCurveAction;  // 曲线管理动作
+    INFO_MANAGE_ACTION manageCoreAction;   // 发热芯的管理动作
+    INFO_MANAGE_ACTION manageConfigAction; // 配置文件的管理动作
+    uint16_t curveAllTime;                 // 回流焊总时间
+    uint16_t curveRunTime;                 // 回流焊运行时间
+    uint16_t curveStartTimeStamp;          // 回流焊开始时间
+    uint16_t curveEndTime;                 // 回流焊结束时间
 };
 
 extern struct HeatplatformModel heatplatformModel;
@@ -86,11 +105,12 @@ struct AdjPowerModel
 {
     unsigned char workState; // 工作状态
 
-    AdjPowerConfig utilConfig; // 通用配置
-    int32_t voltage;           // 当前电压
-    int32_t current;           // 当前的电流
-    int32_t capacity;          // 功率
-    bool curToZeroFlag;        // 电流归零
+    AdjPowerConfig utilConfig;             // 通用配置
+    int32_t voltage;                       // 当前电压
+    int32_t current;                       // 当前的电流
+    int32_t capacity;                      // 功率
+    bool curToZeroFlag;                    // 电流归零
+    INFO_MANAGE_ACTION manageConfigAction; // 配置文件的管理动作
 };
 
 extern struct AdjPowerModel adjPowerModel;
@@ -112,26 +132,24 @@ extern struct StopWelderModel stopWelderModel;
 struct SysInfoModel
 {
     char sn[32];
-    VERSION_INFO srceenVersion;
-    VERSION_INFO coreVersion;
-    VERSION_INFO outBoardVersion;
     char softwareVersion[16]; // 软件版本
-    uint8_t touchFlag;        // 触摸开关
-    ENABLE_STATE sysTone;     // 系统提示音（关闭后 旋钮设置将不起作用）
-    ENABLE_STATE knobTone;    // 旋钮反馈音
-    KNOBS_DIR knobDir;        // 旋钮方向
 
-    uint16_t lockScreenDelayTime; // 锁屏延时时间(s)
-    uint16_t wallpaperSwitchTime; // 锁屏切换时间(s)
+    SysCoreConfig coreConfig;
+    SysUtilConfig utilConfig;
+    INFO_MANAGE_ACTION manageConfigAction; // 配置文件的管理动作
 
-    UI_PARAM_INFO uiGlobalParam; // 关于UI的全局配置参数，会持久化保存
-    bool lockScreenFlag;         // 是否锁屏
-    bool hasInfo;                // 是否有系统消息
-    int16_t sysInfoDispTime;     // 系统消息显示的时长 ms
-    char sysInfo[128];           // 系统消息的具体内容
+    bool lockScreenFlag;     // 是否锁屏
+    bool hasInfo;            // 是否有系统消息
+    bool resetFlag;          // 重置标志位
+    int16_t sysInfoDispTime; // 系统消息显示的时长 ms
+    char sysInfo[128];       // 系统消息的具体内容
 
     // 设置保存的回调函数
     int (*saveConfAPI)(void *param);
+
+    // 设置旋钮智能加速
+    bool (*setIntellectRateFlag)(bool flag);
+    // std::function<bool(bool)> setIntellectRateFlag;
 };
 
 extern struct SysInfoModel sysInfoModel;

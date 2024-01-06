@@ -21,8 +21,7 @@ struct StopWelderModel stopWelderModel = {SPOTWELDER_STATE_WAIT, SPOTWELDER_MODE
                                           2700, 2000, 2700};
 
 struct SysInfoModel sysInfoModel = {"", VERSION_INFO_SRCEEN_V20,
-                                    VERSION_INFO_CORE_V20, VERSION_INFO_OUT_BOARD_V20,
-                                    ""};
+                                    VERSION_INFO_CORE_V20, VERSION_INFO_OUT_BOARD_V20};
 
 /*
  *   电烙铁
@@ -161,6 +160,6 @@ int setSysInfo(SysInfoModel *model)
 
 int setKnobsDir(KNOBS_DIR knobDir)
 {
-    sysInfoModel.knobDir = knobDir;
+    sysInfoModel.utilConfig.knobDir = knobDir;
     return 0;
 }

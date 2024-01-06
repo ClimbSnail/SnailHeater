@@ -7,26 +7,26 @@ static lv_timer_t *adjPowerTimer = NULL;
 static lv_obj_t *adjPowerPageUI = NULL;
 static lv_obj_t *ui_voltageLabel;
 static lv_obj_t *ui_voltSlider;
-static lv_obj_t *ui_voltageUnitLabel;
 static lv_obj_t *ui_currentLabel;
-static lv_obj_t *ui_currentUnitLabel;
+static lv_obj_t *ui_settingVoltageButton;
 static lv_obj_t *ui_settingCurrentButton;
-static lv_obj_t *ui_settingCurrentLabel;
-static lv_obj_t *ui_settingCurrentUnitLabel;
-static lv_obj_t *ui_settingCurrentArc = NULL;
-static lv_group_t *ui_setArcGroup = NULL;
 static lv_obj_t *ui_capacityLabel;
-static lv_obj_t *ui_capacityUnitLabel;
 static lv_obj_t *ui_enableSwitch;
 static lv_obj_t *ui_modeButton;
 static lv_obj_t *ui_modeLable;
 
+static lv_obj_t *ui_quickSetupVolButton0;
+static lv_obj_t *ui_quickSetupVolButton1;
+static lv_obj_t *ui_quickSetupVolButton2;
+
 static lv_group_t *btn_group = NULL;
 
 static void ui_set_slider_changed(lv_event_t *e);
-static void ui_set_cur_pressed(lv_event_t *e);
+static void ui_set_vol_cur_pressed(lv_event_t *e);
 static void ui_enable_switch_pressed(lv_event_t *e);
 static void ui_mode_bnt_pressed(lv_event_t *e);
+static void ui_bnt_obj_pressed(lv_event_t *e);
+void ui_updateAdjPowerData(void);
 
 static void adjPowerPageUI_focused(lv_event_t *e)
 {
@@ -44,16 +44,15 @@ static void adjPowerPageUI_focused(lv_event_t *e)
 static void adjPowerTimer_timeout(lv_timer_t *timer)
 {
     LV_UNUSED(timer);
-    // 更新电压电流功率的函数
-    lv_label_set_text_fmt(ui_voltageLabel, "%.2lf", adjPowerModel.voltage / 1000.0);
-    lv_label_set_text_fmt(ui_currentLabel, "%.2lf", adjPowerModel.current / 1000.0);
-    lv_label_set_text_fmt(ui_capacityLabel, "%.2lf", adjPowerModel.capacity / 1000000.0);
+
+    ui_updateAdjPowerData();
 }
 
 static bool adjPowerPageUI_init(lv_obj_t *father)
 {
     if (NULL != adjPowerPageUI)
     {
+        lv_obj_del(adjPowerPageUI);
         adjPowerPageUI = NULL;
     }
     top_layer_set_name();
@@ -72,94 +71,191 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
 
     lv_obj_t *ui_ButtonTmp = adjPowerPageUI;
 
+    lv_obj_t *lb1 = lv_label_create(ui_ButtonTmp);
+    lv_label_set_text(lb1, TEXT_TEMP_POWER_VOL_CHANNEL_MD);
+    lv_obj_align(lb1, LV_ALIGN_TOP_LEFT, 10, 12);
+    lv_obj_add_style(lb1, &label_text_style, 0);
+
+    ui_quickSetupVolButton0 = lv_btn_create(ui_ButtonTmp);
+    lv_obj_remove_style_all(ui_quickSetupVolButton0);
+    lv_obj_set_size(ui_quickSetupVolButton0, 38, 20);
+    // lv_obj_align(ui_quickSetupVolButton0, LV_ALIGN_TOP_LEFT, 74, 10);
+    lv_obj_align_to(ui_quickSetupVolButton0, lb1,
+                    LV_ALIGN_OUT_RIGHT_MID, 10, 0);
+    lv_obj_add_flag(ui_quickSetupVolButton0, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+    lv_obj_clear_flag(ui_quickSetupVolButton0, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_add_style(ui_quickSetupVolButton0, &btn_type1_style, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_add_style(ui_quickSetupVolButton0, &btn_type1_focused_style, LV_STATE_FOCUSED);
+
+    lv_obj_t *ui_quickSetupVolLabel1 = lv_label_create(ui_quickSetupVolButton0);
+    lv_obj_set_align(ui_quickSetupVolLabel1, LV_ALIGN_CENTER);
+    lv_label_set_text_fmt(ui_quickSetupVolLabel1, "%.1lf",
+                          adjPowerModel.utilConfig.quickSetupVoltage_0 / 1000.0);
+
+    ui_quickSetupVolButton1 = lv_btn_create(ui_ButtonTmp);
+    lv_obj_remove_style_all(ui_quickSetupVolButton1);
+    lv_obj_set_size(ui_quickSetupVolButton1, 38, 20);
+    // lv_obj_align(ui_quickSetupVolButton1, LV_ALIGN_TOP_LEFT, 122, 10);
+    lv_obj_align_to(ui_quickSetupVolButton1, ui_quickSetupVolButton0,
+                    LV_ALIGN_OUT_RIGHT_MID, 10, 0);
+    lv_obj_add_flag(ui_quickSetupVolButton1, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+    lv_obj_clear_flag(ui_quickSetupVolButton1, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_add_style(ui_quickSetupVolButton1, &btn_type1_style, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_add_style(ui_quickSetupVolButton1, &btn_type1_focused_style, LV_STATE_FOCUSED);
+
+    lv_obj_t *ui_quickSetupVolLabel2 = lv_label_create(ui_quickSetupVolButton1);
+    lv_obj_set_align(ui_quickSetupVolLabel2, LV_ALIGN_CENTER);
+    lv_label_set_text_fmt(ui_quickSetupVolLabel2, "%.1lf",
+                          adjPowerModel.utilConfig.quickSetupVoltage_1 / 1000.0);
+
+    ui_quickSetupVolButton2 = lv_btn_create(ui_ButtonTmp);
+    lv_obj_remove_style_all(ui_quickSetupVolButton2);
+    lv_obj_set_size(ui_quickSetupVolButton2, 38, 20);
+    // lv_obj_align(ui_quickSetupVolButton2, LV_ALIGN_TOP_LEFT, 170, 10);
+    lv_obj_align_to(ui_quickSetupVolButton2, ui_quickSetupVolButton1,
+                    LV_ALIGN_OUT_RIGHT_MID, 10, 0);
+    lv_obj_add_flag(ui_quickSetupVolButton2, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+    lv_obj_clear_flag(ui_quickSetupVolButton2, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_add_style(ui_quickSetupVolButton2, &btn_type1_style, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_add_style(ui_quickSetupVolButton2, &btn_type1_focused_style, LV_STATE_FOCUSED);
+
+    lv_obj_t *ui_quickSetupVolLabel3 = lv_label_create(ui_quickSetupVolButton2);
+    lv_obj_set_align(ui_quickSetupVolLabel3, LV_ALIGN_CENTER);
+    lv_label_set_text_fmt(ui_quickSetupVolLabel3, "%.1lf",
+                          adjPowerModel.utilConfig.quickSetupVoltage_2 / 1000.0);
+
     ui_voltageLabel = lv_label_create(ui_ButtonTmp);
     lv_obj_set_size(ui_voltageLabel, 140, 52);
-    lv_obj_align(ui_voltageLabel, LV_ALIGN_TOP_LEFT, 0, 20);
+    lv_obj_align(ui_voltageLabel, LV_ALIGN_TOP_LEFT, 5, 45);
     lv_label_set_text_fmt(ui_voltageLabel, "%.2lf", adjPowerModel.voltage / 1000.0);
     lv_obj_set_style_text_align(ui_voltageLabel, LV_TEXT_ALIGN_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_color(ui_voltageLabel, ADJ_POWER_THEME_COLOR1, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_voltageLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_voltageLabel, &FontRoboto_52, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_voltageUnitLabel = lv_label_create(ui_ButtonTmp);
-    lv_obj_align(ui_voltageUnitLabel, LV_ALIGN_TOP_LEFT, 142, 30);
+    lv_obj_t *ui_voltageUnitLabel = lv_label_create(ui_ButtonTmp);
+    lv_obj_align_to(ui_voltageUnitLabel, ui_voltageLabel,
+                    LV_ALIGN_OUT_RIGHT_MID, 0, -5);
     lv_label_set_text(ui_voltageUnitLabel, "V");
     lv_obj_set_style_text_color(ui_voltageUnitLabel, lv_color_hex(0x999798), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_voltageUnitLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_voltageUnitLabel, &FontRoboto_36, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    // 电压调节滑杆
-    ui_voltSlider = lv_slider_create(ui_ButtonTmp);
-    lv_obj_set_size(ui_voltSlider, 70, 10);
-    lv_obj_align(ui_voltSlider, LV_ALIGN_TOP_LEFT, 190, 40);
-    lv_slider_set_range(ui_voltSlider, 0, DAC_DEFAULT_RESOLUTION);
-    lv_obj_set_style_bg_color(ui_voltSlider, ADJ_POWER_THEME_COLOR1, LV_PART_KNOB | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_voltSlider, lv_color_hex(0x999999), LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    lv_slider_set_value(ui_voltSlider,
-                        DAC_DEFAULT_RESOLUTION - adjPowerModel.utilConfig.volDacValue,
-                        LV_ANIM_OFF);
+    //     // 电压调节滑杆
+    //     ui_voltSlider = lv_slider_create(ui_ButtonTmp);
+    //     lv_obj_set_size(ui_voltSlider, 70, 10);
+    //     lv_obj_align_to(ui_voltSlider, ui_voltageUnitLabel,
+    //                     LV_ALIGN_OUT_RIGHT_MID, 10, 0);
+    // #if SH_HARDWARE_VER == SH_ESP32S2_WROOM_V26
+    //     // 一二车250mv 77 三车100mv 31
+    //     lv_slider_set_range(ui_voltSlider, 0, DAC_DEFAULT_RESOLUTION - 31);
+    // #elif SH_HARDWARE_VER < SH_ESP32S2_WROOM_V26
+    //     lv_slider_set_range(ui_voltSlider, 0, DAC_DEFAULT_RESOLUTION - 77);
+    // #endif
+    //     lv_obj_set_style_bg_color(ui_voltSlider, ADJ_POWER_THEME_COLOR1, LV_PART_KNOB | LV_STATE_DEFAULT);
+    //     lv_obj_set_style_bg_color(ui_voltSlider, lv_color_hex(0x999999), LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    //     lv_slider_set_value(ui_voltSlider,
+    //                         DAC_DEFAULT_RESOLUTION - adjPowerModel.utilConfig.volDacValue,
+    //                         LV_ANIM_OFF);
 
-    // lv_obj_add_flag(ui_voltSlider, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+    // 设定的电压
+    lv_obj_t *ui_settingVoltageUnitLabel = lv_label_create(ui_ButtonTmp);
+#if SH_HARDWARE_VER == SH_ESP32S2_WROOM_V26
+    lv_obj_align(ui_settingVoltageUnitLabel, LV_ALIGN_RIGHT_MID, -30, -30);
+#elif SH_HARDWARE_VER == SH_ESP32S3_FN8_V27
+    lv_obj_align(ui_settingVoltageUnitLabel, LV_ALIGN_RIGHT_MID, -30, -30);
+#else
+    lv_obj_align(ui_settingVoltageUnitLabel, LV_ALIGN_RIGHT_MID, -10, -30);
+#endif
+    lv_label_set_text(ui_settingVoltageUnitLabel, "V");
+    lv_obj_set_style_text_color(ui_settingVoltageUnitLabel, lv_color_hex(0x999798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_settingVoltageUnitLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_settingVoltageUnitLabel, &FontRoboto_24, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_settingVoltageButton = lv_numberbtn_create(ui_ButtonTmp);
+
+    lv_obj_t *settingVoltageLabel = lv_label_create(ui_settingVoltageButton);
+    lv_numberbtn_set_label_and_format(ui_settingVoltageButton,
+                                      settingVoltageLabel, "%.2lf", 0.05);
+    lv_numberbtn_set_range(ui_settingVoltageButton, 0.6, ADJ_POWER_VOL_MAX / 1000.0);
+    lv_numberbtn_set_value(ui_settingVoltageButton, adjPowerModel.utilConfig.settingVoltage / 1000.0);
+    lv_numberbtn_set_align(ui_settingVoltageButton, LV_ALIGN_RIGHT_MID);
+    lv_obj_remove_style_all(ui_settingVoltageButton);
+    lv_obj_set_size(ui_settingVoltageButton, 95, 30);
+    lv_obj_align_to(ui_settingVoltageButton, ui_settingVoltageUnitLabel,
+                    LV_ALIGN_OUT_LEFT_BOTTOM, 0, 0);
+    lv_obj_add_flag(ui_settingVoltageButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+    lv_obj_clear_flag(ui_settingVoltageButton, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_radius(ui_settingVoltageButton, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_settingVoltageButton, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_settingVoltageButton, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_settingVoltageButton, &FontRoboto_36, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_add_style(ui_settingVoltageButton, &btn_type1_focused_style, LV_STATE_FOCUSED);
+    lv_obj_add_style(ui_settingVoltageButton, &btn_type1_pressed_style, LV_STATE_EDITED);
 
     // 实际电流
     ui_currentLabel = lv_label_create(ui_ButtonTmp);
-    lv_obj_set_size(ui_currentLabel, 140, 52);
-    lv_obj_align(ui_currentLabel, LV_ALIGN_TOP_LEFT, 0, 80);
+    lv_obj_set_size(ui_currentLabel, 140, 55);
+    lv_obj_align_to(ui_currentLabel, ui_voltageLabel,
+                    LV_ALIGN_OUT_BOTTOM_MID, 0, 5);
     lv_label_set_text_fmt(ui_currentLabel, "%.2lf", adjPowerModel.current / 1000.0);
     lv_obj_set_style_text_align(ui_currentLabel, LV_TEXT_ALIGN_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_color(ui_currentLabel, ADJ_POWER_THEME_COLOR1, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_currentLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_currentLabel, &FontRoboto_52, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_currentUnitLabel = lv_label_create(ui_ButtonTmp);
-    lv_obj_align(ui_currentUnitLabel, LV_ALIGN_TOP_LEFT, 142, 90);
+    lv_obj_t *ui_currentUnitLabel = lv_label_create(ui_ButtonTmp);
+    lv_obj_align_to(ui_currentUnitLabel, ui_currentLabel,
+                    LV_ALIGN_OUT_RIGHT_MID, 0, -5);
     lv_label_set_text(ui_currentUnitLabel, "A");
     lv_obj_set_style_text_color(ui_currentUnitLabel, lv_color_hex(0x999798), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_currentUnitLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_currentUnitLabel, &FontRoboto_36, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     // 设定的电流
-    ui_settingCurrentButton = lv_btn_create(ui_ButtonTmp);
-    lv_obj_remove_style_all(ui_settingCurrentButton);
-    lv_obj_set_size(ui_settingCurrentButton, 100, 30);
-    lv_obj_align(ui_settingCurrentButton, LV_ALIGN_CENTER, 80, -5);
-    lv_obj_add_flag(ui_settingCurrentButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
-    lv_obj_clear_flag(ui_settingCurrentButton, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_radius(ui_settingCurrentButton, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(ui_settingCurrentButton, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(ui_settingCurrentButton, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_settingCurrentButton, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_add_style(ui_settingCurrentButton, &btn_type1_focused_style, LV_STATE_FOCUSED);
-    lv_obj_add_style(ui_settingCurrentButton, &btn_type1_pressed_style, LV_STATE_EDITED);
-
-    ui_settingCurrentLabel = lv_label_create(ui_settingCurrentButton);
-    // lv_obj_set_size(ui_settingCurrentLabel, -40, 0);
-    lv_obj_align(ui_settingCurrentLabel, LV_ALIGN_CENTER, -5, 0);
-    lv_label_set_text_fmt(ui_settingCurrentLabel, "%.2lf", adjPowerModel.utilConfig.settingCurrent / 1000.0);
-    lv_obj_set_style_text_align(ui_settingCurrentLabel, LV_TEXT_ALIGN_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(ui_settingCurrentLabel, ADJ_POWER_THEME_COLOR1, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_settingCurrentLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_settingCurrentLabel, &FontRoboto_36, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_settingCurrentUnitLabel = lv_label_create(ui_settingCurrentButton);
-    lv_obj_align(ui_settingCurrentUnitLabel, LV_ALIGN_CENTER, 40, 3);
+    lv_obj_t *ui_settingCurrentUnitLabel = lv_label_create(ui_ButtonTmp);
+    lv_obj_align_to(ui_settingCurrentUnitLabel, ui_settingVoltageUnitLabel,
+                    LV_ALIGN_OUT_BOTTOM_MID, 5, 40);
     lv_label_set_text(ui_settingCurrentUnitLabel, "A");
     lv_obj_set_style_text_color(ui_settingCurrentUnitLabel, lv_color_hex(0x999798), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_settingCurrentUnitLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_settingCurrentUnitLabel, &FontRoboto_24, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    ui_settingCurrentButton = lv_numberbtn_create(ui_ButtonTmp);
+
+    lv_obj_t *settingCurrentLabel = lv_label_create(ui_settingCurrentButton);
+    lv_numberbtn_set_label_and_format(ui_settingCurrentButton,
+                                      settingCurrentLabel, "%.2lf", 0.01);
+    lv_numberbtn_set_range(ui_settingCurrentButton, 0, ADJ_POWER_CUR_MAX / 1000.0);
+    lv_numberbtn_set_value(ui_settingCurrentButton, adjPowerModel.utilConfig.settingCurrent / 1000);
+    lv_numberbtn_set_align(ui_settingCurrentButton, LV_ALIGN_RIGHT_MID);
+    lv_obj_remove_style_all(ui_settingCurrentButton);
+    lv_obj_set_size(ui_settingCurrentButton, 80, 30);
+    lv_obj_align_to(ui_settingCurrentButton, ui_settingCurrentUnitLabel,
+                    LV_ALIGN_OUT_LEFT_BOTTOM, 0, 0);
+    lv_obj_add_flag(ui_settingCurrentButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+    lv_obj_clear_flag(ui_settingCurrentButton, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_radius(ui_settingCurrentButton, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_settingCurrentButton, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_settingCurrentButton, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_settingCurrentButton, &FontRoboto_36, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_add_style(ui_settingCurrentButton, &btn_type1_focused_style, LV_STATE_FOCUSED);
+    lv_obj_add_style(ui_settingCurrentButton, &btn_type1_pressed_style, LV_STATE_EDITED);
+
     // 功率
     ui_capacityLabel = lv_label_create(ui_ButtonTmp);
     lv_obj_set_size(ui_capacityLabel, 140, 52);
-    lv_obj_align(ui_capacityLabel, LV_ALIGN_TOP_LEFT, 0, 140);
+    lv_obj_align_to(ui_capacityLabel, ui_currentLabel,
+                    LV_ALIGN_OUT_BOTTOM_MID, 0, 5);
     lv_label_set_text_fmt(ui_capacityLabel, "%.2lf", adjPowerModel.capacity / 1000000.0);
     lv_obj_set_style_text_align(ui_capacityLabel, LV_TEXT_ALIGN_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_color(ui_capacityLabel, lv_color_hex(0xFF0000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_capacityLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_capacityLabel, &FontRoboto_52, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_capacityUnitLabel = lv_label_create(ui_ButtonTmp);
-    lv_obj_align(ui_capacityUnitLabel, LV_ALIGN_TOP_LEFT, 142, 150);
+    lv_obj_t *ui_capacityUnitLabel = lv_label_create(ui_ButtonTmp);
+    lv_obj_align_to(ui_capacityUnitLabel, ui_capacityLabel,
+                    LV_ALIGN_OUT_RIGHT_MID, 0, -5);
     lv_label_set_text(ui_capacityUnitLabel, "W");
     lv_obj_set_style_text_color(ui_capacityUnitLabel, lv_color_hex(0x999798), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_capacityUnitLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -193,7 +289,8 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     ui_enableSwitch = lv_switch_create(ui_ButtonTmp);
     lv_obj_add_flag(ui_enableSwitch, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_set_size(ui_enableSwitch, 60, 30);
-    lv_obj_align(ui_enableSwitch, LV_ALIGN_CENTER, 90, 50);
+    lv_obj_align_to(ui_enableSwitch, ui_settingCurrentUnitLabel,
+                    LV_ALIGN_OUT_BOTTOM_MID, -35, 25);
     if (ENABLE_STATE_OPEN == adjPowerModel.workState)
     {
         lv_obj_add_state(ui_enableSwitch, LV_STATE_CHECKED); // 开
@@ -208,14 +305,22 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     lv_obj_set_style_outline_opa(ui_enableSwitch, 255, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
     lv_obj_set_style_outline_pad(ui_enableSwitch, 4, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
 
-    lv_obj_add_event_cb(ui_voltSlider, ui_set_slider_changed, LV_EVENT_VALUE_CHANGED, NULL);
-    lv_obj_add_event_cb(ui_settingCurrentButton, ui_set_cur_pressed, LV_EVENT_PRESSED, NULL);
+    lv_obj_add_event_cb(ui_quickSetupVolButton0, ui_bnt_obj_pressed, LV_EVENT_PRESSED, NULL);
+    lv_obj_add_event_cb(ui_quickSetupVolButton1, ui_bnt_obj_pressed, LV_EVENT_PRESSED, NULL);
+    lv_obj_add_event_cb(ui_quickSetupVolButton2, ui_bnt_obj_pressed, LV_EVENT_PRESSED, NULL);
+    // lv_obj_add_event_cb(ui_voltSlider, ui_set_slider_changed, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_add_event_cb(ui_settingVoltageButton, ui_set_vol_cur_pressed, LV_EVENT_PRESSED, NULL);
+    lv_obj_add_event_cb(ui_settingCurrentButton, ui_set_vol_cur_pressed, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(ui_enableSwitch, ui_enable_switch_pressed, LV_EVENT_VALUE_CHANGED, NULL);
     // lv_obj_add_event_cb(ui_modeButton, ui_mode_bnt_pressed, LV_EVENT_PRESSED, NULL);
 
     btn_group = lv_group_create();
     lv_group_add_obj(btn_group, ui_backBtn);
-    lv_group_add_obj(btn_group, ui_voltSlider);
+    lv_group_add_obj(btn_group, ui_quickSetupVolButton0);
+    lv_group_add_obj(btn_group, ui_quickSetupVolButton1);
+    lv_group_add_obj(btn_group, ui_quickSetupVolButton2);
+    // lv_group_add_obj(btn_group, ui_voltSlider);
+    lv_group_add_obj(btn_group, ui_settingVoltageButton);
     lv_group_add_obj(btn_group, ui_settingCurrentButton);
     lv_group_add_obj(btn_group, ui_enableSwitch);
     // lv_group_add_obj(btn_group, ui_modeButton);
@@ -229,8 +334,6 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     }
     lv_indev_set_group(knobs_indev, btn_group);
 
-    ui_setArcGroup = lv_group_create();
-
     adjPowerTimer = lv_timer_create(adjPowerTimer_timeout, DATA_REFRESH_MS, NULL);
     lv_timer_set_repeat_count(adjPowerTimer, -1);
     return true;
@@ -238,11 +341,10 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
 
 static void adjPowerPageUI_release()
 {
-    if (NULL != adjPowerPageUI)
+    if (NULL != adjPowerTimer)
     {
-        lv_obj_del(adjPowerPageUI);
-        adjPowerPageUI = NULL;
-        adjPowerUIObj.mainButtonUI = NULL;
+        lv_timer_del(adjPowerTimer);
+        adjPowerTimer = NULL;
     }
 
     if (NULL != btn_group)
@@ -251,10 +353,11 @@ static void adjPowerPageUI_release()
         btn_group = NULL;
     }
 
-    if (NULL != adjPowerTimer)
+    if (NULL != adjPowerPageUI)
     {
-        lv_timer_del(adjPowerTimer);
-        adjPowerTimer = NULL;
+        lv_obj_del(adjPowerPageUI);
+        adjPowerPageUI = NULL;
+        adjPowerUIObj.mainButtonUI = NULL;
     }
 }
 
@@ -303,7 +406,14 @@ void ui_updateAdjPowerData(void)
     }
     lv_label_set_text_fmt(ui_voltageLabel, "%.2lf", adjPowerModel.voltage / 1000.0);
     lv_label_set_text_fmt(ui_currentLabel, "%.2lf", adjPowerModel.current / 1000.0);
-    lv_label_set_text_fmt(ui_capacityLabel, "%.2lf", adjPowerModel.capacity / 1000000.0);
+    if (adjPowerModel.capacity > 100000000)
+    {
+        lv_label_set_text_fmt(ui_capacityLabel, "%.1lf", adjPowerModel.capacity / 1000000.0);
+    }
+    else
+    {
+        lv_label_set_text_fmt(ui_capacityLabel, "%.2lf", adjPowerModel.capacity / 1000000.0);
+    }
 }
 
 void ui_updateAdjPowerWorkState(void)
@@ -335,73 +445,56 @@ static void ui_set_slider_changed(lv_event_t *e)
     }
 }
 
-static void ui_set_curArc_changed(lv_event_t *e)
+static void ui_bnt_obj_pressed(lv_event_t *e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t *target = lv_event_get_target(e);
 
-    if (LV_EVENT_VALUE_CHANGED == event_code)
+    if (event_code == LV_EVENT_PRESSED)
     {
-        lv_label_set_text_fmt(ui_settingCurrentLabel, "%.2lf", lv_arc_get_value(ui_settingCurrentArc) / 100.0);
+        if (target == ui_quickSetupVolButton0)
+        {
+            adjPowerModel.utilConfig.settingVoltage =
+                adjPowerModel.utilConfig.quickSetupVoltage_0;
+            lv_numberbtn_set_value(ui_settingVoltageButton,
+                                   adjPowerModel.utilConfig.settingVoltage / 1000.0);
+        }
+        else if (target == ui_quickSetupVolButton1)
+        {
+            adjPowerModel.utilConfig.settingVoltage =
+                adjPowerModel.utilConfig.quickSetupVoltage_1;
+            lv_numberbtn_set_value(ui_settingVoltageButton,
+                                   adjPowerModel.utilConfig.settingVoltage / 1000.0);
+        }
+        else if (target == ui_quickSetupVolButton2)
+        {
+            adjPowerModel.utilConfig.settingVoltage =
+                adjPowerModel.utilConfig.quickSetupVoltage_2;
+            lv_numberbtn_set_value(ui_settingVoltageButton,
+                                   adjPowerModel.utilConfig.settingVoltage / 1000.0);
+        }
     }
 }
 
-static void ui_set_curArc_pressed(lv_event_t *e)
+static void ui_set_vol_cur_pressed(lv_event_t *e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t *target = lv_event_get_target(e);
 
     if (LV_EVENT_PRESSED == event_code)
     {
-        adjPowerModel.utilConfig.settingCurrent = lv_arc_get_value(ui_settingCurrentArc) * 10;
-
-        lv_group_focus_freeze(ui_setArcGroup, false);
-        lv_indev_set_group(knobs_indev, btn_group);
-
-        LV_LOG_USER("set_tempArc LV_EVENT_PRESSED % u", event_code);
-        if (NULL != ui_settingCurrentArc)
+        if (target == ui_settingVoltageButton)
         {
-            lv_group_remove_obj(ui_settingCurrentArc);
-            lv_obj_del(ui_settingCurrentArc);
-            ui_settingCurrentArc = NULL;
+            LV_LOG_USER("button_pressed LV_EVENT_PRESSED % u", event_code);
+            adjPowerModel.utilConfig.settingVoltage =
+                lv_numberbtn_get_value(ui_settingVoltageButton) * 1000;
         }
-        lv_obj_clear_state(ui_settingCurrentButton, LV_STATE_EDITED);
-    }
-}
-
-static void ui_set_cur_pressed(lv_event_t *e)
-{
-    lv_event_code_t event_code = lv_event_get_code(e);
-    lv_obj_t *target = lv_event_get_target(e);
-
-    if (LV_EVENT_PRESSED == event_code)
-    {
-        LV_LOG_USER("button_pressed LV_EVENT_PRESSED % u", event_code);
-
-        // 给它增加一个状态
-        lv_obj_add_state(ui_settingCurrentButton, LV_STATE_EDITED);
-
-        if (NULL != ui_settingCurrentArc)
+        else if (target == ui_settingCurrentButton)
         {
-            lv_group_remove_obj(ui_settingCurrentArc);
-            lv_obj_del(ui_settingCurrentArc);
-            ui_settingCurrentArc = NULL;
+            LV_LOG_USER("button_pressed LV_EVENT_PRESSED % u", event_code);
+            adjPowerModel.utilConfig.settingCurrent =
+                lv_numberbtn_get_value(ui_settingCurrentButton) * 1000;
         }
-
-        ui_settingCurrentArc = lv_arc_create(ui_settingCurrentButton);
-        lv_obj_set_size(ui_settingCurrentArc, 30, 30);
-        lv_obj_center(ui_settingCurrentArc);
-        lv_arc_set_range(ui_settingCurrentArc, 0, 500); // 电流峰值5000ma 这里使用10ma为步进
-        lv_arc_set_value(ui_settingCurrentArc, adjPowerModel.utilConfig.settingCurrent / 10);
-        // 设置隐藏
-        lv_obj_set_style_opa(ui_settingCurrentArc, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-        lv_group_add_obj(ui_setArcGroup, ui_settingCurrentArc);
-        lv_indev_set_group(knobs_indev, ui_setArcGroup);
-        lv_group_focus_obj(ui_settingCurrentArc);
-
-        lv_obj_add_event_cb(ui_settingCurrentArc, ui_set_curArc_pressed, LV_EVENT_PRESSED, NULL);
-        lv_obj_add_event_cb(ui_settingCurrentArc, ui_set_curArc_changed, LV_EVENT_VALUE_CHANGED, NULL);
     }
 }
 
