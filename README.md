@@ -44,20 +44,19 @@
 
 # PCB展示（V2.5.x版本）
 ##### 当前测试图
-![SnailHeater](Images/SnailHeater_main.jpg)
-![SnailHeater](Images/SnailHeater_back.jpg)
-![SnailHeater](Images/size_consult.jpg)
+![SnailHeater](Images/SnailHeater镂空.png)
+![SnailHeater](Images/主机成品2.jpg)
 
-##### 前面板
-![SnailHeater](Images/前面板.jpg)
+##### 屏幕版
+![SnailHeater](Images/屏幕版正面.jpg)
 
-![SnailHeater](Images/前面板斜视角.jpg)
+![SnailHeater](Images/屏幕版和接线板接线1.jpg)
 
 ##### 主控制板
 ![SnailHeater](Images/核心板反面渲染图.png)
 
-##### 功率板
-![SnailHeater](Images/功率板正面.jpg)
+##### 驱动板
+![SnailHeater](Images/驱动板正面.jpg)
 
 ##### 接线板
 ![SnailHeater](Images/拓展板反面渲染图（组装最后才焊航空头）.png)
