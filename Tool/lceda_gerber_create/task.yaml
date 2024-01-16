@@ -31,7 +31,7 @@ NewFileName:
   Drill_Npth: Drill_NPTH_Through.DRL
 
 GerberList:
-  - Gerber:
+  -
     # 待处理的Gerber目录
     SrcDir: C:\Users\climb\Desktop\【硬件】SnailHeater_V2.5（二车）DIY资料\功率板\功率板gerber
     # 输出的目录
@@ -88,7 +88,7 @@ GerberList:
       Drill_Through: .gd1|.GD1
 
       
-  - Gerber:
+  -
     # 待处理的Gerber目录
     SrcDir: C:\Users\climb\Desktop\【硬件】SnailHeater_V2.5（二车）DIY资料\核心板\核心板gerber
     # 输出的目录
@@ -113,7 +113,7 @@ GerberList:
       Drill_Through: .gd1|.GD1
 
       
-  - Gerber:
+  -
     # 待处理的Gerber目录
     SrcDir: C:\Users\climb\Desktop\【硬件】SnailHeater_V2.5（二车）DIY资料\屏幕板\屏幕板gerber
     # 输出的目录
@@ -138,7 +138,7 @@ GerberList:
       Drill_Through: .gd1|.GD1
 
       
-  - Gerber:
+  -
     # 待处理的Gerber目录
     SrcDir: C:\Users\climb\Desktop\【硬件】SnailHeater_V2.5（二车）DIY资料\拓展板\拓展板gerber
     # 输出的目录
@@ -163,7 +163,7 @@ GerberList:
       Drill_Through: .gd1|.GD1
 
       
-  - Gerber:
+  -
     # 待处理的Gerber目录
     SrcDir: C:\Users\climb\Desktop\【硬件】SnailHeater_V2.5（二车）DIY资料\内嵌板\内嵌板gerber_2mm
     # 输出的目录
