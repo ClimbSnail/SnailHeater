@@ -103,4 +103,10 @@ platformIO模拟器 https://github.com/lvgl/lv_platformio
 * PWM实现DAC电路设计 https://www.elecfans.com/d/590628.html
 * PWM转DAC如何实现 https://blog.csdn.net/shileiwu0505/article/details/124053815
 * 运放的电流检测 https://blog.csdn.net/qq997758497/article/details/79374599
+* 修改分区表数据 https://www.bilibili.com/read/mobile?id=23149188
+* 示波器代码 https://www.bilibili.com/read/mobile?id=23076062
+* lvgl的现实中原理 https://blog.csdn.net/weixin_49947521/article/details/132866129
 * 接地设计 https://blog.csdn.net/sinat_15677011/article/details/126088471
+* UI调色 https://colorhunt.co
+* UI调色 https://aicolors.co/
+* UI调色 https://color.adobe.com/zh/create/color-wheel
