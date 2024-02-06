@@ -120,6 +120,7 @@ static void sysInfoTimer_timeout(lv_timer_t *timer);
 
 void ui_setIntellectRateFlag(lv_event_t *e)
 {
+    return;
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t *target = lv_event_get_target(e);
     lv_obj_t *obj = (lv_obj_t *)lv_event_get_user_data(e);
@@ -197,6 +198,9 @@ void hide_arc_menu()
     if (MENU_SHOW == menu_status)
     {
         menu_status = MENU_HIDING;
+        // 开启按钮全局加速
+        sysInfoModel.setIntellectRateFlag(true);
+
 #if USE_MENU_STYLE == 3
         lv_anim_del(&menu_anim, set_bg_opa);
         lv_anim_init(&menu_anim);
@@ -240,7 +244,7 @@ void show_arc_menu()
     if (MENU_HIDE == menu_status)
     {
         menu_status = MENU_SHOWING;
-        // 关闭全局加速
+        // 关闭按钮全局加速
         sysInfoModel.setIntellectRateFlag(false);
 
         // #ifndef SIMULATOR
@@ -453,7 +457,10 @@ void update_top_info()
         lv_obj_set_style_text_color(ui_topLabel1, AIR_HOT_THEME_COLOR1, 0);
         set_temp_label_text(ui_topLabel2, heatplatformModel.curTemp);
         lv_obj_set_style_text_color(ui_topLabel2, HEAT_PLAT_THEME_COLOR1, 0);
-        lv_label_set_text_fmt(ui_topLabel3, "%.1lf", adjPowerModel.voltage / 1000.0);
+        if (ENABLE_STATE_CLOSE == adjPowerModel.workState)
+            lv_label_set_text_fmt(ui_topLabel3, "OFF");
+        else
+            lv_label_set_text_fmt(ui_topLabel3, "%.1lf", adjPowerModel.voltage / 1000.0);
         lv_obj_set_style_text_color(ui_topLabel3, ADJ_POWER_THEME_COLOR1, 0);
         break;
     case PAGE_INDEX_AIR_HOT:
@@ -461,7 +468,10 @@ void update_top_info()
         lv_obj_set_style_text_color(ui_topLabel1, SOLDER_THEME_COLOR1, 0);
         set_temp_label_text(ui_topLabel2, heatplatformModel.curTemp);
         lv_obj_set_style_text_color(ui_topLabel2, HEAT_PLAT_THEME_COLOR1, 0);
-        lv_label_set_text_fmt(ui_topLabel3, "%.1lf", adjPowerModel.voltage / 1000.0);
+        if (ENABLE_STATE_CLOSE == adjPowerModel.workState)
+            lv_label_set_text_fmt(ui_topLabel3, "OFF");
+        else
+            lv_label_set_text_fmt(ui_topLabel3, "%.1lf", adjPowerModel.voltage / 1000.0);
         lv_obj_set_style_text_color(ui_topLabel3, ADJ_POWER_THEME_COLOR1, 0);
         break;
     case PAGE_INDEX_HEAT_PLAT:
@@ -469,7 +479,10 @@ void update_top_info()
         lv_obj_set_style_text_color(ui_topLabel1, SOLDER_THEME_COLOR1, 0);
         set_temp_label_text(ui_topLabel2, airhotModel.curTemp);
         lv_obj_set_style_text_color(ui_topLabel2, AIR_HOT_THEME_COLOR1, 0);
-        lv_label_set_text_fmt(ui_topLabel3, "%.1lf", adjPowerModel.voltage / 1000.0);
+        if (ENABLE_STATE_CLOSE == adjPowerModel.workState)
+            lv_label_set_text_fmt(ui_topLabel3, "OFF");
+        else
+            lv_label_set_text_fmt(ui_topLabel3, "%.1lf", adjPowerModel.voltage / 1000.0);
         lv_obj_set_style_text_color(ui_topLabel3, ADJ_POWER_THEME_COLOR1, 0);
         break;
     case PAGE_INDEX_ADJ_POWER:
@@ -516,12 +529,21 @@ void top_layer_set_name()
 static void ui_back_btn_pressed(lv_event_t *e)
 {
     // 返回项被按下
+    LV_LOG_USER("LOOK\n");
     show_arc_menu();
 }
 
-void top_layer_init()
+void top_layer_init(lv_obj_t *parent)
 {
     // 只在第一次调用
+
+    ui_PanelTop = lv_obj_create(desktop_screen);
+    lv_obj_remove_style_all(ui_PanelTop);
+    lv_obj_clear_flag(ui_PanelTop, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_size(ui_PanelTop, SH_SCREEN_WIDTH, 24);
+    lv_obj_align(ui_PanelTop, LV_ALIGN_TOP_LEFT, 0, 0);
+    lv_obj_set_style_bg_opa(ui_PanelTop, 0, 0);
+
     //  顶部状态栏
     ui_topLogoLabel = lv_label_create(ui_PanelTop);
     lv_obj_set_size(ui_topLogoLabel, 40, 24);
@@ -892,7 +914,7 @@ void main_screen_init(lv_indev_t *indev)
 
     lv_style_init(&btn_type1_focused_style);
     lv_style_set_radius(&btn_type1_focused_style, 4);
-    lv_style_set_border_width(&btn_type1_focused_style, 1);
+    lv_style_set_border_width(&btn_type1_focused_style, 2);
 
     lv_style_init(&btn_type1_pressed_style);
     lv_style_set_radius(&btn_type1_pressed_style, 4);
@@ -931,16 +953,11 @@ void main_screen_init(lv_indev_t *indev)
     ui_Page[PAGE_INDEX_AIR_HOT] = &airhotUIObj;
     ui_Page[PAGE_INDEX_HEAT_PLAT] = &hpUIObj;
     ui_Page[PAGE_INDEX_ADJ_POWER] = &adjPowerUIObj;
-    // ui_Page[PAGE_INDEX_SPOTWELDER] = NULL;
+    ui_Page[PAGE_INDEX_SPOTWELDER] = &spotWelderUIObj;
+    ui_Page[PAGE_INDEX_SIGNAL] = &signalUIObj;
     ui_Page[PAGE_INDEX_SETTING] = &settingUIObj;
 
-    ui_PanelTop = lv_obj_create(desktop_screen);
-    lv_obj_remove_style_all(ui_PanelTop);
-    lv_obj_clear_flag(ui_PanelTop, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_size(ui_PanelTop, SH_SCREEN_WIDTH, 24);
-    lv_obj_align(ui_PanelTop, LV_ALIGN_TOP_LEFT, 0, 0);
-    lv_obj_set_style_bg_opa(ui_PanelTop, 0, 0);
-    top_layer_init();
+    top_layer_init(desktop_screen);
 
 #if USE_MENU_STYLE == 3
     lv_obj_add_style(lv_layer_top(), &black_white_theme_style, 0);
@@ -979,7 +996,7 @@ void ui_init(lv_indev_t *indev)
     lv_disp_set_theme(dispp, theme);
     */
     main_screen_init(knobs_indev);
-    lv_disp_load_scr(desktop_screen);
+    // lv_disp_load_scr(desktop_screen);
 }
 
 void ui_reload()
@@ -989,6 +1006,9 @@ void ui_reload()
         lv_scr_load(desktop_screen);
         // lv_disp_load_scr(desktop_screen);
     }
+
+    // ui_release();
+    // ui_init(knobs_indev);
 }
 
 void ui_release()
@@ -1010,6 +1030,8 @@ void ui_release()
         lv_timer_del(sysInfoTimer);
         sysInfoTimer = NULL;
     }
+
+    ui_Page[currPageIndex]->ui_release();
 
     if (NULL != desktop_screen)
     {
@@ -1093,7 +1115,8 @@ static void sysInfoTimer_timeout(lv_timer_t *timer)
         lv_obj_set_size(sysInfoLabel, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
         lv_obj_add_flag(sysInfoLabel, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
         lv_obj_clear_flag(sysInfoLabel, LV_OBJ_FLAG_SCROLLABLE);
-        lv_obj_set_style_text_color(sysInfoLabel, lv_color_hex(0xdb3156), LV_PART_MAIN | LV_STATE_DEFAULT);
+        // lv_obj_set_style_text_color(sysInfoLabel, lv_color_hex(0xdb3156), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(sysInfoLabel, theme_color1[currPageIndex], LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_text_font(sysInfoLabel, &FontDeyi_24, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
     else if (0 < sysInfoModel.sysInfoDispTime)
@@ -1121,6 +1144,7 @@ static void sysInfoTimer_timeout(lv_timer_t *timer)
 // 触摸事件处理
 void touch_event(unsigned int value)
 {
+    LV_LOG_USER("LOOK\n");
     if (NULL != ui_backBtn)
     {
         if (MENU_SHOW == menu_status)

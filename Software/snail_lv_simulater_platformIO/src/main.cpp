@@ -21,7 +21,7 @@
 #include <SDL2/SDL_timer.h>
 #include "demos/lv_demos.h"
 
-#define SNAILHEATER_VERSION "1.9.9"
+#define SNAILHEATER_VERSION "2.1.0"
 
 int saveSettingAPI(void *parameter)
 {
@@ -54,6 +54,7 @@ void SnailHeater_UI()
         model.utilConfig.quickSetupTemp_1 = 360;
         model.utilConfig.quickSetupTemp_2 = 400;
         model.utilConfig.workAirSpeed = 30;
+        model.utilConfig.coolingFinishTemp = 50;
         model.utilConfig.targetTemp = 300;
         model.utilConfig.fastPID = ENABLE_STATE::ENABLE_STATE_CLOSE;
         model.curTemp = 33;
@@ -80,7 +81,11 @@ void SnailHeater_UI()
         model.utilConfig.quickSetupTemp_2 = 400;
         model.utilConfig.targetTemp = 230;
         model.curTemp = 100;
+        model.curveTemp = 25;
+        model.curRunTime = 10000;
         model.utilConfig.workAirSpeed = 30;
+        model.utilConfig.coolingFinishTemp = 50;
+        model.utilConfig.curveCnt = 2;
         model.utilConfig.fastPID = ENABLE_STATE::ENABLE_STATE_CLOSE;
         model.powerRatio = 0;
         model.manageCurveAction = INFO_MANAGE_ACTION::INFO_MANAGE_ACTION_CURVE_IDLE;
@@ -95,11 +100,21 @@ void SnailHeater_UI()
             model.coreConfig.realTemp[i] = i * DISPLAY_TEMP_STEP;
         }
 
-        model.curveConfig.id = 0;
+        model.curveConfig.id = 1;
         model.curveConfig.stageNum = 6;
-        int data[MAX_STAGE_NUM] = {0, 150, 160, 250, 250, 100};
-        int time[MAX_STAGE_NUM] = {2, 60, 150, 180, 210, 270};
-        model.curveAllTime = time[model.curveConfig.stageNum - 1] + 20;
+        int data[MAX_STAGE_NUM] = {0, 150, 200, 240, 240, 25};
+        int time[MAX_STAGE_NUM] = {2, 150, 240, 276, 294, 375};
+        for (int ind = 0; ind < model.curveConfig.stageNum; ++ind)
+        {
+            model.curveConfig.temperatur[ind] = data[ind];
+            model.curveConfig.time[ind] = time[ind];
+            if (ind > 0)
+            {
+                model.curveConfig.slope[ind] =
+                    (model.curveConfig.temperatur[ind] - model.curveConfig.temperatur[ind - 1]) * 1.0 / (model.curveConfig.time[ind] - model.curveConfig.time[ind - 1]);
+            }
+        }
+        model.curveAllTime = time[model.curveConfig.stageNum - 1];
         model.curveRunTime = 0;
         for (int ind = 0; ind < MAX_STAGE_NUM; ++ind)
         {
@@ -114,10 +129,12 @@ void SnailHeater_UI()
         SolderModel model;
         model.workState = SOLDER_STATE_DEEP_SLEEP;
         model.utilConfig.curCoreID = 0;
-        model.coreNameList = "0_NUKNOWN\n1_T12\n2_C210\n3_C245";
+        model.coreNameList = "0_XXX\n1_T12\n2_C210\n3_C245\n4_C470\n5_C115\n6_C105";
+        snprintf(model.curCoreName, 16, "1_T12");
+        model.coreConfig.solderPwmFreq = SOLDER_PWM_FREQ::SOLDER_PWM_FREQ_128;
         model.coreConfig.solderType = SOLDER_TYPE_T12;
-        model.coreConfig.wakeSwitchType = SOLDER_SHAKE_TYPE_CHANGE;
-        // model.coreConfig.wakeSwitchType = SOLDER_SHAKE_TYPE_NONE;
+        model.coreConfig.wakeSwitchType = SOLDER_SHAKE_TYPE_NONE;
+        model.coreConfig.powerLimit = 0.8;
         model.coreConfig.kp = 150;
         model.coreConfig.ki = 4.0;
         model.coreConfig.kd = 120;
@@ -126,6 +143,7 @@ void SnailHeater_UI()
         {
             model.coreConfig.realTemp[i] = i * DISPLAY_TEMP_STEP;
         }
+        model.editCoreConfig = model.coreConfig;
         model.tempEnable.allValue = 0x01;
         model.utilConfig.quickSetupTemp_0 = 270;
         model.utilConfig.quickSetupTemp_1 = 360;
@@ -133,6 +151,7 @@ void SnailHeater_UI()
         model.fineAdjTemp = 300;
         model.utilConfig.targetTemp = 300;
         model.utilConfig.easySleepTemp = 150;
+        model.utilConfig.shortCircuit = ENABLE_STATE::ENABLE_STATE_CLOSE;
         model.utilConfig.autoTypeSwitch = ENABLE_STATE::ENABLE_STATE_OPEN;
         model.utilConfig.fastPID = ENABLE_STATE::ENABLE_STATE_CLOSE;
         model.curTemp = 30;
@@ -162,9 +181,34 @@ void SnailHeater_UI()
         setAdjPowerInfo(&model);
     }
 
-    // setStopWelderInfo(SPOTWELDER_MODE_DOUBLE, 5, 1000,
-    //                   2, 2700, 2000,
-    //                   2700, SPOTWELDER_STATE_WAIT);
+    if (true)
+    {
+        StopWelderModel model;
+        model.workState = ENABLE_STATE_CLOSE;
+        model.manualTriggerFlag = 0;
+        model.utilConfig.mode = SPOTWELDER_MODE::SPOTWELDER_MODE_DOUBLE;
+        model.utilConfig.pulseWidth_0 = 3;
+        model.utilConfig.pulseWidth_1 = 10;
+        model.utilConfig.interval = 1000;
+        model.voltage = 5400;
+        model.count = 0;
+        setStopWelderInfo(&model);
+    }
+
+    if (true)
+    {
+        SignalGeneratorModel model;
+        model.workState = ENABLE_STATE_CLOSE;
+
+        model.freqStep = 1;
+        model.utilConfig.signalType = SIGNAL_TYPE::SIGNAL_TYPE_SINE_WARE;
+        model.utilConfig.freqPwm = 1000;
+        model.utilConfig.freqDAC = 1000;
+        model.utilConfig.scale = 1;
+        model.utilConfig.duty = 500;
+        model.utilConfig.phase = 5000;
+        setSignalGeneratorInfo(&model);
+    }
 
     if (true)
     {
@@ -176,6 +220,7 @@ void SnailHeater_UI()
         model.coreConfig.outBoardVersion = VERSION_INFO_OUT_BOARD_V25;
         snprintf(model.softwareVersion, 16, "%s", SNAILHEATER_VERSION);
         model.utilConfig.knobDir = KNOBS_DIR_POS;
+        model.utilConfig.beepVolume = 50;
         model.utilConfig.touchFlag = ENABLE_STATE_OPEN;
         model.utilConfig.sysTone = ENABLE_STATE_OPEN;
         model.utilConfig.knobTone = ENABLE_STATE_OPEN;

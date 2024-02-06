@@ -58,6 +58,7 @@ extern "C"
     void lv_numberbtn_set_label_and_format(const lv_obj_t *obj,
                                            lv_obj_t *obj_to_add,
                                            const char *format, double step);
+    void lv_numberbtn_set_step(const lv_obj_t *obj, double step);
 
 #ifdef __cplusplus
 } /*extern "C"*/

@@ -3,12 +3,21 @@
 
 #define SOLDER_THEME_COLOR1 lv_color_hex(0xdb3156)
 #define SOLDER_THEME_COLOR2 lv_color_hex(0x851e34)
+#define SOLDER_THEME_COLOR3 lv_color_hex(0xD2D3D2)
+
 #define HEAT_PLAT_THEME_COLOR1 lv_color_hex(0x009be6)
 #define HEAT_PLAT_THEME_COLOR2 lv_color_hex(0x006799)
+#define HEAT_PLAT_THEME_COLOR3 lv_color_hex(0xEB803F)
+
 #define AIR_HOT_THEME_COLOR1 lv_color_hex(0xffcc33)
 #define AIR_HOT_THEME_COLOR2 lv_color_hex(0xd4aa2a)
+
 #define ADJ_POWER_THEME_COLOR1 lv_color_hex(0x4ed438)
-#define SPOT_WELDER_THEME_COLOR1 lv_color_hex(0x4ed438)
+
+#define SPOT_WELDER_THEME_COLOR1 lv_color_hex(0xB800EB)
+
+#define SIGNAL_THEME_COLOR1 lv_color_hex(0xEB803F)
+
 #define SETTING_THEME_COLOR1 lv_color_hex(0x999999)
 #define SETTING_THEME_COLOR2 lv_color_hex(0x666666)
 

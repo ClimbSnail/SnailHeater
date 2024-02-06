@@ -12,7 +12,7 @@ static lv_obj_t *ui_airhotGridSwitch;
 static lv_obj_t *airhotQuickSetupTemp0;
 static lv_obj_t *airhotQuickSetupTemp1;
 static lv_obj_t *airhotQuickSetupTemp2;
-static lv_obj_t *fastPIDLabel;
+static lv_obj_t *ui_coolingFinishTempBtn;
 static lv_obj_t *fastPIDSwitch;
 
 static lv_obj_t *ui_airhotPIDLabel;
@@ -44,7 +44,7 @@ static void ui_air_hot_grid_pressed(lv_event_t *e)
     }
 }
 
-static void ui_airhotQuickSetupTemp_pressed(lv_event_t *e)
+static void ui_airhotSetTemp_pressed(lv_event_t *e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t *target = lv_event_get_target(e);
@@ -62,6 +62,10 @@ static void ui_airhotQuickSetupTemp_pressed(lv_event_t *e)
         else if (target == airhotQuickSetupTemp2)
         {
             airhotModel.utilConfig.quickSetupTemp_2 = lv_numberbtn_get_value(airhotQuickSetupTemp2);
+        }
+        else if (target == ui_coolingFinishTempBtn)
+        {
+            airhotModel.utilConfig.coolingFinishTemp = lv_numberbtn_get_value(ui_coolingFinishTempBtn);
         }
     }
 }
@@ -268,11 +272,37 @@ void ui_airhot_setting_init(lv_obj_t *father)
     lv_obj_add_style(airhotQuickSetupTemp2, &setting_btn_focused_style, LV_STATE_FOCUSED);
     lv_obj_add_style(airhotQuickSetupTemp2, &setting_btn_pressed_style, LV_STATE_EDITED);
 
-    // 快捷PID
-    fastPIDLabel = lv_label_create(father);
-    lv_obj_align(fastPIDLabel, LV_ALIGN_TOP_LEFT, 10, 10);
-    lv_obj_align_to(fastPIDLabel, airhotQuickSetupTempLabel,
+    // 冷却终止温度
+    lv_obj_t *ui_coolingFinishTempLabel = lv_label_create(father);
+    lv_obj_align_to(ui_coolingFinishTempLabel, airhotQuickSetupTempLabel,
                     LV_ALIGN_OUT_BOTTOM_LEFT, 0, 40);
+    lv_label_set_text(ui_coolingFinishTempLabel, SETTING_TEXT_COOL_FINISH_TEMP);
+    lv_obj_add_style(ui_coolingFinishTempLabel, &label_text_style, 0);
+
+    ui_coolingFinishTempBtn = lv_numberbtn_create(father);
+    lv_obj_t *ui_coolingFinishTempBtnLabel = lv_label_create(ui_coolingFinishTempBtn);
+    lv_numberbtn_set_label_and_format(ui_coolingFinishTempBtn,
+                                      ui_coolingFinishTempBtnLabel, "%d", 1);
+    lv_numberbtn_set_range(ui_coolingFinishTempBtn, 0, 100);
+    lv_numberbtn_set_value(ui_coolingFinishTempBtn, airhotModel.utilConfig.coolingFinishTemp);
+    lv_obj_set_size(ui_coolingFinishTempBtn, 50, 20);
+    lv_obj_align_to(ui_coolingFinishTempBtn, ui_coolingFinishTempLabel,
+                    LV_ALIGN_OUT_LEFT_MID, 145, 0);
+    // lv_obj_remove_style_all(ui_coolingFinishTempBtn);
+    lv_obj_add_flag(ui_coolingFinishTempBtn, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+    lv_obj_clear_flag(ui_coolingFinishTempBtn, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_radius(ui_coolingFinishTempBtn, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_coolingFinishTempBtn, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_coolingFinishTempBtn, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_coolingFinishTempBtn, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_add_style(ui_coolingFinishTempBtn, &setting_btn_focused_style, LV_STATE_FOCUSED);
+    lv_obj_add_style(ui_coolingFinishTempBtn, &setting_btn_pressed_style, LV_STATE_EDITED);
+
+    // 快捷PID
+    lv_obj_t *fastPIDLabel = lv_label_create(father);
+    lv_obj_align(fastPIDLabel, LV_ALIGN_TOP_LEFT, 10, 10);
+    lv_obj_align_to(fastPIDLabel, ui_coolingFinishTempLabel,
+                    LV_ALIGN_OUT_BOTTOM_LEFT, 0, 15);
     lv_label_set_text(fastPIDLabel, SETTING_TEXT_FAST_PID);
     lv_obj_add_style(fastPIDLabel, &label_text_style, 0);
 
@@ -280,7 +310,7 @@ void ui_airhot_setting_init(lv_obj_t *father)
     lv_obj_add_flag(fastPIDSwitch, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_set_size(fastPIDSwitch, 40, 20);
     lv_obj_align_to(fastPIDSwitch, fastPIDLabel,
-                    LV_ALIGN_OUT_LEFT_MID, 135, 0);
+                    LV_ALIGN_OUT_LEFT_MID, 140, 0);
     // if (GET_BIT(cfgKey1, CFG_KEY1_SOLDER_GRID))
     if (ENABLE_STATE_OPEN == airhotModel.utilConfig.fastPID)
     {
@@ -441,15 +471,16 @@ void ui_airhot_setting_init(lv_obj_t *father)
     lv_obj_t *ui_saveLabel = lv_label_create(ui_saveBtn);
     lv_obj_center(ui_saveLabel);
     lv_obj_add_style(ui_saveLabel, &label_text_style, 0);
-    lv_label_set_text(ui_saveLabel, SETTING_TEXT_SOLDER_CORE_SAVE);
+    lv_label_set_text(ui_saveLabel, SETTING_TEXT_EDIT_SAVE);
 }
 
 void ui_airhot_setting_init_group(lv_obj_t *father)
 {
     lv_obj_add_event_cb(ui_airhotGridSwitch, ui_air_hot_grid_pressed, LV_EVENT_VALUE_CHANGED, NULL);
-    lv_obj_add_event_cb(airhotQuickSetupTemp0, ui_airhotQuickSetupTemp_pressed, LV_EVENT_PRESSED, NULL);
-    lv_obj_add_event_cb(airhotQuickSetupTemp1, ui_airhotQuickSetupTemp_pressed, LV_EVENT_PRESSED, NULL);
-    lv_obj_add_event_cb(airhotQuickSetupTemp2, ui_airhotQuickSetupTemp_pressed, LV_EVENT_PRESSED, NULL);
+    lv_obj_add_event_cb(airhotQuickSetupTemp0, ui_airhotSetTemp_pressed, LV_EVENT_PRESSED, NULL);
+    lv_obj_add_event_cb(airhotQuickSetupTemp1, ui_airhotSetTemp_pressed, LV_EVENT_PRESSED, NULL);
+    lv_obj_add_event_cb(airhotQuickSetupTemp2, ui_airhotSetTemp_pressed, LV_EVENT_PRESSED, NULL);
+    lv_obj_add_event_cb(ui_coolingFinishTempBtn, ui_airhotSetTemp_pressed, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(fastPIDSwitch, ui_fastPIDSwitch_pressed, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_event_cb(ui_airhotParamKp, ui_airhot_set_core_pid_pressed, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(ui_airhotParamKi, ui_airhot_set_core_pid_pressed, LV_EVENT_PRESSED, NULL);
@@ -473,6 +504,7 @@ void ui_airhot_setting_init_group(lv_obj_t *father)
     lv_group_add_obj(sub_btn_group, airhotQuickSetupTemp0);
     lv_group_add_obj(sub_btn_group, airhotQuickSetupTemp1);
     lv_group_add_obj(sub_btn_group, airhotQuickSetupTemp2);
+    lv_group_add_obj(sub_btn_group, ui_coolingFinishTempBtn);
     lv_group_add_obj(sub_btn_group, fastPIDSwitch);
     lv_group_add_obj(sub_btn_group, ui_airhotParamKp);
     lv_group_add_obj(sub_btn_group, ui_airhotParamKi);

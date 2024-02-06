@@ -317,6 +317,14 @@ void settingPageUI_release()
         dispPageTimer = NULL;
     }
 
+    // 需要手动清理下各个子页面
+    ui_sys_setting_release(ui_tabSystem);
+    ui_solder_setting_release(ui_tabSoder);
+    ui_airhot_setting_release(ui_tabAirhot);
+    ui_hp_setting_release(ui_tabHp);
+    ui_adjpwr_setting_release(ui_tabAdjPwr);
+    lv_obj_clean(ui_tabBack);
+
     if (NULL != btn_group)
     {
         lv_group_del(btn_group);

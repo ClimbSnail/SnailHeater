@@ -85,7 +85,7 @@ void ui_adjpwr_setting_init(lv_obj_t *father)
     lv_obj_add_flag(ui_activeCloseSolderSwitch, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_set_size(ui_activeCloseSolderSwitch, 40, 20);
     lv_obj_align_to(ui_activeCloseSolderSwitch, ui_activeCloseSolderLabel,
-                    LV_ALIGN_OUT_LEFT_MID, 135, 0);
+                    LV_ALIGN_OUT_LEFT_MID, 140, 0);
     if (sysInfoModel.utilConfig.activeCloseSolder)
     {
         lv_obj_add_state(ui_activeCloseSolderSwitch, LV_STATE_CHECKED); // 反向

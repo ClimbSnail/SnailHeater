@@ -85,7 +85,7 @@
    <property name="geometry">
     <rect>
      <x>293</x>
-     <y>6</y>
+     <y>8</y>
      <width>63</width>
      <height>16</height>
     </rect>
@@ -133,10 +133,10 @@
    <widget class="QComboBox" name="FirmwareComboBox">
     <property name="geometry">
      <rect>
-      <x>120</x>
-      <y>32</y>
+      <x>116</x>
+      <y>30</y>
       <width>287</width>
-      <height>25</height>
+      <height>30</height>
      </rect>
     </property>
    </widget>
@@ -472,7 +472,7 @@
    <property name="geometry">
     <rect>
      <x>265</x>
-     <y>30</y>
+     <y>32</y>
      <width>91</width>
      <height>16</height>
     </rect>
@@ -505,7 +505,7 @@
      <x>360</x>
      <y>30</y>
      <width>349</width>
-     <height>16</height>
+     <height>20</height>
     </rect>
    </property>
    <property name="font">
@@ -536,7 +536,7 @@
      <x>360</x>
      <y>6</y>
      <width>349</width>
-     <height>16</height>
+     <height>20</height>
     </rect>
    </property>
    <property name="font">

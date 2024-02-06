@@ -93,7 +93,8 @@ struct SysUtilConfig
     uint8_t backLight;      // 屏幕背光亮度
     uint8_t pilotLampLight; // 指示灯亮度
     uint8_t pilotLampSpeed; // 指示灯渐变速度
-    uint8_t touchFlag;      // 触摸开关
+    ENABLE_STATE touchFlag; // 触摸开关
+    uint8_t beepVolume;     // 蜂鸣器音量 0~100
     ENABLE_STATE sysTone;   // 系统提示音（关闭后 旋钮设置将不起作用）
     ENABLE_STATE knobTone;  // 旋钮反馈音
     KNOBS_DIR knobDir;      // 旋钮方向
@@ -157,8 +158,10 @@ struct HP_UtilConfig
     int16_t coolingFinishTemp;    // 冷却结束的温度
     int16_t alarmValue;           // 超温报警阈值
     uint16_t coreCnt;             // 发热芯数量
+    uint16_t curveCnt;            // 曲线数量
     uint16_t coreIDRecord;        // 使用位标志发热芯id编号 1~31位
     uint16_t curCoreID;           // 当前选择的发热芯ID
+    uint16_t curCurveID;          // 当前选择的曲线ID
     ENABLE_STATE fastPID;         // 使能便捷PID
 };
 
@@ -180,13 +183,15 @@ struct HP_CoreConfig
 
 #define MAX_STAGE_NUM 8
 
+// 曲线参数
 struct HP_CurveConfig
 {
+    // 升温 预热 回流 冷却
     unsigned int id;                    // ID
     uint16_t stageNum;                  // 阶段数
     uint16_t temperatur[MAX_STAGE_NUM]; // 温度
-    uint16_t slope[MAX_STAGE_NUM];      // 斜率
     uint16_t time[MAX_STAGE_NUM];       // 时间
+    double slope[MAX_STAGE_NUM];        // 斜率
 };
 
 enum HEAT_PLATFORM_STATE
@@ -317,9 +322,6 @@ struct AdjPowerConfig
 
 /****************************************************************/
 
-const char solder_type_str[7][8] = {
-    "UNHNOWN", "T12", "C210", "C245", "C470", "C115", "T20"};
-
 #define SOLDER_SHAKE_TYPE_TEXT "None\nHigh\nLow\nChange"
 
 enum SOLDER_SHAKE_TYPE
@@ -339,18 +341,32 @@ enum SOLDER_TYPE : unsigned char
     SOLDER_TYPE_JBC470,
     SOLDER_TYPE_JBC115,
     SOLDER_TYPE_T20,
+    SOLDER_TYPE_TK, // K型热电偶
     SOLDER_TYPE_MAX
 };
 
-#define SOLDER_PWM_FREQ_TEXT "64\n128\n256\n512\n1024"
+const char solder_type_str[SOLDER_TYPE_MAX][8] = {
+    "XXX", "T12", "C210", "C245", "C470", "C115", "T20", "T-K"};
 
-enum SOLDER_PWM_FREQ : unsigned int
+#if SH_HARDWARE_VER <= SH_ESP32S2_WROOM_V26
+// mos电路驱动电流太小
+#define SOLDER_PWM_FREQ_TEXT "64\n128\n256\n512\n1024"
+#elif
+#define SOLDER_PWM_FREQ_TEXT "64\n128\n256\n512\n1024\n2K\n4K\n8K\n16K"
+#endif
+
+enum SOLDER_PWM_FREQ : unsigned long
 {
     SOLDER_PWM_FREQ_64 = 64,
     SOLDER_PWM_FREQ_128 = 128,
     SOLDER_PWM_FREQ_256 = 256,
     SOLDER_PWM_FREQ_512 = 512,
-    SOLDER_PWM_FREQ_1024 = 1024
+    SOLDER_PWM_FREQ_1024 = 1024,
+    SOLDER_PWM_FREQ_2048 = 2048,
+    SOLDER_PWM_FREQ_4096 = 4096,
+    SOLDER_PWM_FREQ_8192 = 8192,
+    SOLDER_PWM_FREQ_16384 = 16384,
+    SOLDER_PWM_FREQ_MAX
 };
 
 // 信息管理动作
@@ -437,6 +453,7 @@ struct SolderUtilConfig
     uint16_t coreCnt;            // 发热芯数量
     uint16_t coreIDRecord;       // 使用位标志发热芯id编号 1~31位
     uint16_t curCoreID;          // 当前选择的发热芯ID
+    ENABLE_STATE shortCircuit;   // 烙铁短路保护
     ENABLE_STATE autoTypeSwitch; // 自动类型切换
     ENABLE_STATE fastPID;        // 使能便捷PID
 };
@@ -449,6 +466,7 @@ struct SolderCoreConfig
     SOLDER_PWM_FREQ solderPwmFreq;       // 烙铁驱动频率
     SOLDER_TYPE solderType;              // 烙铁类型
     SOLDER_SHAKE_TYPE wakeSwitchType;    // 唤醒开关类型
+    double powerLimit;                   // 功率限制系数 0.01~1.0
     double kp;                           // PID参数
     double ki;                           // PID参数
     double kd;                           // PID参数
@@ -475,6 +493,38 @@ enum SPOTWELDER_STATE
     SPOTWELDER_STATE_NONE = 0,
     SPOTWELDER_STATE_TRIGGERING, // 触发中
     SPOTWELDER_STATE_WAIT,       // 等待中
+};
+
+// 点焊机配置文件中的参数
+struct SpotWelderConfig
+{
+    SPOTWELDER_MODE mode;  // 点焊模式
+    uint16_t pulseWidth_0; // 脉宽1 每个单位0.1ms
+    uint16_t pulseWidth_1; // 脉宽2 每个单位0.1ms
+    uint16_t interval;     // 触发点焊条件后短暂延时 ms
+    uint8_t capNumber;     // 电容数
+    uint16_t singleCapVol; // 单电容额定电压 mv
+    uint16_t alarmVol;     // 总电压报警值
+};
+
+// 信号发生器
+enum SIGNAL_TYPE : unsigned char
+{
+    SIGNAL_TYPE_SQUARE_WARE, // 方波
+    SIGNAL_TYPE_SINE_WARE,   // 正弦波
+    SIGNAL_TYPE_MAX
+};
+
+// 信号发生器配置文件中的参数
+struct SignalConfig
+{
+    SIGNAL_TYPE signalType; // 波形
+    uint32_t freqDAC;       // 频率 hz
+    uint32_t freqPwm;       // 频率 hz
+    uint32_t cycle;         // 周期 us
+    uint16_t duty;          // 占空比 千分为单位
+    uint8_t scale;          // 振幅
+    uint8_t phase;          // 相位
 };
 
 #endif

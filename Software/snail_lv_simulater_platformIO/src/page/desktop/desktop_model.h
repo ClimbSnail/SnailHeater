@@ -88,15 +88,16 @@ struct HeatplatformModel
     HP_CurveConfig curveConfig;   // 温度曲线
 
     int curTemp;                           // 当前的温度
-    unsigned long curRunTime;              // 当前运行时间
+    int curveTemp;                         // 回流焊温度
+    unsigned long curRunTime;              // 当前运行时间(ms)
     uint16_t powerRatio;                   // 供电能量占比
     INFO_MANAGE_ACTION manageCurveAction;  // 曲线管理动作
     INFO_MANAGE_ACTION manageCoreAction;   // 发热芯的管理动作
     INFO_MANAGE_ACTION manageConfigAction; // 配置文件的管理动作
-    uint16_t curveAllTime;                 // 回流焊总时间
-    uint16_t curveRunTime;                 // 回流焊运行时间
-    uint16_t curveStartTimeStamp;          // 回流焊开始时间
-    uint16_t curveEndTime;                 // 回流焊结束时间
+    uint16_t curveAllTime;                 // 回流焊总时间(s)
+    uint16_t curveRunTime;                 // 回流焊运行时间(s)
+    uint16_t curveStartTimeStamp;          // 回流焊开始时间(s)
+    uint16_t curveEndTime;                 // 回流焊结束时间(s)
 };
 
 extern struct HeatplatformModel heatplatformModel;
@@ -117,17 +118,26 @@ extern struct AdjPowerModel adjPowerModel;
 
 struct StopWelderModel
 {
-    unsigned char workState; // 工作状态
-    uint8_t mode;            // 点焊模式
-    uint16_t pulseWidth;     // 脉宽 ms
-    uint16_t interval;       // 触发最小间隔 ms
-    uint8_t capNumber;       // 电容数
-    uint16_t singleCapVol;   // 单电容额定电压 mv
-    uint16_t alarmVol;       // 总电压报警值
-    uint16_t voltage;        // 当前电容电压
+    unsigned char workState;         // 工作状态
+    unsigned char manualTriggerFlag; // 手动触发标志
+
+    uint16_t voltage; // 当前电容的电压
+    uint16_t count;   // 点焊计数
+
+    SpotWelderConfig utilConfig; // 通用配置
 };
 
 extern struct StopWelderModel stopWelderModel;
+
+struct SignalGeneratorModel
+{
+    unsigned char workState; // 工作状态
+
+    uint16_t freqStep;       // 频率调节的不进
+    SignalConfig utilConfig; // 通用配置
+};
+
+extern struct SignalGeneratorModel signalGeneratorModel;
 
 struct SysInfoModel
 {
@@ -180,6 +190,10 @@ int setAdjPowerWorkState(unsigned char workState);
 int setStopWelderInfo(StopWelderModel *mode);
 int setStopWelderVoltage(uint16_t voltage);
 int setStopWelderWorkState(unsigned char workState);
+
+// 信号发生器
+int setSignalGeneratorInfo(SignalGeneratorModel *mode);
+int setSignalGeneratorWorkState(unsigned char workState);
 
 // 系统给设置
 int setSysInfo(SysInfoModel *model);

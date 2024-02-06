@@ -16,9 +16,9 @@ struct HeatplatformModel heatplatformModel = {HP_STATE_SLEEP, ENABLE_STATE_CLOSE
 struct AdjPowerModel adjPowerModel = {ENABLE_STATE_CLOSE, 0, 0,
                                       0, 0, 0, 0};
 
-struct StopWelderModel stopWelderModel = {SPOTWELDER_STATE_WAIT, SPOTWELDER_MODE_DOUBLE,
-                                          5, 1000, 2,
-                                          2700, 2000, 2700};
+struct StopWelderModel stopWelderModel = {SPOTWELDER_STATE_WAIT};
+
+struct SignalGeneratorModel signalGeneratorModel = {ENABLE_STATE_CLOSE, 1};
 
 struct SysInfoModel sysInfoModel = {"", VERSION_INFO_SRCEEN_V20,
                                     VERSION_INFO_CORE_V20, VERSION_INFO_OUT_BOARD_V20};
@@ -130,9 +130,9 @@ int setAdjPowerWorkState(unsigned char workState)
  *   点焊机设置
  *
  */
-int setStopWelderInfo(StopWelderModel mode)
+int setStopWelderInfo(StopWelderModel *mode)
 {
-    stopWelderModel = mode;
+    stopWelderModel = *mode;
     return 0;
 }
 
@@ -145,6 +145,22 @@ int setStopWelderVoltage(uint16_t voltage)
 int setStopWelderWorkState(unsigned char workState)
 {
     stopWelderModel.workState = workState;
+    return 0;
+}
+
+/*
+ *   信号发生器设置
+ *
+ */
+int setSignalGeneratorInfo(SignalGeneratorModel *mode)
+{
+    signalGeneratorModel = *mode;
+    return 0;
+}
+
+int setSignalGeneratorWorkState(unsigned char workState)
+{
+    signalGeneratorModel.workState = workState;
     return 0;
 }
 

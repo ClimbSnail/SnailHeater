@@ -22,14 +22,16 @@ static lv_obj_t *ui_quickSetupVolButton2;
 static lv_group_t *btn_group = NULL;
 
 static void ui_set_slider_changed(lv_event_t *e);
-static void ui_set_vol_cur_pressed(lv_event_t *e);
+static void ui_set_vol_cur_change(lv_event_t *e);
 static void ui_enable_switch_pressed(lv_event_t *e);
 static void ui_mode_bnt_pressed(lv_event_t *e);
 static void ui_bnt_obj_pressed(lv_event_t *e);
 void ui_updateAdjPowerData(void);
+static void adjPowerPageUI_release();
 
 static void adjPowerPageUI_focused(lv_event_t *e)
 {
+    lv_indev_set_group(knobs_indev, btn_group);
     if (adjPowerModel.workState == 1)
     {
         lv_group_focus_obj(ui_enableSwitch);
@@ -38,7 +40,6 @@ static void adjPowerPageUI_focused(lv_event_t *e)
     {
         lv_group_focus_obj(ui_backBtn);
     }
-    lv_indev_set_group(knobs_indev, btn_group);
 }
 
 static void adjPowerTimer_timeout(lv_timer_t *timer)
@@ -50,26 +51,22 @@ static void adjPowerTimer_timeout(lv_timer_t *timer)
 
 static bool adjPowerPageUI_init(lv_obj_t *father)
 {
-    if (NULL != adjPowerPageUI)
-    {
-        lv_obj_del(adjPowerPageUI);
-        adjPowerPageUI = NULL;
-    }
+    adjPowerPageUI_release();
+
     top_layer_set_name();
     theme_color_init();
 
     adjPowerPageUI = lv_btn_create(father);
     adjPowerUIObj.mainButtonUI = adjPowerPageUI;
-
-    lv_obj_remove_style_all(adjPowerPageUI);
-    lv_obj_set_size(adjPowerPageUI, EACH_PAGE_SIZE_X, EACH_PAGE_SIZE_Y);
-    lv_obj_center(adjPowerPageUI);
-    lv_obj_add_flag(adjPowerPageUI, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
-    lv_obj_clear_flag(adjPowerPageUI, LV_OBJ_FLAG_SCROLLABLE);
-    // lv_obj_set_style_bg_color(adjPowerPageUI, IS_WHITE_THEME ? lv_color_white() : lv_color_black(), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(adjPowerPageUI, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-
     lv_obj_t *ui_ButtonTmp = adjPowerPageUI;
+
+    lv_obj_remove_style_all(ui_ButtonTmp);
+    lv_obj_set_size(ui_ButtonTmp, EACH_PAGE_SIZE_X, EACH_PAGE_SIZE_Y);
+    lv_obj_center(ui_ButtonTmp);
+    lv_obj_add_flag(ui_ButtonTmp, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+    lv_obj_clear_flag(ui_ButtonTmp, LV_OBJ_FLAG_SCROLLABLE);
+    // lv_obj_set_style_bg_color(adjPowerPageUI, IS_WHITE_THEME ? lv_color_white() : lv_color_black(), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_ButtonTmp, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_t *lb1 = lv_label_create(ui_ButtonTmp);
     lv_label_set_text(lb1, TEXT_TEMP_POWER_VOL_CHANNEL_MD);
@@ -227,7 +224,7 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     lv_numberbtn_set_label_and_format(ui_settingCurrentButton,
                                       settingCurrentLabel, "%.2lf", 0.01);
     lv_numberbtn_set_range(ui_settingCurrentButton, 0, ADJ_POWER_CUR_MAX / 1000.0);
-    lv_numberbtn_set_value(ui_settingCurrentButton, adjPowerModel.utilConfig.settingCurrent / 1000);
+    lv_numberbtn_set_value(ui_settingCurrentButton, adjPowerModel.utilConfig.settingCurrent / 1000.0);
     lv_numberbtn_set_align(ui_settingCurrentButton, LV_ALIGN_RIGHT_MID);
     lv_obj_remove_style_all(ui_settingCurrentButton);
     lv_obj_set_size(ui_settingCurrentButton, 80, 30);
@@ -301,7 +298,7 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     }
     // 注意，这里触发的是3个状态 CHECKED 、LV_STATE_FOCUS 、 和 LV_STATE_FOCUS_KEY，必须设置成KEY才有效
     lv_obj_set_style_outline_color(ui_enableSwitch, ADJ_POWER_THEME_COLOR1, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
-    lv_obj_set_style_bg_color(ui_enableSwitch, ADJ_POWER_THEME_COLOR1, LV_PART_INDICATOR | LV_STATE_FOCUS_KEY);
+    lv_obj_set_style_bg_color(ui_enableSwitch, ADJ_POWER_THEME_COLOR1, LV_PART_INDICATOR | LV_STATE_CHECKED);
     lv_obj_set_style_outline_opa(ui_enableSwitch, 255, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
     lv_obj_set_style_outline_pad(ui_enableSwitch, 4, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
 
@@ -309,8 +306,8 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     lv_obj_add_event_cb(ui_quickSetupVolButton1, ui_bnt_obj_pressed, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(ui_quickSetupVolButton2, ui_bnt_obj_pressed, LV_EVENT_PRESSED, NULL);
     // lv_obj_add_event_cb(ui_voltSlider, ui_set_slider_changed, LV_EVENT_VALUE_CHANGED, NULL);
-    lv_obj_add_event_cb(ui_settingVoltageButton, ui_set_vol_cur_pressed, LV_EVENT_PRESSED, NULL);
-    lv_obj_add_event_cb(ui_settingCurrentButton, ui_set_vol_cur_pressed, LV_EVENT_PRESSED, NULL);
+    lv_obj_add_event_cb(ui_settingVoltageButton, ui_set_vol_cur_change, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_add_event_cb(ui_settingCurrentButton, ui_set_vol_cur_change, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_event_cb(ui_enableSwitch, ui_enable_switch_pressed, LV_EVENT_VALUE_CHANGED, NULL);
     // lv_obj_add_event_cb(ui_modeButton, ui_mode_bnt_pressed, LV_EVENT_PRESSED, NULL);
 
@@ -324,6 +321,7 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     lv_group_add_obj(btn_group, ui_settingCurrentButton);
     lv_group_add_obj(btn_group, ui_enableSwitch);
     // lv_group_add_obj(btn_group, ui_modeButton);
+    lv_indev_set_group(knobs_indev, btn_group);
     if (adjPowerModel.workState == 1)
     {
         lv_group_focus_obj(ui_enableSwitch);
@@ -332,7 +330,6 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     {
         lv_group_focus_obj(ui_backBtn);
     }
-    lv_indev_set_group(knobs_indev, btn_group);
 
     adjPowerTimer = lv_timer_create(adjPowerTimer_timeout, DATA_REFRESH_MS, NULL);
     lv_timer_set_repeat_count(adjPowerTimer, -1);
@@ -476,22 +473,20 @@ static void ui_bnt_obj_pressed(lv_event_t *e)
     }
 }
 
-static void ui_set_vol_cur_pressed(lv_event_t *e)
+static void ui_set_vol_cur_change(lv_event_t *e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t *target = lv_event_get_target(e);
 
-    if (LV_EVENT_PRESSED == event_code)
+    if (LV_EVENT_VALUE_CHANGED == event_code)
     {
         if (target == ui_settingVoltageButton)
         {
-            LV_LOG_USER("button_pressed LV_EVENT_PRESSED % u", event_code);
             adjPowerModel.utilConfig.settingVoltage =
                 lv_numberbtn_get_value(ui_settingVoltageButton) * 1000;
         }
         else if (target == ui_settingCurrentButton)
         {
-            LV_LOG_USER("button_pressed LV_EVENT_PRESSED % u", event_code);
             adjPowerModel.utilConfig.settingCurrent =
                 lv_numberbtn_get_value(ui_settingCurrentButton) * 1000;
         }

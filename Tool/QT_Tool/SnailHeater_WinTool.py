@@ -698,7 +698,7 @@ class DownloadController(object):
             startAddr.append(dataAddrOffset)
             fileSize = os.path.getsize(wallpapers[ind])
             dataLen.append(fileSize)  # 壁纸数据长度
-            if fileSize >= 20000:
+            if suffix != "mjpeg" and fileSize >= 20000:
                 # 超出最大长度
                 isLegal.append(False)
                 self.print_log(COLOR_RED % ("此图片文件过大（已被忽略）：" + param["src_path"][ind]))

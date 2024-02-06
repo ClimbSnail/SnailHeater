@@ -64,6 +64,7 @@ static void lv_numberbtn_constructor(const lv_obj_class_t *class_p, lv_obj_t *ob
     LV_UNUSED(class_p);
     LV_TRACE_OBJ_CREATE("begin");
 
+    lv_res_t res;
     lv_numberbtn_t *numBnt = (lv_numberbtn_t *)obj;
 
     /*Initialize the allocated 'ext'*/
@@ -234,10 +235,13 @@ static void lv_numberbtn_event(const lv_obj_class_t *class_p, lv_event_t *e)
         if (c == LV_KEY_RIGHT || c == LV_KEY_UP)
         {
             lv_numberbtn_set_value(numBnt, numBnt->value + numBnt->step);
+            res = lv_event_send(obj, LV_EVENT_VALUE_CHANGED, NULL);
         }
         else if (c == LV_KEY_LEFT || c == LV_KEY_DOWN)
         {
+            res = lv_event_send(obj, LV_EVENT_VALUE_CHANGED, NULL);
             lv_numberbtn_set_value(numBnt, numBnt->value - numBnt->step);
+            res = lv_event_send(obj, LV_EVENT_VALUE_CHANGED, NULL);
         }
     }
     // else if (code == LV_EVENT_HIT_TEST)
@@ -338,6 +342,14 @@ void lv_numberbtn_set_label_and_format(const lv_obj_t *obj,
     lv_obj_align(obj_to_add, numBnt->align, 0, 0);
 }
 
+void lv_numberbtn_set_step(const lv_obj_t *obj, double step)
+{
+    LV_ASSERT_OBJ(obj, MY_CLASS);
+
+    lv_numberbtn_t *numBnt = (lv_numberbtn_t *)obj;
+    numBnt->step = step;
+}
+
 void lv_numberbtn_set_align(lv_obj_t *obj, lv_align_t align)
 {
     LV_ASSERT_OBJ(obj, MY_CLASS);
@@ -385,8 +397,6 @@ void lv_numberbtn_set_value(lv_obj_t *obj, double value)
 
     lv_obj_update_layout(obj);
     lv_numberbtn_t *numBnt = (lv_numberbtn_t *)obj;
-    // if (value == numBnt->value)
-    //     return;
 
     numBnt->value = LV_CLAMP(numBnt->min_value, value, numBnt->max_value);
     if (true == numBnt->is_set_text)

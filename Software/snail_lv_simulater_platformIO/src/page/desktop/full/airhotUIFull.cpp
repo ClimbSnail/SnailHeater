@@ -31,12 +31,13 @@ static uint8_t chartTempData[CHART_TEMP_LEN] = {0};
 static uint8_t chartTempDataSaveInd; // 循环储存的下标
 
 static void ui_set_temp_btn_pressed(lv_event_t *e);
-static void ui_set_air_btn_pressed(lv_event_t *e);
+static void ui_set_air_duty_btn_change(lv_event_t *e);
+static void airhotPageUI_release();
 
 static void airhotPageUI_focused(lv_event_t *e)
 {
-    lv_group_focus_obj(ui_backBtn);
     lv_indev_set_group(knobs_indev, btn_group);
+    lv_group_focus_obj(ui_backBtn);
 }
 
 static void rotate_anim_cb(void *lvobj, int32_t v)
@@ -165,26 +166,22 @@ static void airhotTimer_timeout(lv_timer_t *timer)
 
 static bool airhotPageUI_init(lv_obj_t *father)
 {
-    if (NULL != airhotPageUI)
-    {
-        lv_obj_del(airhotPageUI);
-        airhotPageUI = NULL;
-    }
+    airhotPageUI_release();
+
     top_layer_set_name();
     theme_color_init();
 
     airhotPageUI = lv_btn_create(father);
     airhotUIObj.mainButtonUI = airhotPageUI;
-
-    lv_obj_remove_style_all(airhotPageUI);
-    lv_obj_set_size(airhotPageUI, EACH_PAGE_SIZE_X, EACH_PAGE_SIZE_Y);
-    lv_obj_center(airhotPageUI);
-    lv_obj_add_flag(airhotPageUI, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
-    lv_obj_clear_flag(airhotPageUI, LV_OBJ_FLAG_SCROLLABLE);
-    // lv_obj_set_style_bg_color(airhotPageUI, IS_WHITE_THEME ? lv_color_white() : lv_color_black(), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(airhotPageUI, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-
     lv_obj_t *ui_ButtonTmp = airhotPageUI;
+
+    lv_obj_remove_style_all(ui_ButtonTmp);
+    lv_obj_set_size(ui_ButtonTmp, EACH_PAGE_SIZE_X, EACH_PAGE_SIZE_Y);
+    lv_obj_center(ui_ButtonTmp);
+    lv_obj_add_flag(ui_ButtonTmp, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+    lv_obj_clear_flag(ui_ButtonTmp, LV_OBJ_FLAG_SCROLLABLE);
+    // lv_obj_set_style_bg_color(ui_ButtonTmp, IS_WHITE_THEME ? lv_color_white() : lv_color_black(), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_ButtonTmp, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_t *lb1 = lv_label_create(ui_ButtonTmp);
     lv_label_set_text(lb1, TEXT_TEMP_PRESET);
@@ -301,7 +298,7 @@ static bool airhotPageUI_init(lv_obj_t *father)
     lv_obj_t *airDutyLabel = lv_label_create(ui_setAirDutyButton);
     lv_numberbtn_set_label_and_format(ui_setAirDutyButton,
                                       airDutyLabel, "%d%%", 1);
-    lv_numberbtn_set_range(ui_setAirDutyButton, 5, 100);
+    lv_numberbtn_set_range(ui_setAirDutyButton, 15, 100);
     lv_numberbtn_set_value(ui_setAirDutyButton, airhotModel.utilConfig.workAirSpeed);
     lv_obj_remove_style_all(ui_setAirDutyButton);
     lv_obj_set_size(ui_setAirDutyButton, 64, 30);
@@ -411,7 +408,7 @@ static bool airhotPageUI_init(lv_obj_t *father)
     lv_obj_add_event_cb(ui_fastSetTempButton1, ui_fast_temp_btn2_pressed, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(ui_fastSetTempButton2, ui_fast_temp_btn3_pressed, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(ui_targetTempButton, ui_set_temp_btn_pressed, LV_EVENT_PRESSED, NULL);
-    lv_obj_add_event_cb(ui_setAirDutyButton, ui_set_air_btn_pressed, LV_EVENT_PRESSED, NULL);
+    lv_obj_add_event_cb(ui_setAirDutyButton, ui_set_air_duty_btn_change, LV_EVENT_VALUE_CHANGED, NULL);
     if (ENABLE_STATE::ENABLE_STATE_OPEN == airhotModel.utilConfig.fastPID)
     {
         lv_obj_add_event_cb(ui_paramKp, ui_set_pid_pressed, LV_EVENT_PRESSED, NULL);
@@ -432,8 +429,8 @@ static bool airhotPageUI_init(lv_obj_t *father)
         lv_group_add_obj(btn_group, ui_paramKi);
         lv_group_add_obj(btn_group, ui_paramKd);
     }
-    lv_group_focus_obj(ui_backBtn);
     lv_indev_set_group(knobs_indev, btn_group);
+    lv_group_focus_obj(ui_backBtn);
 
     airhotTimer = lv_timer_create(airhotTimer_timeout, DATA_REFRESH_MS, NULL);
     lv_timer_set_repeat_count(airhotTimer, -1);
@@ -510,12 +507,12 @@ static void ui_set_temp_btn_pressed(lv_event_t *e)
     }
 }
 
-static void ui_set_air_btn_pressed(lv_event_t *e)
+static void ui_set_air_duty_btn_change(lv_event_t *e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t *target = lv_event_get_target(e);
 
-    if (LV_EVENT_PRESSED == event_code)
+    if (LV_EVENT_VALUE_CHANGED == event_code)
     {
         airhotModel.utilConfig.workAirSpeed = lv_numberbtn_get_value(ui_setAirDutyButton);
         // if (airhotModel.utilConfig.workAirSpeed != 0)
@@ -530,7 +527,7 @@ static void ui_set_air_btn_pressed(lv_event_t *e)
         //     lv_anim_start(&fan_anim);
         // }
 
-        LV_LOG_USER("set_tempArc LV_EVENT_PRESSED % u", event_code);
+        LV_LOG_USER("set_tempArc LV_EVENT_VALUE_CHANGED % u", event_code);
     }
 }
 

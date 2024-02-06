@@ -8,6 +8,7 @@
 static lv_obj_t *ui_father = NULL;
 
 static lv_obj_t *ui_touchSwitch;
+static lv_obj_t *ui_beepVolumeBtn;
 static lv_obj_t *ui_sysToneSwitch;
 static lv_obj_t *ui_knobsToneSwitch;
 static lv_obj_t *ui_knobsDirSwitch;
@@ -151,7 +152,8 @@ static void ui_white_theme_pressed(lv_event_t *e)
         if (lv_obj_has_state(target, LV_STATE_CHECKED))
         // SET_BIT(cfgKey1,CFG_KEY1_WHITE_THEME);
         {
-            sysInfoModel.utilConfig.uiParam.uiGlobalParam.whiteThemeEnable = ENABLE_STATE_OPEN;
+            sysInfoModel.utilConfig.uiParam.uiGlobalParam.whiteThemeEnable =
+                ENABLE_STATE::ENABLE_STATE_OPEN;
             lv_style_set_bg_color(&black_white_theme_style, lv_color_white());
             lv_img_set_src(ui_PanelTopBgImg, &img_top_bar_white);
             lv_style_set_text_color(&label_text_style, WHITE_THEME_LABEL_TEXT_COLOR);
@@ -199,8 +201,10 @@ void ui_sys_setting_init(lv_obj_t *father)
     lv_obj_add_flag(ui_touchSwitch, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_set_size(ui_touchSwitch, 40, 20);
     lv_obj_align_to(ui_touchSwitch, ui_touchLabel,
-                    LV_ALIGN_OUT_LEFT_MID, 135, 0);
-    if (sysInfoModel.utilConfig.touchFlag)
+                    LV_ALIGN_OUT_LEFT_MID, 140, 0);
+    // lv_obj_set_style_bg_color(ui_touchSwitch, lv_color_hex(0xF6B428),
+    //                           LV_PART_INDICATOR | LV_STATE_CHECKED);
+    if (ENABLE_STATE::ENABLE_STATE_OPEN == sysInfoModel.utilConfig.touchFlag)
     {
         lv_obj_add_state(ui_touchSwitch, LV_STATE_CHECKED); // 反向
     }
@@ -213,9 +217,35 @@ void ui_sys_setting_init(lv_obj_t *father)
     lv_obj_set_style_outline_opa(ui_touchSwitch, 255, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
     lv_obj_set_style_outline_pad(ui_touchSwitch, 4, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
 
+    // 提示音音量
+    lv_obj_t *ui_beepVolumeLabel = lv_label_create(father);
+    lv_obj_align_to(ui_beepVolumeLabel, ui_touchLabel,
+                    LV_ALIGN_OUT_BOTTOM_LEFT, 0, 20);
+    lv_label_set_text(ui_beepVolumeLabel, SETTING_TEXT_BEEP_VOLUME);
+    lv_obj_add_style(ui_beepVolumeLabel, &label_text_style, 0);
+
+    ui_beepVolumeBtn = lv_numberbtn_create(father);
+    lv_obj_t *ui_beepVolumeBtnLabel = lv_label_create(ui_beepVolumeBtn);
+    lv_numberbtn_set_label_and_format(ui_beepVolumeBtn,
+                                      ui_beepVolumeBtnLabel, "%d%%", 1);
+    lv_numberbtn_set_range(ui_beepVolumeBtn, 0, 100);
+    lv_numberbtn_set_value(ui_beepVolumeBtn, sysInfoModel.utilConfig.beepVolume);
+    lv_obj_set_size(ui_beepVolumeBtn, 50, 20);
+    lv_obj_align_to(ui_beepVolumeBtn, ui_beepVolumeLabel,
+                    LV_ALIGN_OUT_LEFT_MID, 145, 0);
+    // lv_obj_remove_style_all(ui_beepVolumeBtn);
+    lv_obj_add_flag(ui_beepVolumeBtn, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+    lv_obj_clear_flag(ui_beepVolumeBtn, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_radius(ui_beepVolumeBtn, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_beepVolumeBtn, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_beepVolumeBtn, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_beepVolumeBtn, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_add_style(ui_beepVolumeBtn, &setting_btn_focused_style, LV_STATE_FOCUSED);
+    lv_obj_add_style(ui_beepVolumeBtn, &setting_btn_pressed_style, LV_STATE_EDITED);
+
     // 系统提示音
     lv_obj_t *ui_sysToneLabel = lv_label_create(father);
-    lv_obj_align_to(ui_sysToneLabel, ui_touchLabel,
+    lv_obj_align_to(ui_sysToneLabel, ui_beepVolumeLabel,
                     LV_ALIGN_OUT_BOTTOM_LEFT, 0, 15);
     lv_label_set_text(ui_sysToneLabel, SETTING_TEXT_SYS_TONE);
     lv_obj_add_style(ui_sysToneLabel, &label_text_style, 0);
@@ -224,7 +254,7 @@ void ui_sys_setting_init(lv_obj_t *father)
     lv_obj_add_flag(ui_sysToneSwitch, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_set_size(ui_sysToneSwitch, 40, 20);
     lv_obj_align_to(ui_sysToneSwitch, ui_sysToneLabel,
-                    LV_ALIGN_OUT_LEFT_MID, 135, 0);
+                    LV_ALIGN_OUT_LEFT_MID, 140, 0);
     if (sysInfoModel.utilConfig.sysTone)
     {
         lv_obj_add_state(ui_sysToneSwitch, LV_STATE_CHECKED); // 反向
@@ -249,7 +279,7 @@ void ui_sys_setting_init(lv_obj_t *father)
     lv_obj_add_flag(ui_knobsToneSwitch, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_set_size(ui_knobsToneSwitch, 40, 20);
     lv_obj_align_to(ui_knobsToneSwitch, ui_knobsToneLabel,
-                    LV_ALIGN_OUT_LEFT_MID, 135, 0);
+                    LV_ALIGN_OUT_LEFT_MID, 140, 0);
     if (sysInfoModel.utilConfig.knobTone)
     {
         lv_obj_add_state(ui_knobsToneSwitch, LV_STATE_CHECKED); // 反向
@@ -274,7 +304,7 @@ void ui_sys_setting_init(lv_obj_t *father)
     lv_obj_add_flag(ui_knobsDirSwitch, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_set_size(ui_knobsDirSwitch, 40, 20);
     lv_obj_align_to(ui_knobsDirSwitch, ui_knobsDirLabel,
-                    LV_ALIGN_OUT_LEFT_MID, 135, 0);
+                    LV_ALIGN_OUT_LEFT_MID, 140, 0);
     if (sysInfoModel.utilConfig.knobDir)
     {
         lv_obj_add_state(ui_knobsDirSwitch, LV_STATE_CHECKED); // 反向
@@ -299,7 +329,7 @@ void ui_sys_setting_init(lv_obj_t *father)
     lv_obj_add_flag(ui_whiteThemeSwitch, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_set_size(ui_whiteThemeSwitch, 40, 20);
     lv_obj_align_to(ui_whiteThemeSwitch, ui_whiteThemeLabel,
-                    LV_ALIGN_OUT_LEFT_MID, 135, 0);
+                    LV_ALIGN_OUT_LEFT_MID, 140, 0);
     bool isWhiteTheme = IS_WHITE_THEME;
     if (isWhiteTheme)
     {
@@ -324,7 +354,7 @@ void ui_sys_setting_init(lv_obj_t *father)
     lv_obj_add_flag(ui_wallpaperSwitch, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_set_size(ui_wallpaperSwitch, 40, 20);
     lv_obj_align_to(ui_wallpaperSwitch, ui_wallpaperLabel,
-                    LV_ALIGN_OUT_LEFT_MID, 135, 0);
+                    LV_ALIGN_OUT_LEFT_MID, 140, 0);
     if (sysInfoModel.utilConfig.enableWallpaper)
     {
         lv_obj_add_state(ui_wallpaperSwitch, LV_STATE_CHECKED); // 反向
@@ -489,7 +519,7 @@ void ui_sys_setting_init(lv_obj_t *father)
     // lv_obj_remove_style_all(ui_userDataBnt);
     lv_obj_set_size(ui_userDataBnt, 40, 20);
     lv_obj_align_to(ui_userDataBnt, ui_userDataLabel,
-                    LV_ALIGN_OUT_LEFT_MID, 135, 0);
+                    LV_ALIGN_OUT_LEFT_MID, 140, 0);
     lv_obj_add_flag(ui_userDataBnt, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_clear_flag(ui_userDataBnt, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_color(ui_userDataBnt, lv_color_hex(0xffffff), LV_STATE_DEFAULT);
@@ -543,7 +573,11 @@ static void ui_sys_param_pressed(lv_event_t *e)
 
     if (LV_EVENT_PRESSED == event_code)
     {
-        if (target == ui_wallpaperDelayBtn)
+        if (target == ui_beepVolumeBtn)
+        {
+            sysInfoModel.utilConfig.beepVolume = lv_numberbtn_get_value(ui_beepVolumeBtn);
+        }
+        else if (target == ui_wallpaperDelayBtn)
         {
             sysInfoModel.utilConfig.lockScreenDelayTime = lv_numberbtn_get_value(ui_wallpaperDelayBtn);
         }
@@ -572,6 +606,7 @@ static void ui_sys_param_pressed(lv_event_t *e)
 void ui_sys_setting_init_group(lv_obj_t *father)
 {
     lv_obj_add_event_cb(ui_touchSwitch, ui_sys_setting_pressed, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_add_event_cb(ui_beepVolumeBtn, ui_sys_param_pressed, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(ui_sysToneSwitch, ui_sys_setting_pressed, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_event_cb(ui_knobsToneSwitch, ui_sys_setting_pressed, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_event_cb(ui_knobsDirSwitch, ui_sys_setting_pressed, LV_EVENT_VALUE_CHANGED, NULL);
@@ -593,7 +628,7 @@ void ui_sys_setting_init_group(lv_obj_t *father)
     sub_btn_group = lv_group_create();
     lv_group_add_obj(sub_btn_group, ui_subBackBtn);
     lv_group_add_obj(sub_btn_group, ui_touchSwitch);
-    lv_group_add_obj(sub_btn_group, ui_sysToneSwitch);
+    lv_group_add_obj(sub_btn_group, ui_beepVolumeBtn);
     lv_group_add_obj(sub_btn_group, ui_sysToneSwitch);
     lv_group_add_obj(sub_btn_group, ui_knobsToneSwitch);
     lv_group_add_obj(sub_btn_group, ui_knobsDirSwitch);
@@ -619,6 +654,7 @@ void ui_sys_setting_release(void *param)
 
     if (NULL != ui_father)
     {
+        userdata_verification_release();
         lv_obj_clean(ui_father);
         ui_father = NULL;
     }

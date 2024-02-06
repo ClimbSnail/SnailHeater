@@ -23,7 +23,16 @@ static lv_obj_t *ui_paramKd;
 
 static lv_obj_t *curvelineDropdown = NULL;
 static lv_obj_t *curvelineSwitchBtn;
-static lv_obj_t *curvelineSwitchLabel;
+static lv_obj_t *curvelineSetBtn;
+static lv_obj_t *curvelineNameLabel;
+
+static lv_obj_t *curvelineSetRegion = NULL;
+static lv_obj_t *curvelineTempBtn[6];
+static lv_obj_t *curvelineTimeBtn[6];
+static lv_obj_t *ui_saveEditBtn;
+static lv_obj_t *ui_exitEditBtn;
+static lv_obj_t *ui_hpCuver_arc = NULL;
+static lv_timer_t *ui_hpCuverTimer = NULL; // 曲线操作的定时器
 static lv_obj_t *startTimeLabel;
 static lv_timer_t *ui_searchTimer = NULL; // 读取曲线的定时器
 static lv_point_t curveline_points[MAX_STAGE_NUM];
@@ -32,6 +41,7 @@ static lv_point_t cur_point[2];
 static lv_obj_t *curveCurline;
 
 static lv_group_t *btn_group = NULL;
+static lv_group_t *sub_btn_group = NULL;
 
 // 图标的历史数据
 #define CHART_TEMP_LEN 70
@@ -39,16 +49,22 @@ static uint8_t chartTempData[CHART_TEMP_LEN] = {0};
 static uint8_t chartTempDataSaveInd; // 循环储存的下标
 
 static void ui_set_temp_btn_pressed(lv_event_t *e);
-static void ui_set_air_duty_btn_pressed(lv_event_t *e);
+static void ui_set_air_duty_btn_change(lv_event_t *e);
 static void ui_enable_switch_pressed(lv_event_t *e);
-static void ui_curvelineDropdown_pressed(lv_event_t *e);
 static void ui_line_switch_pressed(lv_event_t *e);
 static void managerInfoTimer_timeout(lv_timer_t *timer);
+static void hpPageUI_release();
 
 static void hpPageUI_focused(lv_event_t *e)
 {
-    lv_group_focus_obj(ui_backBtn);
+    if (NULL != curvelineSetRegion)
+    {
+        lv_obj_del(curvelineSetRegion);
+        curvelineSetRegion = NULL;
+    }
+
     lv_indev_set_group(knobs_indev, btn_group);
+    lv_group_focus_obj(ui_backBtn);
 }
 
 static void setTargetTemp(int temp)
@@ -57,17 +73,121 @@ static void setTargetTemp(int temp)
     lv_numberbtn_set_value(ui_targetTempButton, heatplatformModel.utilConfig.targetTemp);
 }
 
-static void ui_fast_temp_btn1_pressed(lv_event_t *e)
+static void displayCurve()
 {
-    setTargetTemp(heatplatformModel.utilConfig.quickSetupTemp_0);
+
+#ifdef SIMULATOR
+    // ind = 3 的单独会在后台处理, 故模拟器部分单独处理
+    heatplatformModel.curveConfig.temperatur[3] = heatplatformModel.curveConfig.temperatur[4];
+    heatplatformModel.curveConfig.time[3] =
+        (heatplatformModel.curveConfig.time[4] - heatplatformModel.curveConfig.time[2]) / 3.0 * 2 +
+        heatplatformModel.curveConfig.time[2];
+    heatplatformModel.manageCurveAction = INFO_MANAGE_ACTION_CURVE_IDLE;
+#endif
+    if (0 == heatplatformModel.curveConfig.id)
+    {
+        // 曲线0用于恒温控制
+        for (uint32_t i = 1; i < heatplatformModel.curveConfig.stageNum - 1; ++i)
+        {
+            heatplatformModel.curveConfig.temperatur[i] = heatplatformModel.utilConfig.targetTemp;
+        }
+    }
+
+    heatplatformModel.curveAllTime =
+        heatplatformModel.curveConfig.time[heatplatformModel.curveConfig.stageNum - 1];
+
+    // 温控曲线数据
+    double div_x = (SH_SCREEN_WIDTH - 20) / 1.0 / heatplatformModel.curveAllTime;
+    for (uint32_t i = 0; i < heatplatformModel.curveConfig.stageNum; ++i)
+    {
+        curveline_points[i].x = div_x * heatplatformModel.curveConfig.time[i] + 10;
+        curveline_points[i].y = CURVE_HIGH - (heatplatformModel.curveConfig.temperatur[i] >> 2);
+    }
+
+    lv_line_set_points(curveline, curveline_points,
+                       heatplatformModel.curveConfig.stageNum); /*Set the points*/
+
+    lv_label_set_text_fmt(curvelineNameLabel, SETTING_TEXT_CONFIG_CURVE "%d",
+                          heatplatformModel.curveConfig.id);
 }
-static void ui_fast_temp_btn2_pressed(lv_event_t *e)
+
+static void hpCurveTimer_timeout(lv_timer_t *timer)
 {
-    setTargetTemp(heatplatformModel.utilConfig.quickSetupTemp_1);
+    LV_UNUSED(timer);
+
+    if (NULL != ui_hpCuver_arc)
+    {
+        lv_obj_del(ui_hpCuver_arc);
+        ui_hpCuver_arc = NULL;
+    }
+
+    if (INFO_MANAGE_ACTION_CURVE_WRITE_OK == heatplatformModel.manageCurveAction)
+    {
+        heatplatformModel.manageCurveAction = INFO_MANAGE_ACTION_CURVE_IDLE;
+        // 更新曲线数据
+        displayCurve();
+    }
 }
-static void ui_fast_temp_btn3_pressed(lv_event_t *e)
+
+static void ui_fast_temp_btn_pressed(lv_event_t *e)
 {
-    setTargetTemp(heatplatformModel.utilConfig.quickSetupTemp_2);
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t *target = lv_event_get_target(e);
+
+    if (LV_EVENT_PRESSED == event_code)
+    {
+        if (target == ui_fastSetTempButton0)
+        {
+            setTargetTemp(heatplatformModel.utilConfig.quickSetupTemp_0);
+        }
+        else if (target == ui_fastSetTempButton1)
+        {
+            setTargetTemp(heatplatformModel.utilConfig.quickSetupTemp_1);
+        }
+        else if (target == ui_fastSetTempButton2)
+        {
+            setTargetTemp(heatplatformModel.utilConfig.quickSetupTemp_2);
+        }
+        else if (target == ui_exitEditBtn)
+        {
+            lv_indev_set_group(knobs_indev, btn_group);
+            lv_obj_del(curvelineSetRegion);
+            curvelineSetRegion = NULL;
+        }
+        else if (target == ui_saveEditBtn)
+        {
+            if (INFO_MANAGE_ACTION_CURVE_WRITE == heatplatformModel.manageCurveAction)
+            {
+                return;
+            }
+
+            int ind;
+            for (ind = 1; ind < heatplatformModel.curveConfig.stageNum; ind++)
+            {
+                if (3 == ind)
+                {
+                    ind++;
+                }
+
+                heatplatformModel.curveConfig.temperatur[ind] = lv_numberbtn_get_value(curvelineTempBtn[ind]);
+                heatplatformModel.curveConfig.time[ind] = lv_numberbtn_get_value(curvelineTimeBtn[ind]);
+            }
+
+            // 动作修改成读取
+            heatplatformModel.manageCurveAction = INFO_MANAGE_ACTION_CURVE_WRITE;
+
+#ifdef SIMULATOR
+            // 更新曲线数据
+            displayCurve();
+
+            snprintf(sysInfoModel.sysInfo, 128, "%s", "操作：\n  曲线已保存 !!!");
+            sysInfoModel.sysInfoDispTime = 3000;
+#else
+            ui_hpCuverTimer = lv_timer_create(hpCurveTimer_timeout, 600, NULL);
+            lv_timer_set_repeat_count(ui_hpCuverTimer, 1);
+#endif
+        }
+    }
 }
 
 static void draw_event_cb(lv_event_t *e)
@@ -190,26 +310,22 @@ static void setCurveline(lv_obj_t *obj, const char *text)
 
 static bool hpPageUI_init(lv_obj_t *father)
 {
-    if (NULL != hpPageUI)
-    {
-        lv_obj_del(hpPageUI);
-        hpPageUI = NULL;
-    }
+    hpPageUI_release();
+
     top_layer_set_name();
     theme_color_init();
 
     hpPageUI = lv_btn_create(father);
     hpUIObj.mainButtonUI = hpPageUI;
-
-    lv_obj_remove_style_all(hpPageUI);
-    lv_obj_set_size(hpPageUI, EACH_PAGE_SIZE_X, EACH_PAGE_SIZE_Y);
-    lv_obj_center(hpPageUI);
-    lv_obj_add_flag(hpPageUI, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
-    lv_obj_clear_flag(hpPageUI, LV_OBJ_FLAG_SCROLLABLE);
-    // lv_obj_set_style_bg_color(hpPageUI, IS_WHITE_THEME ? lv_color_white() : lv_color_black(), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(hpPageUI, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-
     lv_obj_t *ui_ButtonTmp = hpPageUI;
+
+    lv_obj_remove_style_all(ui_ButtonTmp);
+    lv_obj_set_size(ui_ButtonTmp, EACH_PAGE_SIZE_X, EACH_PAGE_SIZE_Y);
+    lv_obj_center(ui_ButtonTmp);
+    lv_obj_add_flag(ui_ButtonTmp, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+    lv_obj_clear_flag(ui_ButtonTmp, LV_OBJ_FLAG_SCROLLABLE);
+    // lv_obj_set_style_bg_color(ui_ButtonTmp, IS_WHITE_THEME ? lv_color_white() : lv_color_black(), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_ButtonTmp, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_t *lb1 = lv_label_create(ui_ButtonTmp);
     lv_label_set_text(lb1, TEXT_TEMP_PRESET);
@@ -331,6 +447,7 @@ static bool hpPageUI_init(lv_obj_t *father)
     lv_obj_set_style_outline_color(ui_enableSwitch, HEAT_PLAT_THEME_COLOR1, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
     lv_obj_set_style_outline_opa(ui_enableSwitch, 255, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
     lv_obj_set_style_outline_pad(ui_enableSwitch, 4, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
+    lv_obj_set_style_bg_color(ui_enableSwitch, HEAT_PLAT_THEME_COLOR1, LV_PART_INDICATOR | LV_STATE_CHECKED);
 
     // 风速字样
     ui_setAirTextLabel = lv_label_create(ui_ButtonTmp);
@@ -344,10 +461,10 @@ static bool hpPageUI_init(lv_obj_t *father)
     lv_obj_t *setAirDutyLabel = lv_label_create(ui_setAirDutyButton);
     lv_numberbtn_set_label_and_format(ui_setAirDutyButton,
                                       setAirDutyLabel, "%d%%", 1);
-    lv_numberbtn_set_range(ui_setAirDutyButton, 5, 100);
+    lv_numberbtn_set_range(ui_setAirDutyButton, 15, 100);
     lv_numberbtn_set_value(ui_setAirDutyButton, heatplatformModel.utilConfig.workAirSpeed);
     lv_obj_remove_style_all(ui_setAirDutyButton);
-    lv_obj_set_size(ui_setAirDutyButton, 64, 30);
+    lv_obj_set_size(ui_setAirDutyButton, 60, 25);
     // lv_obj_align(ui_setAirDutyButton, LV_ALIGN_CENTER, 102, -65);
     lv_obj_align(ui_setAirDutyButton, LV_ALIGN_CENTER, 102, -36);
     lv_obj_add_flag(ui_setAirDutyButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
@@ -384,41 +501,47 @@ static bool hpPageUI_init(lv_obj_t *father)
     lv_obj_add_event_cb(chartTemp, draw_event_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
     lv_chart_set_update_mode(chartTemp, LV_CHART_UPDATE_MODE_SHIFT);
 
-    // static char curvelineName[] = "恒温\n折线";
-    // curvelineDropdown = lv_dropdown_create(chartTemp);
-    // // lv_dropdown_set_options(curvelineDropdown, curvelineName);
-    // lv_dropdown_set_options_static(curvelineDropdown, curvelineName);
-    // lv_dropdown_set_selected(curvelineDropdown, heatplatformModel.curveConfig.id);
-    // // setCurveline(curvelineDropdown, heatplatformModel.curveConfig.id);
-    // lv_obj_set_size(curvelineDropdown, 60, LV_SIZE_CONTENT);
-    // lv_obj_align(curvelineDropdown, LV_ALIGN_TOP_LEFT, 5, 5);
-    // lv_obj_add_flag(curvelineDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
-    // lv_obj_set_style_text_font(curvelineDropdown, &FontDeyi_16, LV_PART_MAIN | LV_STATE_DEFAULT);
-    // lv_obj_set_style_outline_color(curvelineDropdown, SETTING_THEME_COLOR1, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
-    // lv_obj_set_style_outline_opa(curvelineDropdown, 255, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
-    // lv_obj_set_style_outline_pad(curvelineDropdown, 4, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
-    // lv_obj_add_style(curvelineDropdown, &label_text_style, 0);
-
     // 曲线切换按钮
     curvelineSwitchBtn = lv_btn_create(chartTemp);
     lv_obj_remove_style_all(curvelineSwitchBtn);
-    lv_obj_set_size(curvelineSwitchBtn, 38, 20);
-    lv_obj_align(curvelineSwitchBtn, LV_ALIGN_TOP_LEFT, 5, 5);
+    lv_obj_set_size(curvelineSwitchBtn, 20, 20);
+    lv_obj_align(curvelineSwitchBtn, LV_ALIGN_TOP_LEFT, 2, 2);
     lv_obj_add_flag(curvelineSwitchBtn, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_clear_flag(curvelineSwitchBtn, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_add_style(curvelineSwitchBtn, &btn_type1_style, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_style(curvelineSwitchBtn, &btn_type1_focused_style, LV_STATE_FOCUSED);
+    // lv_obj_set_style_border_width(curvelineSwitchBtn, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_t *curvelineImg = lv_img_create(curvelineSwitchBtn);
+    lv_img_set_src(curvelineImg, &lineSwitch);
+    lv_obj_align(curvelineImg, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_set_style_img_recolor_opa(curvelineImg, LV_OPA_70, 0);
+    lv_obj_set_style_img_recolor(curvelineImg, HEAT_PLAT_THEME_COLOR1, 0);
 
-    curvelineSwitchLabel = lv_label_create(curvelineSwitchBtn);
-    lv_label_set_text(curvelineSwitchLabel, TEXT_SWITVHCH_LINE);
-    lv_obj_align(curvelineSwitchLabel, LV_ALIGN_CENTER, 0, 0);
-    lv_obj_add_style(curvelineSwitchLabel, &label_text_style, 0);
+    // 曲线配置按钮
+    curvelineSetBtn = lv_btn_create(chartTemp);
+    lv_obj_remove_style_all(curvelineSetBtn);
+    lv_obj_set_size(curvelineSetBtn, 20, 20);
+    lv_obj_align_to(curvelineSetBtn, curvelineSwitchBtn, LV_ALIGN_OUT_BOTTOM_MID, 0, 3);
+    lv_obj_add_flag(curvelineSetBtn, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+    lv_obj_clear_flag(curvelineSetBtn, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_add_style(curvelineSetBtn, &btn_type1_focused_style, LV_STATE_FOCUSED);
+    // lv_obj_set_style_border_width(curvelineSetBtn, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_t *curvelineSetImg = lv_img_create(curvelineSetBtn);
+    lv_img_set_src(curvelineSetImg, &setting);
+    lv_obj_align(curvelineSetImg, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_set_style_img_recolor_opa(curvelineSetImg, LV_OPA_70, 0);
+    lv_obj_set_style_img_recolor(curvelineSetImg, HEAT_PLAT_THEME_COLOR1, 0);
+
+    curvelineNameLabel = lv_label_create(chartTemp);
+    lv_label_set_text_fmt(curvelineNameLabel, SETTING_TEXT_CONFIG_CURVE "%d",
+                          heatplatformModel.curveConfig.id);
+    lv_obj_align_to(curvelineNameLabel, curvelineSwitchBtn, LV_ALIGN_OUT_RIGHT_MID, 5, -1);
+    lv_obj_add_style(curvelineNameLabel, &label_text_style, 0);
 
     startTimeLabel = lv_label_create(chartTemp);
     lv_label_set_text_fmt(startTimeLabel, "%03d:%02d",
                           heatplatformModel.curRunTime / 60000,
                           heatplatformModel.curRunTime % 60000 / 1000);
-    lv_obj_align(startTimeLabel, LV_ALIGN_TOP_RIGHT, -5, 5);
+    lv_obj_align(startTimeLabel, LV_ALIGN_TOP_RIGHT, -5, 2);
     lv_obj_add_style(startTimeLabel, &label_text_style, 0);
 
     chartSer1 = lv_chart_add_series(chartTemp, HEAT_PLAT_THEME_COLOR1, LV_CHART_AXIS_PRIMARY_Y);
@@ -429,15 +552,9 @@ static bool hpPageUI_init(lv_obj_t *father)
         i = (i + 1) % CHART_TEMP_LEN;
     }
 
-    // 曲线数据
-    double div_x = (SH_SCREEN_WIDTH - 20) / 1.0 / heatplatformModel.curveAllTime;
-    for (uint32_t i = 0; i < heatplatformModel.curveConfig.stageNum; ++i)
-    {
-        curveline_points[i].x = div_x * heatplatformModel.curveConfig.time[i] + 10;
-        curveline_points[i].y = CURVE_HIGH - (heatplatformModel.curveConfig.temperatur[i] >> 2);
-    }
-
+    // 温控曲线数据
     curveline = lv_line_create(chartTemp);
+    displayCurve();
     lv_line_set_points(curveline, curveline_points,
                        heatplatformModel.curveConfig.stageNum); /*Set the points*/
     lv_obj_set_style_line_color(curveline, lv_palette_main(LV_PALETTE_BLUE), 0);
@@ -511,14 +628,15 @@ static bool hpPageUI_init(lv_obj_t *father)
         lv_obj_add_style(ui_paramKd, &btn_type1_pressed_style, LV_STATE_EDITED);
     }
 
-    lv_obj_add_event_cb(ui_fastSetTempButton0, ui_fast_temp_btn1_pressed, LV_EVENT_PRESSED, NULL);
-    lv_obj_add_event_cb(ui_fastSetTempButton1, ui_fast_temp_btn2_pressed, LV_EVENT_PRESSED, NULL);
-    lv_obj_add_event_cb(ui_fastSetTempButton2, ui_fast_temp_btn3_pressed, LV_EVENT_PRESSED, NULL);
+    lv_obj_add_event_cb(ui_fastSetTempButton0, ui_fast_temp_btn_pressed, LV_EVENT_PRESSED, NULL);
+    lv_obj_add_event_cb(ui_fastSetTempButton1, ui_fast_temp_btn_pressed, LV_EVENT_PRESSED, NULL);
+    lv_obj_add_event_cb(ui_fastSetTempButton2, ui_fast_temp_btn_pressed, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(ui_targetTempButton, ui_set_temp_btn_pressed, LV_EVENT_PRESSED, NULL);
-    lv_obj_add_event_cb(ui_setAirDutyButton, ui_set_air_duty_btn_pressed, LV_EVENT_PRESSED, NULL);
+    lv_obj_add_event_cb(ui_setAirDutyButton, ui_set_air_duty_btn_change, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_event_cb(ui_enableSwitch, ui_enable_switch_pressed, LV_EVENT_VALUE_CHANGED, NULL);
-    // lv_obj_add_event_cb(curvelineDropdown, ui_curvelineDropdown_pressed, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_event_cb(curvelineSwitchBtn, ui_line_switch_pressed, LV_EVENT_PRESSED, NULL);
+    lv_obj_add_event_cb(curvelineSetBtn, ui_line_switch_pressed, LV_EVENT_PRESSED, NULL);
+
     if (ENABLE_STATE::ENABLE_STATE_OPEN == heatplatformModel.utilConfig.fastPID)
     {
         lv_obj_add_event_cb(ui_paramKp, ui_set_pid_pressed, LV_EVENT_PRESSED, NULL);
@@ -529,13 +647,22 @@ static bool hpPageUI_init(lv_obj_t *father)
     btn_group = lv_group_create();
     lv_group_add_obj(btn_group, ui_backBtn);
     lv_group_add_obj(btn_group, ui_enableSwitch);
+    lv_group_add_obj(btn_group, ui_setAirDutyButton);
+    if (ENABLE_STATE::ENABLE_STATE_OPEN == heatplatformModel.utilConfig.fastPID)
+    {
+        lv_group_add_obj(btn_group, ui_paramKp);
+        lv_group_add_obj(btn_group, ui_paramKi);
+        lv_group_add_obj(btn_group, ui_paramKd);
+    }
+    lv_group_add_obj(btn_group, curvelineSetBtn);
+    lv_group_add_obj(btn_group, curvelineSwitchBtn);
     lv_group_add_obj(btn_group, ui_targetTempButton);
     lv_group_add_obj(btn_group, ui_fastSetTempButton0);
     lv_group_add_obj(btn_group, ui_fastSetTempButton1);
     lv_group_add_obj(btn_group, ui_fastSetTempButton2);
-    // lv_group_add_obj(btn_group, curvelineDropdown);
-    lv_group_add_obj(btn_group, curvelineSwitchBtn);
-    lv_group_add_obj(btn_group, ui_setAirDutyButton);
+
+    lv_indev_set_group(knobs_indev, btn_group);
+
     if (heatplatformModel.enable == ENABLE_STATE_OPEN)
     {
         lv_group_focus_obj(ui_enableSwitch);
@@ -544,14 +671,6 @@ static bool hpPageUI_init(lv_obj_t *father)
     {
         lv_group_focus_obj(ui_backBtn);
     }
-
-    if (ENABLE_STATE::ENABLE_STATE_OPEN == heatplatformModel.utilConfig.fastPID)
-    {
-        lv_group_add_obj(btn_group, ui_paramKp);
-        lv_group_add_obj(btn_group, ui_paramKi);
-        lv_group_add_obj(btn_group, ui_paramKd);
-    }
-    lv_indev_set_group(knobs_indev, btn_group);
 
     hpTimer = lv_timer_create(hpTimer_timeout, DATA_REFRESH_MS, NULL);
     lv_timer_set_repeat_count(hpTimer, -1);
@@ -583,6 +702,162 @@ static void hpPageUI_release()
     }
 }
 
+static void ui_init_curve_setting()
+{
+    if (heatplatformModel.curveConfig.id == 0)
+    {
+        snprintf(sysInfoModel.sysInfo, 128, "%s", "错误：\n  曲线0不支持更改 !!!");
+        sysInfoModel.sysInfoDispTime = 3000;
+        return;
+    }
+    lv_obj_t *ui_ButtonTmp = hpPageUI;
+
+    curvelineSetRegion = lv_obj_create(ui_ButtonTmp);
+    // lv_obj_remove_style_all(ui_ButtonTmp);
+    lv_obj_set_size(curvelineSetRegion, EACH_PAGE_SIZE_X - 6, EACH_PAGE_SIZE_Y - CURVE_HIGH - 5);
+    lv_obj_set_style_bg_color(curvelineSetRegion, IS_WHITE_THEME ? WHITE_THEME_CHART_COLOR1 : BLACK_THEME_CHART_COLOR1, LV_PART_MAIN);
+    lv_obj_align(curvelineSetRegion, LV_ALIGN_TOP_LEFT, 3, 3);
+
+    lv_obj_t *curvelineStageLabel = lv_label_create(curvelineSetRegion);
+    lv_label_set_text_fmt(curvelineStageLabel, SETTING_TEXT_CONFIG_CURVE_STAGE);
+    lv_obj_align(curvelineStageLabel, LV_ALIGN_TOP_LEFT, 15, -10);
+    lv_obj_add_style(curvelineStageLabel, &label_text_style, 0);
+
+    lv_obj_t *curvelineRiseLabel = lv_label_create(curvelineSetRegion);
+    lv_label_set_text_fmt(curvelineRiseLabel, SETTING_TEXT_CONFIG_CURVE_RISE);
+    lv_obj_align_to(curvelineRiseLabel, curvelineStageLabel, LV_ALIGN_OUT_RIGHT_MID, 20, -2);
+    lv_obj_add_style(curvelineRiseLabel, &label_text_style, 0);
+
+    lv_obj_t *curvelinePreheatingLabel = lv_label_create(curvelineSetRegion);
+    lv_label_set_text_fmt(curvelinePreheatingLabel, SETTING_TEXT_CONFIG_CURVE_PREHEATING);
+    lv_obj_align_to(curvelinePreheatingLabel, curvelineRiseLabel, LV_ALIGN_OUT_RIGHT_MID, 20, -2);
+    lv_obj_add_style(curvelinePreheatingLabel, &label_text_style, 0);
+
+    lv_obj_t *curvelineRefluxLabel = lv_label_create(curvelineSetRegion);
+    lv_label_set_text_fmt(curvelineRefluxLabel, SETTING_TEXT_CONFIG_CURVE_REFLUX);
+    lv_obj_align_to(curvelineRefluxLabel, curvelinePreheatingLabel, LV_ALIGN_OUT_RIGHT_MID, 20, -2);
+    lv_obj_add_style(curvelineRefluxLabel, &label_text_style, 0);
+
+    lv_obj_t *curvelineCoolingLabel = lv_label_create(curvelineSetRegion);
+    lv_label_set_text_fmt(curvelineCoolingLabel, SETTING_TEXT_CONFIG_CURVE_COOLING);
+    lv_obj_align_to(curvelineCoolingLabel, curvelineRefluxLabel, LV_ALIGN_OUT_RIGHT_MID, 20, -2);
+    lv_obj_add_style(curvelineCoolingLabel, &label_text_style, 0);
+
+    lv_obj_t *curvelineTarTempLabel = lv_label_create(curvelineSetRegion);
+    lv_label_set_text_fmt(curvelineTarTempLabel, SETTING_TEXT_CONFIG_CURVE_TARGET_TEMP);
+    lv_obj_align_to(curvelineTarTempLabel, curvelineStageLabel, LV_ALIGN_OUT_BOTTOM_MID, -20, 2);
+    lv_obj_add_style(curvelineTarTempLabel, &label_text_style, 0);
+
+    lv_obj_t *curvelineTimelineLabel = lv_label_create(curvelineSetRegion);
+    lv_label_set_text_fmt(curvelineTimelineLabel, SETTING_TEXT_CONFIG_CURVE_TIMELINE);
+    lv_obj_align_to(curvelineTimelineLabel, curvelineTarTempLabel, LV_ALIGN_OUT_BOTTOM_MID, -2, 2);
+    lv_obj_add_style(curvelineTimelineLabel, &label_text_style, 0);
+
+    // lv_obj_t *curvelineSlopeLabel = lv_label_create(curvelineSetRegion);
+    // lv_label_set_text_fmt(curvelineSlopeLabel, SETTING_TEXT_CONFIG_CURVE_SLOPE);
+    // lv_obj_align_to(curvelineSlopeLabel, curvelineTimelineLabel, LV_ALIGN_OUT_BOTTOM_MID, 4, 5);
+    // lv_obj_add_style(curvelineSlopeLabel, &label_text_style, 0);
+
+    // 保存修改按钮
+    ui_saveEditBtn = lv_btn_create(curvelineSetRegion);
+    lv_obj_remove_style_all(ui_saveEditBtn);
+    lv_obj_set_size(ui_saveEditBtn, 60, 22);
+    lv_obj_align(ui_saveEditBtn, LV_ALIGN_CENTER, -40, 32);
+    lv_obj_add_flag(ui_saveEditBtn, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+    lv_obj_clear_flag(ui_saveEditBtn, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_add_style(ui_saveEditBtn, &btn_type1_style, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_add_style(ui_saveEditBtn, &btn_type1_focused_style, LV_STATE_FOCUSED);
+    lv_obj_t *saveEditBtnLabel = lv_label_create(ui_saveEditBtn);
+    lv_obj_set_align(saveEditBtnLabel, LV_ALIGN_CENTER);
+    lv_obj_set_style_text_font(saveEditBtnLabel, &FontDeyi_16, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_label_set_text_fmt(saveEditBtnLabel, "%s", SETTING_TEXT_EDIT_SAVE);
+
+    // 取消修改按钮
+    ui_exitEditBtn = lv_btn_create(curvelineSetRegion);
+    lv_obj_remove_style_all(ui_exitEditBtn);
+    lv_obj_set_size(ui_exitEditBtn, 60, 22);
+    lv_obj_align(ui_exitEditBtn, LV_ALIGN_CENTER, 40, 32);
+    lv_obj_add_flag(ui_exitEditBtn, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+    lv_obj_clear_flag(ui_exitEditBtn, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_add_style(ui_exitEditBtn, &btn_type1_style, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_add_style(ui_exitEditBtn, &btn_type1_focused_style, LV_STATE_FOCUSED);
+    lv_obj_t *exitEditBtnLabel = lv_label_create(ui_exitEditBtn);
+    lv_obj_set_align(exitEditBtnLabel, LV_ALIGN_CENTER);
+    lv_obj_set_style_text_font(exitEditBtnLabel, &FontDeyi_16, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_label_set_text_fmt(exitEditBtnLabel, "%s", SETTING_TEXT_EDIT_EXIT_MD);
+
+    int ind;
+    int cnt = 0;
+    for (ind = 1; ind < heatplatformModel.curveConfig.stageNum; ind++)
+    {
+        if (3 == ind)
+        {
+            // 有一段不用
+            ind++;
+        }
+
+        curvelineTempBtn[ind] = lv_numberbtn_create(curvelineSetRegion);
+        lv_obj_t *curvelineTempBtnLabel = lv_label_create(curvelineTempBtn[ind]);
+        lv_numberbtn_set_label_and_format(curvelineTempBtn[ind],
+                                          curvelineTempBtnLabel, "%d", 1);
+        lv_numberbtn_set_range(curvelineTempBtn[ind], 0, 500);
+        lv_numberbtn_set_value(curvelineTempBtn[ind], heatplatformModel.curveConfig.temperatur[ind]);
+        // lv_obj_remove_style_all(curvelineTempBtn[ind]);
+        lv_obj_set_size(curvelineTempBtn[ind], 30, 20);
+        lv_obj_align_to(curvelineTempBtn[ind], curvelineTarTempLabel, LV_ALIGN_OUT_RIGHT_MID, 17 + cnt * 47, 0);
+        lv_obj_add_flag(curvelineTempBtn[ind], LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+        lv_obj_clear_flag(curvelineTempBtn[ind], LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_set_style_radius(curvelineTempBtn[ind], 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_border_width(curvelineTempBtn[ind], 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(curvelineTempBtn[ind], lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_font(curvelineTempBtn[ind], &FontDeyi_16, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_add_style(curvelineTempBtn[ind], &btn_type1_focused_style, LV_STATE_FOCUSED);
+        lv_obj_add_style(curvelineTempBtn[ind], &btn_type1_pressed_style, LV_STATE_EDITED);
+
+        curvelineTimeBtn[ind] = lv_numberbtn_create(curvelineSetRegion);
+        lv_obj_t *curvelineTimeBtnLabel = lv_label_create(curvelineTimeBtn[ind]);
+        lv_numberbtn_set_label_and_format(curvelineTimeBtn[ind],
+                                          curvelineTimeBtnLabel, "%d", 1);
+        lv_numberbtn_set_range(curvelineTimeBtn[ind], 0, 500);
+        lv_numberbtn_set_value(curvelineTimeBtn[ind], heatplatformModel.curveConfig.time[ind]);
+        // lv_obj_remove_style_all(curvelineTimeBtn[ind]);
+        lv_obj_set_size(curvelineTimeBtn[ind], 30, 20);
+        lv_obj_align_to(curvelineTimeBtn[ind], curvelineTimelineLabel, LV_ALIGN_OUT_RIGHT_MID, 17 + cnt * 47, 0);
+        lv_obj_add_flag(curvelineTimeBtn[ind], LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+        lv_obj_clear_flag(curvelineTimeBtn[ind], LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_set_style_radius(curvelineTimeBtn[ind], 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_border_width(curvelineTimeBtn[ind], 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(curvelineTimeBtn[ind], lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_font(curvelineTimeBtn[ind], &FontDeyi_16, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_add_style(curvelineTimeBtn[ind], &btn_type1_focused_style, LV_STATE_FOCUSED);
+        lv_obj_add_style(curvelineTimeBtn[ind], &btn_type1_pressed_style, LV_STATE_EDITED);
+
+        ++cnt;
+    }
+
+    lv_obj_add_event_cb(ui_saveEditBtn, ui_fast_temp_btn_pressed, LV_EVENT_PRESSED, NULL);
+    lv_obj_add_event_cb(ui_exitEditBtn, ui_fast_temp_btn_pressed, LV_EVENT_PRESSED, NULL);
+
+    sub_btn_group = lv_group_create();
+    lv_group_add_obj(sub_btn_group, ui_exitEditBtn);
+    for (ind = 1; ind < heatplatformModel.curveConfig.stageNum; ind++)
+    {
+        if (3 == ind)
+        {
+            // 有一段不用
+            ind++;
+        }
+
+        lv_group_add_obj(sub_btn_group, curvelineTempBtn[ind]);
+        lv_group_add_obj(sub_btn_group, curvelineTimeBtn[ind]);
+    }
+
+    lv_group_add_obj(sub_btn_group, ui_saveEditBtn);
+
+    lv_indev_set_group(knobs_indev, sub_btn_group);
+    // lv_event_send(curvelineTempBtn[1], LV_EVENT_PRESSED, NULL);
+}
+
 static void ui_line_switch_pressed(lv_event_t *e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
@@ -590,15 +865,24 @@ static void ui_line_switch_pressed(lv_event_t *e)
 
     if (event_code == LV_EVENT_PRESSED)
     {
-        LV_LOG_USER("ui_line_switch_pressed heatplatformModel.curveConfig.id = % u",
-                    heatplatformModel.curveConfig.id);
-        // 正在编辑
-        heatplatformModel.curveConfig.id = (heatplatformModel.curveConfig.id + 1) % 2;
-        // 动作修改成读取
-        heatplatformModel.manageCurveAction = INFO_MANAGE_ACTION_CURVE_READ;
+        if (target == curvelineSwitchBtn)
+        {
+            LV_LOG_USER("ui_line_switch_pressed heatplatformModel.curveConfig.id = % u",
+                        heatplatformModel.curveConfig.id);
+            // 正在编辑
+            heatplatformModel.curveConfig.id =
+                (heatplatformModel.curveConfig.id + 1) % heatplatformModel.utilConfig.curveCnt;
+            // 动作修改成读取
+            heatplatformModel.manageCurveAction = INFO_MANAGE_ACTION_CURVE_READ;
+            heatplatformModel.utilConfig.curCurveID = heatplatformModel.curveConfig.id;
 
-        ui_searchTimer = lv_timer_create(managerInfoTimer_timeout, 600, NULL);
-        lv_timer_set_repeat_count(ui_searchTimer, 1);
+            ui_searchTimer = lv_timer_create(managerInfoTimer_timeout, 600, NULL);
+            lv_timer_set_repeat_count(ui_searchTimer, 1);
+        }
+        else if (target == curvelineSetBtn)
+        {
+            ui_init_curve_setting();
+        }
     }
 }
 
@@ -622,35 +906,8 @@ static void managerInfoTimer_timeout(lv_timer_t *timer)
     {
         heatplatformModel.manageCurveAction = INFO_MANAGE_ACTION_CURVE_IDLE;
         // 读取成功
-        // lv_dropdown_set_selected(curvelineDropdown, heatplatformModel.curveConfig.id);
-
-        // 曲线数据
-        double div_x = (SH_SCREEN_WIDTH - 20) / 1.0 / heatplatformModel.curveAllTime;
-        for (uint32_t i = 0; i < heatplatformModel.curveConfig.stageNum; ++i)
-        {
-            curveline_points[i].x = div_x * heatplatformModel.curveConfig.time[i] + 10;
-            curveline_points[i].y = CURVE_HIGH - (heatplatformModel.curveConfig.temperatur[i] >> 2);
-        }
-
-        lv_line_set_points(curveline, curveline_points,
-                           heatplatformModel.curveConfig.stageNum); /*Set the points*/
-    }
-}
-
-static void ui_curvelineDropdown_pressed(lv_event_t *e)
-{
-    lv_event_code_t event_code = lv_event_get_code(e);
-    lv_obj_t *target = lv_event_get_target(e);
-
-    if (LV_EVENT_VALUE_CHANGED == event_code)
-    {
-        // 正在编辑
-        heatplatformModel.curveConfig.id = lv_dropdown_get_selected(curvelineDropdown);
-        // 动作修改成读取
-        heatplatformModel.manageCurveAction = INFO_MANAGE_ACTION_CURVE_READ;
-
-        ui_searchTimer = lv_timer_create(managerInfoTimer_timeout, 600, NULL);
-        lv_timer_set_repeat_count(ui_searchTimer, 1);
+        heatplatformModel.utilConfig.curCurveID = heatplatformModel.curveConfig.id;
+        displayCurve();
     }
 }
 
@@ -687,9 +944,13 @@ void ui_updateHeatplatformData(void)
 
         // 单位时间的x的div
         double div_x = (SH_SCREEN_WIDTH - 20) / 1.0 / heatplatformModel.curveAllTime;
-        // heatplatformModel.curveRunTime = (heatplatformModel.curveRunTime + 1) %
-        //                                    heatplatformModel.curveAllTime;
-        cur_point[0].x = heatplatformModel.curveRunTime * div_x;
+
+        unsigned long curRunTime = heatplatformModel.curRunTime / 1000;
+        if (curRunTime > heatplatformModel.curveAllTime)
+        {
+            curRunTime = heatplatformModel.curveAllTime;
+        }
+        cur_point[0].x = curRunTime * div_x + 10;
         cur_point[0].y = CURVE_HIGH - (heatplatformModel.curTemp >> 2);
         cur_point[1].x = cur_point[0].x;
         cur_point[1].y = cur_point[0].y + 1;
@@ -701,14 +962,14 @@ void ui_updateHeatplatformData(void)
     }
 }
 
-static void ui_set_air_duty_btn_pressed(lv_event_t *e)
+static void ui_set_air_duty_btn_change(lv_event_t *e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t *target = lv_event_get_target(e);
 
-    if (LV_EVENT_PRESSED == event_code)
+    if (LV_EVENT_VALUE_CHANGED == event_code)
     {
-        LV_LOG_USER("button_pressed LV_EVENT_PRESSED % u", event_code);
+        LV_LOG_USER("button_pressed LV_EVENT_VALUE_CHANGED % u", event_code);
 
         heatplatformModel.utilConfig.workAirSpeed = lv_numberbtn_get_value(ui_setAirDutyButton);
     }
@@ -724,6 +985,10 @@ static void ui_set_temp_btn_pressed(lv_event_t *e)
         LV_LOG_USER("button_pressed LV_EVENT_PRESSED % u", event_code);
 
         heatplatformModel.utilConfig.targetTemp = lv_numberbtn_get_value(ui_targetTempButton);
+        if (0 == heatplatformModel.curveConfig.id)
+        {
+            displayCurve();
+        }
     }
 }
 

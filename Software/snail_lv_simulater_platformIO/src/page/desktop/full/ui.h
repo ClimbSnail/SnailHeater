@@ -31,7 +31,8 @@ extern "C"
         PAGE_INDEX_AIR_HOT,
         PAGE_INDEX_HEAT_PLAT,
         PAGE_INDEX_ADJ_POWER,
-        // PAGE_INDEX_SPOTWELDER,
+        PAGE_INDEX_SPOTWELDER,
+        PAGE_INDEX_SIGNAL,
         PAGE_INDEX_SETTING,
         PAGE_INDEX_MAXSIZE
 
@@ -41,7 +42,8 @@ extern "C"
     extern uint8_t currPageIndex; // 当前页所在的页面索引，对应上面的枚举 PAGE_INDEX
     const char modeName[UI_OBJ_NUM][20] = {"烙铁", "风枪",
                                            "热台", "电源",
-                                           //    "点焊机",
+                                           "点焊",
+                                           "信号",
                                            "设置"};
 
 #define EACH_PAGE_SIZE_X SH_SCREEN_WIDTH
@@ -66,6 +68,28 @@ extern "C"
     LV_IMG_DECLARE(img_text_c210);
     LV_IMG_DECLARE(img_text_t12);
     LV_IMG_DECLARE(img_text_noc);
+
+    LV_IMG_DECLARE(img_name_noc_ico);
+    LV_IMG_DECLARE(img_name_c105_ico);
+    LV_IMG_DECLARE(img_name_c115_ico);
+    LV_IMG_DECLARE(img_name_c210_ico);
+    LV_IMG_DECLARE(img_name_c245_ico);
+    LV_IMG_DECLARE(img_name_c470_ico);
+    LV_IMG_DECLARE(img_name_t12_ico);
+    LV_IMG_DECLARE(img_name_t20_ico);
+    LV_IMG_DECLARE(img_name_936_ico);
+
+    LV_IMG_DECLARE(img_wake_type_none);
+    LV_IMG_DECLARE(img_wake_type_high);
+    LV_IMG_DECLARE(img_wake_type_low);
+    LV_IMG_DECLARE(img_wake_type_change);
+
+    LV_IMG_DECLARE(signal_sine);
+    LV_IMG_DECLARE(signal_square);
+    LV_IMG_DECLARE(earphone3);
+    LV_IMG_DECLARE(lineSwitch);
+    LV_IMG_DECLARE(setting);
+
     LV_IMG_DECLARE(img_top_bar_white);
     LV_IMG_DECLARE(img_top_bar_black);
     LV_FONT_DECLARE(lv_font_montserrat_18);
@@ -107,7 +131,8 @@ extern "C"
         AIR_HOT_THEME_COLOR1,
         HEAT_PLAT_THEME_COLOR1,
         ADJ_POWER_THEME_COLOR1,
-        // SPOT_WELDER_THEME_COLOR1,
+        SPOT_WELDER_THEME_COLOR1,
+        SIGNAL_THEME_COLOR1,
         SETTING_THEME_COLOR1};
 
 // 位操作宏
@@ -131,8 +156,8 @@ extern "C"
 // #define IS_WHITE_THEME GET_BIT(cfgKey1, CFG_KEY1_WHITE_THEME)
 #define IS_WHITE_THEME sysInfoModel.utilConfig.uiParam.uiGlobalParam.whiteThemeEnable
 
-    void top_layer_init();   // 绘制顶层状态栏
-    void theme_color_init(); // 根据模式设置主题色
+    void top_layer_init(lv_obj_t *parent); // 绘制顶层状态栏
+    void theme_color_init();               // 根据模式设置主题色
 
     extern lv_style_t label_text_style;        // 用于各种默认标签的样式
     extern lv_style_t black_white_theme_style; // 全局黑白样式
@@ -161,6 +186,8 @@ extern "C"
     extern FE_UI_OBJ hpUIObj;
     extern FE_UI_OBJ airhotUIObj;
     extern FE_UI_OBJ settingUIObj;
+    extern FE_UI_OBJ spotWelderUIObj;
+    extern FE_UI_OBJ signalUIObj;
     extern FE_UI_OBJ adjPowerUIObj;
 
     void ui_init(lv_indev_t *lv_indev_delete);
