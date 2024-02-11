@@ -125,6 +125,7 @@ class DownloadController(object):
         self.form.CanclePushButton.clicked.connect(self.cancle_button_click)
 
         # 设置提示信息
+        self.form.Infolabel.setText(_translate("SanilHeaterTool", "使用教程："))
         self.form.QueryPushButton.setToolTip("获取机器码(SN)")
         self.form.ActivatePushButton.setToolTip("填入SN，点此激活")
         self.form.UpdateModeMethodRadioButton.setToolTip("保留用户的设置信息，只在固件上做更新")
