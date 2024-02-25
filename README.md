@@ -110,3 +110,4 @@ platformIO模拟器 https://github.com/lvgl/lv_platformio
 * UI调色 https://colorhunt.co
 * UI调色 https://aicolors.co/
 * UI调色 https://color.adobe.com/zh/create/color-wheel
+* ESP32与ESP32S2的ADC心得 https://blog.csdn.net/qq_42437017/article/details/127796716
