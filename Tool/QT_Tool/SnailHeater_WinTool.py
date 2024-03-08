@@ -20,6 +20,8 @@ import requests
 import traceback
 import struct
 import shutil
+import contextlib
+import io
 from PIL import Image
 
 import serial  # pip install pyserial
@@ -265,9 +267,8 @@ class DownloadController(object):
                 self.print_log("激活成功")
             else:
                 self.print_log("激活失败")
-        self.ser.close()  # 关闭串口
-        del self.ser
-        self.ser = None
+        
+        self.release_serial()
 
     def query_button_click(self):
         """
@@ -385,7 +386,6 @@ class DownloadController(object):
             if self.ser != None:
                 return
 
-            self.ser = 1
             self.progress_bar_time_cnt = 1  # 间接启动进度条更新
 
             if mode == "清空式":
@@ -397,7 +397,7 @@ class DownloadController(object):
                     esptool.main(cmd)
                     self.print_log("完成清空！")
                 except Exception as e:
-                    self.print_log(COLOR_RED % "错误：通讯异常。")
+                    self.print_log(COLOR_RED % "错误：通讯异常。检查设备或稍后再试！")
                     pass
 
             #  --port COM7 --baud 921600 write_flash -fm dio -fs 4MB 0x1000 bootloader_dio_40m.bin 0x00008000 partitions.bin 0x0000e000 boot_app0.bin 0x00010000
@@ -420,7 +420,6 @@ class DownloadController(object):
             except Exception as e:
                 self.print_log(COLOR_RED % "错误：通讯异常。")
                 return False
-            self.ser = None
 
             # self.esp_reboot()  # 手动复位芯片
             self.print_log(COLOR_RED % "刷机结束！")
@@ -429,7 +428,6 @@ class DownloadController(object):
             self.print_log("如25s后始终未能自动亮屏，请手动拔插一次typec接口再次等待10s。\n")
 
         except Exception as err:
-            self.ser = None
             self.print_log(COLOR_RED % "未释放资源，请15s后再试。如无法触发下载，拔插type-c接口再试。")
             print(err)
 
@@ -452,6 +450,61 @@ class DownloadController(object):
         self.form.UpdateModeMethodRadioButton.setEnabled(True)
         self.form.ClearModeMethodRadioButton.setEnabled(True)
 
+    def get_flash_size(self, select_com):
+        """
+        :param select_com:串口号
+        :return:None
+        """
+        global default_wallpaper
+        flash_size = 0
+        try:
+            if self.ser != None:
+                return
+            
+            # # 打开文件以写入函数的打印输出内容
+            # with open('output.txt', 'w') as file:
+            #     # 使用 io.StringIO 创建一个临时的字符串缓冲区作为打印输出的目标
+            #     with contextlib.redirect_stdout(file), io.StringIO() as buffer:
+            #         # 将缓冲区设置为标准输出，并在函数执行时捕获打印内容
+            #         with contextlib.redirect_stdout(buffer):
+            #             cmd = ['--port', select_com, 'flash_id']
+            #             esptool.main(cmd)
+            #             self.print_log("完成 get_flash_size")
+            #             self.print_log(buffer.getvalue())
+            #             flash_size = buffer.getvalue().split("\n")[-1].split(": ")[-1]
+            #             print("flash_size = ", flash_size)     
+
+            # 创建一个字符串缓冲区
+            output_buffer = io.StringIO()
+            
+            # 将sys.stdout重定向到缓冲区
+            original_stdout = sys.stdout
+            sys.stdout = output_buffer
+            
+            # 调用函数
+            cmd = ['--port', select_com, 'flash_id']
+            esptool.main(cmd)
+            
+            # 恢复sys.stdout
+            sys.stdout = original_stdout
+            
+            # 获取打印的数据
+            printed_data = output_buffer.getvalue()
+            
+            line_data = printed_data.split("\n")
+            for line in line_data:
+                if "Detected flash size: " in line:
+                    flash_size = int(line.split(": ")[1][:-2])
+            
+            flash_size = flash_size * 1024 * 1024
+
+        except Exception as err:
+            print(err)
+            self.print_log(COLOR_RED % "错误：通讯异常。检查设备或稍后再试！")
+            pass
+
+        return flash_size
+
     def cancle_button_click(self):
         """
         取消下载固件
@@ -466,10 +519,11 @@ class DownloadController(object):
                 # common.kill_thread(self.download_thread, self.down_action)
                 common._async_raise(self.download_thread)
                 self.download_thread = None
+                self.release_serial()
             except Exception as err:
                 print(err)
 
-        self.scan_com()
+        # self.scan_com()
 
         # 复位进度条
         self.progress_bar_time_cnt = 0
@@ -479,6 +533,15 @@ class DownloadController(object):
         self.form.UpdateModeMethodRadioButton.setEnabled(True)
         self.form.ClearModeMethodRadioButton.setEnabled(True)
 
+    def release_serial(self):
+        """
+        关闭串口
+        """
+        if self.ser != None:
+            self.ser.close()  # 关闭串口
+            del self.ser
+            self.ser = None
+    
     def get_firmware_version(self):
         """
         获取最新版
@@ -510,8 +573,12 @@ class DownloadController(object):
         if select_com == None:
             return None
 
-        self.ser = serial.Serial(select_com, INFO_BAUD_RATE, timeout=10)
         machine_code = "查询失败"
+        try:
+            self.ser = serial.Serial(select_com, INFO_BAUD_RATE, timeout=10)
+        except Exception as err:
+            self.print_log((COLOR_RED % "串口打开失败"))
+            return machine_code
 
         # 判断是否打开成功
         if self.ser.is_open:
@@ -548,9 +615,7 @@ class DownloadController(object):
             else:
                 self.print_log("机器码查询成功")
 
-        self.ser.close()  # 关闭串口
-        del self.ser
-        self.ser = None
+        self.release_serial()
         return machine_code
 
     def get_sn(self):
@@ -561,8 +626,12 @@ class DownloadController(object):
         if select_com == None:
             return None
 
-        self.ser = serial.Serial(select_com, INFO_BAUD_RATE, timeout=10)
         sn = ""
+        try:
+            self.ser = serial.Serial(select_com, INFO_BAUD_RATE, timeout=10)
+        except Exception as err:
+            self.print_log((COLOR_RED % "串口打开失败"))
+            return sn
 
         # 判断是否打开成功
         if self.ser.is_open:
@@ -598,9 +667,8 @@ class DownloadController(object):
                 self.print_log((COLOR_RED % "SN查询失败"))
             else:
                 self.print_log("SN查询成功")
-        self.ser.close()  # 关闭串口
-        del self.ser
-        self.ser = None
+                
+        self.release_serial()
         return sn
 
     def chooseFile(self):
@@ -631,6 +699,9 @@ class DownloadController(object):
             self.form.WriteWallpaperButton.setEnabled(True)
             pass
 
+        flash_size = self.get_flash_size(select_com)
+        wallpaper_all_size = flash_size - 2097202
+
         param = self.get_output_param()
         if param == False:
             self.print_log((COLOR_RED % "请检查参数设置"))
@@ -649,9 +720,10 @@ class DownloadController(object):
                 return False
 
         # 50为预留值
-        rate = int(os.path.getsize(wallpaper_name) / (2097152 - 50) * 100)
+        rate = int(os.path.getsize(wallpaper_name) / wallpaper_all_size * 100)
+        self.print_log((COLOR_RED % "壁纸可用的全容量为 ") + str(int(wallpaper_all_size/1024))+" KB")
         self.print_log((COLOR_RED % "本次壁纸占用全容量的 ") + str(rate) + "%")
-        if os.path.getsize(wallpaper_name) > (2097152 - 50):
+        if os.path.getsize(wallpaper_name) > wallpaper_all_size:
             self.print_log(COLOR_RED % "异常终止：壁纸数据过大，请适当降低帧率或截取更短的时间。")
             self.form.WriteWallpaperButton.setEnabled(True)
             return False
@@ -958,9 +1030,7 @@ class DownloadController(object):
         time.sleep(0.05)  # 0.5 / 0.05
         self._setDTR(False)  # IO0=HIGH, done
 
-        self.ser.close()  # 关闭串口
-        del self.ser
-        self.ser = None
+        self.release_serial()
 
     def schedule_display_time(self):
         if self.progress_bar_time_cnt > 0 and self.progress_bar_time_cnt < 99:
