@@ -62,7 +62,7 @@ wallpaper_cache_dir = os.path.join(cur_dir, "Wallpaper", "Cache")
 wallpaper_path = os.path.join(cur_dir, "Wallpaper")
 # 壁纸文件
 wallpaper_name = os.path.join(wallpaper_path, "Wallpaper.lsw")
-wallpaperAddrInFlash = '0x00200000'
+WALLPAPER_ADDR_IN_FLASH = '0x00200000'
 TYPE_JPG = 0
 TYPE_MJPEG = 1
 IMAGE_FORMAT = ["jpg", "JPG", "jpeg", "JPEG", "png", "PNG"]
@@ -353,7 +353,7 @@ class DownloadController(object):
             all_time += 5
         file_list = ["./base_data/boot_app0.bin",
                      "./base_data/bootloader.bin",
-                     "./base_data/partitions.bin",
+                     "./base_data/partitions_4MB.bin",
                      #  "./base_data/tinyuf2.bin",
                      firmware_path,
                      default_wallpaper]
@@ -400,19 +400,20 @@ class DownloadController(object):
                     self.print_log(COLOR_RED % "错误：通讯异常。检查设备或稍后再试！")
                     pass
 
+            flash_size, flash_size_text = self.get_flash_size(select_com)
+
             #  --port COM7 --baud 921600 write_flash -fm dio -fs 4MB 0x1000 bootloader_dio_40m.bin 0x00008000 partitions.bin 0x0000e000 boot_app0.bin 0x00010000
             cmd = ['SnailHeater_TOOL.py', '--port', select_com,
                    '--baud', str(BAUD_RATE),
                    'write_flash',
+                   '--flash_size', flash_size_text,
                    '0x00001000', "./base_data/bootloader.bin",
-                   '0x00008000', "./base_data/partitions.bin",
+                   '0x00008000', "./base_data/partitions_%s.bin"%(flash_size_text),
                    '0x0000e000', "./base_data/boot_app0.bin",
                    # '0x002d0000', "./base_data/tinyuf2.bin",
                    '0x00010000', firmware_path,
-                   wallpaperAddrInFlash, default_wallpaper
+                   WALLPAPER_ADDR_IN_FLASH, default_wallpaper
                    ]
-
-            # self.print_log("cmd = "+ str(cmd))
 
             self.print_log("开始刷写固件...")
             try:
@@ -457,9 +458,10 @@ class DownloadController(object):
         """
         global default_wallpaper
         flash_size = 0
+        flash_size_text = 0
         try:
             if self.ser != None:
-                return
+                return 0, "0MB"
             
             # # 打开文件以写入函数的打印输出内容
             # with open('output.txt', 'w') as file:
@@ -494,16 +496,16 @@ class DownloadController(object):
             line_data = printed_data.split("\n")
             for line in line_data:
                 if "Detected flash size: " in line:
-                    flash_size = int(line.split(": ")[1][:-2])
+                    flash_size_text = line.split(": ")[1]
             
-            flash_size = flash_size * 1024 * 1024
+            flash_size = int(flash_size_text[:-2]) * 1024 * 1024
 
         except Exception as err:
             print(err)
             self.print_log(COLOR_RED % "错误：通讯异常。检查设备或稍后再试！")
             pass
 
-        return flash_size
+        return flash_size, flash_size_text
 
     def cancle_button_click(self):
         """
@@ -699,43 +701,48 @@ class DownloadController(object):
             self.form.WriteWallpaperButton.setEnabled(True)
             pass
 
-        flash_size = self.get_flash_size(select_com)
+        flash_size, _ = self.get_flash_size(select_com)
         wallpaper_all_size = flash_size - 2097202
 
-        param = self.get_output_param()
-        if param == False:
-            self.print_log((COLOR_RED % "请检查参数设置"))
-            self.form.WriteWallpaperButton.setEnabled(True)
-            return False
-        if param["format"][0] == "lsw":
-            self.print_log((COLOR_RED % "正在使用已打包好的壁纸文件"))
-            shutil.copy(param["src_path"][0], wallpaper_name)
-        else:
-            if self.trans_format() == False:
-                self.form.WriteWallpaperButton.setEnabled(True)
-                return False
-
-            if self.generateWallpaperBin() == None:
-                self.form.WriteWallpaperButton.setEnabled(True)
-                return False
-
-        # 50为预留值
-        rate = int(os.path.getsize(wallpaper_name) / wallpaper_all_size * 100)
-        self.print_log((COLOR_RED % "壁纸可用的全容量为 ") + str(int(wallpaper_all_size/1024))+" KB")
-        self.print_log((COLOR_RED % "本次壁纸占用全容量的 ") + str(rate) + "%")
-        if os.path.getsize(wallpaper_name) > wallpaper_all_size:
-            self.print_log(COLOR_RED % "异常终止：壁纸数据过大，请适当降低帧率或截取更短的时间。")
-            self.form.WriteWallpaperButton.setEnabled(True)
-            return False
-
-        cmd = ['SnailHeater_TOOL.py', '--port', select_com,
-               '--baud', str(BAUD_RATE),
-               'write_flash',
-               wallpaperAddrInFlash, wallpaper_name
-               ]
-
-        self.print_log("正在烧入壁纸数据到主机，请等待（35s）......")
         try:
+            param = self.get_output_param()
+            if param == False:
+                self.print_log((COLOR_RED % "请检查参数设置"))
+                self.form.WriteWallpaperButton.setEnabled(True)
+                return False
+            if param["format"][0] == "lsw":
+                self.print_log((COLOR_RED % "正在使用已打包好的壁纸文件"))
+                shutil.copy(param["src_path"][0], wallpaper_name)
+            else:
+                if self.trans_format() == False:
+                    self.form.WriteWallpaperButton.setEnabled(True)
+                    return False
+
+                if self.generateWallpaperBin() == None:
+                    self.form.WriteWallpaperButton.setEnabled(True)
+                    return False
+
+            # 50为预留值
+            rate = int(os.path.getsize(wallpaper_name) / wallpaper_all_size * 100)
+            self.print_log((COLOR_RED % "壁纸可用的全容量为 ") + str(int(wallpaper_all_size/1024))+" KB")
+            self.print_log((COLOR_RED % "本次壁纸占用全容量的 ") + str(rate) + "%")
+            if os.path.getsize(wallpaper_name) > wallpaper_all_size:
+                self.print_log(COLOR_RED % "异常终止：壁纸数据过大，请适当降低帧率或截取更短的时间。")
+                self.form.WriteWallpaperButton.setEnabled(True)
+                return False
+
+        except Exception as err:
+            return False
+
+
+        try:
+            cmd = ['SnailHeater_TOOL.py', '--port', select_com,
+                '--baud', str(BAUD_RATE),
+                'write_flash',
+                WALLPAPER_ADDR_IN_FLASH, wallpaper_name
+                ]
+
+            self.print_log("正在烧入壁纸数据到主机，请等待（35s）......")
             esptool.main(cmd[1:])
             self.print_log("成功烧入壁纸数据到主机")
         except Exception as e:
@@ -979,7 +986,7 @@ class DownloadController(object):
         # esptool.py erase_region 0x20000 0x4000
         # esptool.py erase_flash
         cmd = ['SnailHeater_TOOL.py', '--port', select_com,
-               'erase_region', wallpaperAddrInFlash, '0x200000']
+               'erase_region', WALLPAPER_ADDR_IN_FLASH, '0x200000']
         try:
             esptool.main(cmd[1:])
         except Exception as e:
@@ -989,7 +996,7 @@ class DownloadController(object):
         cmd = ['SnailHeater_TOOL.py', '--port', select_com,
                '--baud', str(BAUD_RATE),
                'write_flash',
-               wallpaperAddrInFlash, default_wallpaper_clean
+               WALLPAPER_ADDR_IN_FLASH, default_wallpaper_clean
                ]
         try:
             esptool.main(cmd[1:])
