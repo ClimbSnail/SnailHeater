@@ -48,7 +48,7 @@ if SH_SN == None and os.path.exists("SnailHeater_SN.py"):
 
 COLOR_RED = '<span style=\" color: #ff0000;\">%s</span>'
 BAUD_RATE = 921600
-INFO_BAUD_RATE = 115200
+INFO_BAUD_RATE = 921600
 
 cur_dir = os.getcwd()  # 当前目录
 # 默认壁纸
@@ -315,63 +315,67 @@ class DownloadController(object):
         :return: None
         """
         global default_wallpaper
-        self.print_log("准备更新固件...")
-        self.form.UpdateModeMethodRadioButton.setEnabled(False)
-        self.form.ClearModeMethodRadioButton.setEnabled(False)
-        self.form.UpdatePushButton.setEnabled(False)
+        try:
+            self.print_log("准备更新固件...")
+            self.form.UpdateModeMethodRadioButton.setEnabled(False)
+            self.form.ClearModeMethodRadioButton.setEnabled(False)
+            self.form.UpdatePushButton.setEnabled(False)
 
-        firmware_path = self.form.FirmwareComboBox.currentText().strip()
-        mode = "更新式" if self.form.UpdateModeMethodRadioButton.isChecked() else "清空式"
+            firmware_path = self.form.FirmwareComboBox.currentText().strip()
+            mode = "更新式" if self.form.UpdateModeMethodRadioButton.isChecked() else "清空式"
 
-        select_com = self.getSafeCom()
-        if select_com == None or firmware_path == "":
-            if firmware_path == "":
-                self.print_log((COLOR_RED % "错误提示：") + "未查询到固件文件！")
-            self.form.UpdatePushButton.setEnabled(True)
-            self.form.UpdateModeMethodRadioButton.setEnabled(True)
-            self.form.ClearModeMethodRadioButton.setEnabled(True)
-            return False
+            select_com = self.getSafeCom()
+            if select_com == None or firmware_path == "":
+                if firmware_path == "":
+                    self.print_log((COLOR_RED % "错误提示：") + "未查询到固件文件！")
+                self.form.UpdatePushButton.setEnabled(True)
+                self.form.UpdateModeMethodRadioButton.setEnabled(True)
+                self.form.ClearModeMethodRadioButton.setEnabled(True)
+                return False
 
-        self.print_log("串口号：" + (COLOR_RED % select_com))
-        self.print_log("固件文件：" + (COLOR_RED % firmware_path))
-        self.print_log("刷机模式：" + (COLOR_RED % mode))
+            self.print_log("串口号：" + (COLOR_RED % select_com))
+            self.print_log("固件文件：" + (COLOR_RED % firmware_path))
+            self.print_log("刷机模式：" + (COLOR_RED % mode))
 
-        if "③" in firmware_path:
-            default_wallpaper = default_wallpaper_320
-        elif "①" in firmware_path or "②" in firmware_path:
-            default_wallpaper = default_wallpaper_280
-        else:
-            default_wallpaper = default_wallpaper_clean
+            if "③" in firmware_path:
+                default_wallpaper = default_wallpaper_320
+            elif "①" in firmware_path or "②" in firmware_path:
+                default_wallpaper = default_wallpaper_280
+            else:
+                default_wallpaper = default_wallpaper_clean
 
-        if not os.path.exists(default_wallpaper):
-            default_wallpaper = default_wallpaper_clean
+            if not os.path.exists(default_wallpaper):
+                default_wallpaper = default_wallpaper_clean
 
-        all_time = 0  # 粗略认为连接并复位芯片需要0.5s钟
-        if mode == "清空式":
-            all_time += 24
-        else:
-            all_time += 5
-        file_list = ["./base_data/boot_app0.bin",
-                     "./base_data/bootloader.bin",
-                     "./base_data/partitions_4MB.bin",
-                     #  "./base_data/tinyuf2.bin",
-                     firmware_path,
-                     default_wallpaper]
-        for filepath in file_list:
-            all_time = all_time + os.path.getsize(filepath) * 10 / BAUD_RATE
+            all_time = 0  # 粗略认为连接并复位芯片需要0.5s钟
+            if mode == "清空式":
+                all_time += 24
+            else:
+                all_time += 5
+            file_list = ["./base_data/boot_app0.bin",
+                        "./base_data/bootloader.bin",
+                        "./base_data/partitions_4MB.bin",
+                        #  "./base_data/tinyuf2.bin",
+                        firmware_path,
+                        default_wallpaper]
+            for filepath in file_list:
+                all_time = all_time + os.path.getsize(filepath) * 10 / BAUD_RATE
 
-        if os.path.exists(default_wallpaper):
-            all_time = all_time + os.path.getsize(default_wallpaper) * 10 / BAUD_RATE + 2
+            if os.path.exists(default_wallpaper):
+                all_time = all_time + os.path.getsize(default_wallpaper) * 10 / BAUD_RATE + 2
 
-        self.print_log("刷机预计需要：" + (COLOR_RED % (str(all_time)[0:5] + "s")))
+            self.print_log("刷机预计需要：" + (COLOR_RED % (str(all_time)[0:5] + "s")))
 
-        # 进度条进程要在下载进程之前启动（为了在下载失败时可以立即查杀进度条进程）
-        self.download_thread = threading.Thread(target=self.down_action,
-                                                args=(mode, select_com, firmware_path))
-        self.progress_bar_timer.start(int(all_time / 0.1))
+            # 进度条进程要在下载进程之前启动（为了在下载失败时可以立即查杀进度条进程）
+            self.download_thread = threading.Thread(target=self.down_action,
+                                                    args=(mode, select_com, firmware_path))
+            self.progress_bar_timer.start(int(all_time / 0.1))
 
-        self.download_thread.setDaemon(True)  # 设置守护线程目的尽量防止意外中断掉主线程程序
-        self.download_thread.start()
+            self.download_thread.setDaemon(True)  # 设置守护线程目的尽量防止意外中断掉主线程程序
+            self.download_thread.start()
+
+        except Exception as err:
+            print(err)
 
     def down_action(self, mode, select_com, firmware_path):
         """
@@ -407,6 +411,7 @@ class DownloadController(object):
                    '--baud', str(BAUD_RATE),
                    'write_flash',
                    '--flash_size', flash_size_text,
+                #    '0x00001000', "./base_data/bootloader_%s.bin"%(flash_size_text),
                    '0x00001000', "./base_data/bootloader.bin",
                    '0x00008000', "./base_data/partitions_%s.bin"%(flash_size_text),
                    '0x0000e000', "./base_data/boot_app0.bin",
@@ -429,8 +434,8 @@ class DownloadController(object):
             self.print_log("如25s后始终未能自动亮屏，请手动拔插一次typec接口再次等待10s。\n")
 
         except Exception as err:
-            self.print_log(COLOR_RED % "未释放资源，请15s后再试。如无法触发下载，拔插type-c接口再试。")
             print(err)
+            # self.print_log(COLOR_RED % "未释放资源，请15s后再试。如无法触发下载，拔插type-c接口再试。")
 
         # global SH_SN
         # if SH_SN != None:
@@ -458,23 +463,10 @@ class DownloadController(object):
         """
         global default_wallpaper
         flash_size = 0
-        flash_size_text = 0
+        flash_size_text = ""
         try:
             if self.ser != None:
                 return 0, "0MB"
-            
-            # # 打开文件以写入函数的打印输出内容
-            # with open('output.txt', 'w') as file:
-            #     # 使用 io.StringIO 创建一个临时的字符串缓冲区作为打印输出的目标
-            #     with contextlib.redirect_stdout(file), io.StringIO() as buffer:
-            #         # 将缓冲区设置为标准输出，并在函数执行时捕获打印内容
-            #         with contextlib.redirect_stdout(buffer):
-            #             cmd = ['--port', select_com, 'flash_id']
-            #             esptool.main(cmd)
-            #             self.print_log("完成 get_flash_size")
-            #             self.print_log(buffer.getvalue())
-            #             flash_size = buffer.getvalue().split("\n")[-1].split(": ")[-1]
-            #             print("flash_size = ", flash_size)     
 
             # 创建一个字符串缓冲区
             output_buffer = io.StringIO()
@@ -504,7 +496,7 @@ class DownloadController(object):
             print(err)
             self.print_log(COLOR_RED % "错误：通讯异常。检查设备或稍后再试！")
             pass
-
+        
         return flash_size, flash_size_text
 
     def cancle_button_click(self):
@@ -741,8 +733,8 @@ class DownloadController(object):
                 'write_flash',
                 WALLPAPER_ADDR_IN_FLASH, wallpaper_name
                 ]
-
-            self.print_log("正在烧入壁纸数据到主机，请等待（35s）......")
+            time = int(os.path.getsize(wallpaper_name)) / 2097152 * 30
+            self.print_log("正在烧入壁纸数据到主机，请等待（%ds）......" % time)
             esptool.main(cmd[1:])
             self.print_log("成功烧入壁纸数据到主机")
         except Exception as e:
