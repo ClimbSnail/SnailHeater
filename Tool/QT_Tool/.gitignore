@@ -2,7 +2,8 @@ Doc/*.pdf
 Lib/
 Scripts/
 Include/
-esptoolpy/
+esptool_v33/
+esptool_v41/
 build/
 dist/
 .idea/

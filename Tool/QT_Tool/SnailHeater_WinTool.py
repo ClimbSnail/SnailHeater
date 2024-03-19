@@ -15,12 +15,11 @@ import os
 import time
 import threading
 import re
-import json
+import yaml
 import requests
 import traceback
 import struct
 import shutil
-import contextlib
 import io
 from PIL import Image
 
@@ -35,8 +34,16 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import Qt
 
 import massagehead as mh
-from esptoolpy import esptool
-# from esptoolpy import espefuse
+
+# esptool v3.3可以刷入bootloader.bin时动态修改"--flash_size"
+# if os.path.exists("./esptool_v41"):
+#     sys.path.append("./esptool_v41")
+# else:
+#     sys.path.append("./")
+import esptool # sys.path.append("./esptool_v41") or pip install esptool==4.1 
+# from esptool_v33 import esptool
+# from esptool_v33 import espefuse
+
 from download import Ui_SanilHeaterTool
 import common
 
@@ -47,8 +54,6 @@ if SH_SN == None and os.path.exists("SnailHeater_SN.py"):
     print("激活模块已添加")
 
 COLOR_RED = '<span style=\" color: #ff0000;\">%s</span>'
-BAUD_RATE = 921600
-INFO_BAUD_RATE = 921600
 
 cur_dir = os.getcwd()  # 当前目录
 # 默认壁纸
@@ -69,16 +74,30 @@ IMAGE_FORMAT = ["jpg", "JPG", "jpeg", "JPEG", "png", "PNG"]
 MOVIE_FORMAT = ["mp4", "MP4", "avi", "AVI", "mov", "MOV"]
 
 # 读取配置信息
-cfg_fp = open("SnailHeater_Tool.cfg", "r", encoding="utf-8")
-cfg = json.load(cfg_fp)["windows_tool"]
-temp_sn_recode_path = cfg["temp_sn_recode_path"] \
-    if "temp_sn_recode_path" in cfg.keys() else None
-search_sn_url = cfg["search_sn_url"] \
-    if "search_sn_url" in cfg.keys() else None
-activate_sn_url = cfg["activate_sn_url"] \
-    if "activate_sn_url" in cfg.keys() else None
-get_firmware_new_ver_url = cfg["get_firmware_new_ver_url"] \
-    if "get_firmware_new_ver_url" in cfg.keys() else None
+cfg_fp = open("SnailHeater_Tool.yaml", "r", encoding="utf-8")
+
+win_cfg = yaml.load(cfg_fp, Loader=yaml.SafeLoader)["windows_tool"]
+
+tool_name = win_cfg["tool_name"] \
+    if "tool_name" in win_cfg.keys() else ""
+info_url_0 = win_cfg["info_url_0"] \
+    if "info_url_0" in win_cfg.keys() else ""
+info_url_1 = win_cfg["info_url_1"] \
+    if "info_url_1" in win_cfg.keys() else ""
+qq_info = win_cfg["qq_info"].split(",") \
+    if "qq_info" in win_cfg.keys() else ["", ""]
+temp_sn_recode_path = win_cfg["temp_sn_recode_path"] \
+    if "temp_sn_recode_path" in win_cfg.keys() else None
+search_sn_url = win_cfg["search_sn_url"] \
+    if "search_sn_url" in win_cfg.keys() else None
+activate_sn_url = win_cfg["activate_sn_url"] \
+    if "activate_sn_url" in win_cfg.keys() else None
+get_firmware_new_ver_url = win_cfg["get_firmware_new_ver_url"] \
+    if "get_firmware_new_ver_url" in win_cfg.keys() else None
+baud_rate = win_cfg["baud_rate"] \
+    if "baud_rate" in win_cfg.keys() else ""
+info_baud_rate = win_cfg["info_baud_rate"] \
+    if "info_baud_rate" in win_cfg.keys() else ""
 
 cfg_fp.close()
 
@@ -105,7 +124,7 @@ class DownloadController(object):
 
         _translate = QtCore.QCoreApplication.translate
         self.win_main.setWindowTitle(_translate("SanilHeaterTool",
-                                                "蜗牛台SnailHeater管理工具 " + common.VERSION))
+                                                tool_name + common.VERSION))
 
         # 设置文本可复制
         self.form.LinkInfolabel.setTextInteractionFlags(Qt.TextSelectableByMouse)
@@ -118,6 +137,7 @@ class DownloadController(object):
         self.form.QueryPushButton.clicked.connect(self.query_button_click)
         self.form.chooseWPButton.clicked.connect(self.chooseFile)
         self.form.ActivatePushButton.clicked.connect(self.act_button_click)
+        
         # self.form.UpdatePushButton.clicked.connect(self.update_button_click)
         self.form.UpdatePushButton.clicked.connect(self.UpdatePushButton_show_message)
         # self.form.WriteWallpaperButton.clicked.connect(self.writeWallpaper)
@@ -147,6 +167,10 @@ class DownloadController(object):
         self.form.startTimeEdit.setToolTip("需要截取时间范围才需要设置")
         self.form.endTimeEdit.setToolTip("需要截取时间范围才需要设置")
 
+        self.form.QQInfolabel.setText(_translate("SanilHeaterTool", qq_info[0]))
+        self.form.QQInfolabel_2.setText(_translate("SanilHeaterTool", qq_info[1]))
+        self.form.LinkInfolabel.setText(_translate("SanilHeaterTool", info_url_0))
+        self.form.UpdateLogLinkInfolabel.setText(_translate("SanilHeaterTool", info_url_1))
         self.form.resolutionComboBox.addItems(["280x240 (一、二车)", "320x240 (三车)"])
         self.form.qualityComboBox.addItems([str(num) for num in range(1, 20)])
         self.form.qualityComboBox.setCurrentText("5");
@@ -225,7 +249,7 @@ class DownloadController(object):
             self.print_log(COLOR_RED % "激活操作异常，激活中止...")
             return None
 
-        self.ser = serial.Serial(select_com, INFO_BAUD_RATE, timeout=10)
+        self.ser = serial.Serial(select_com, info_baud_rate, timeout=10)
 
         act_ret = False
 
@@ -261,14 +285,23 @@ class DownloadController(object):
                     print(str(traceback.format_exc()))
 
             if act_ret == True:
-                # sn_record = open(temp_sn_recode_path, 'a', encoding="utf-8")
-                # sn_record.write(value+"\n")
-                # sn_record.close()
                 self.print_log("激活成功")
             else:
                 self.print_log("激活失败")
         
         self.release_serial()
+
+    def auto_active(self):
+        """
+        自动激活
+        """
+        self.print_log((COLOR_RED % "执行自动激活程序"))
+        self.esp_reboot()  # 手动复位芯片
+        time.sleep(2)   # 等待重启结束查询
+
+        if self.query_button_click() == False:
+            return False
+        self.act_button_click()
 
     def query_button_click(self):
         """
@@ -297,6 +330,7 @@ class DownloadController(object):
             except Exception as err:
                 print(str(traceback.format_exc()))
                 self.print_log("联网异常")
+                return False
 
         self.form.SNLineEdit.setText(sn)
 
@@ -305,9 +339,22 @@ class DownloadController(object):
                 sn_record = open(temp_sn_recode_path, 'a', encoding="utf-8")
                 sn_record.write(machine_code + "\t" + sn + "\n")
                 sn_record.close()
+            else:
+                return False
         except Exception as err:
             print(str(traceback.format_exc()))
             self.print_log("获取异常异常")
+        
+        return True
+    
+    def reset_ui_button(self):
+
+        self.progress_bar_time_cnt = 0  # 复位进度条
+
+        self.form.UpdatePushButton.setEnabled(True)
+        self.form.UpdateModeMethodRadioButton.setEnabled(True)
+        self.form.ClearModeMethodRadioButton.setEnabled(True)
+
 
     def update_button_click(self):
         """
@@ -328,9 +375,7 @@ class DownloadController(object):
             if select_com == None or firmware_path == "":
                 if firmware_path == "":
                     self.print_log((COLOR_RED % "错误提示：") + "未查询到固件文件！")
-                self.form.UpdatePushButton.setEnabled(True)
-                self.form.UpdateModeMethodRadioButton.setEnabled(True)
-                self.form.ClearModeMethodRadioButton.setEnabled(True)
+                self.reset_ui_button()
                 return False
 
             self.print_log("串口号：" + (COLOR_RED % select_com))
@@ -347,22 +392,22 @@ class DownloadController(object):
             if not os.path.exists(default_wallpaper):
                 default_wallpaper = default_wallpaper_clean
 
-            all_time = 0  # 粗略认为连接并复位芯片需要0.5s钟
+            all_time = 6  # 粗略认为连接并复位芯片需要0.5s钟 自动激活需要6s
             if mode == "清空式":
                 all_time += 24
             else:
                 all_time += 5
             file_list = ["./base_data/boot_app0.bin",
-                        "./base_data/bootloader.bin",
+                        "./base_data/bootloader_4MB.bin",
                         "./base_data/partitions_4MB.bin",
                         #  "./base_data/tinyuf2.bin",
                         firmware_path,
                         default_wallpaper]
             for filepath in file_list:
-                all_time = all_time + os.path.getsize(filepath) * 10 / BAUD_RATE
+                all_time = all_time + os.path.getsize(filepath) * 10 / int(baud_rate)
 
-            if os.path.exists(default_wallpaper):
-                all_time = all_time + os.path.getsize(default_wallpaper) * 10 / BAUD_RATE + 2
+            # if os.path.exists(default_wallpaper):
+            #     all_time = all_time + os.path.getsize(default_wallpaper) * 10 / int(baud_rate) + 2
 
             self.print_log("刷机预计需要：" + (COLOR_RED % (str(all_time)[0:5] + "s")))
 
@@ -402,38 +447,44 @@ class DownloadController(object):
                     self.print_log("完成清空！")
                 except Exception as e:
                     self.print_log(COLOR_RED % "错误：通讯异常。检查设备或稍后再试！")
-                    pass
 
             flash_size, flash_size_text = self.get_flash_size(select_com)
 
+            if flash_size == 0:
+                self.print_log(COLOR_RED % "错误：储存空间为0，刷机终止。")
+                self.reset_ui_button()
+                return False
+
             #  --port COM7 --baud 921600 write_flash -fm dio -fs 4MB 0x1000 bootloader_dio_40m.bin 0x00008000 partitions.bin 0x0000e000 boot_app0.bin 0x00010000
             cmd = ['SnailHeater_TOOL.py', '--port', select_com,
-                   '--baud', str(BAUD_RATE),
+                   '--baud', baud_rate,
+                   '--after', 'hard_reset',
                    'write_flash',
                    '--flash_size', flash_size_text,
-                #    '0x00001000', "./base_data/bootloader_%s.bin"%(flash_size_text),
-                   '0x00001000', "./base_data/bootloader.bin",
+                   '0x00001000', "./base_data/bootloader_%s.bin"%(flash_size_text),
                    '0x00008000', "./base_data/partitions_%s.bin"%(flash_size_text),
                    '0x0000e000', "./base_data/boot_app0.bin",
                    # '0x002d0000', "./base_data/tinyuf2.bin",
                    '0x00010000', firmware_path,
                    WALLPAPER_ADDR_IN_FLASH, default_wallpaper
                    ]
+            print(cmd)
 
             self.print_log("开始刷写固件...")
             try:
                 esptool.main(cmd[1:])
             except Exception as e:
+                print(str(traceback.format_exc()))
                 self.print_log(COLOR_RED % "错误：通讯异常。")
                 return False
 
-            # self.esp_reboot()  # 手动复位芯片
             self.print_log(COLOR_RED % "刷机结束！")
             self.print_log("刷机流程完毕，请保持typec通电等待焊台屏幕将会亮起后才能断电。")
             self.print_log((COLOR_RED % "注：") + "更新式刷机一般刷机完成后2s就能亮屏，清空式刷机则需等待10s左右。")
             self.print_log("如25s后始终未能自动亮屏，请手动拔插一次typec接口再次等待10s。\n")
 
         except Exception as err:
+            self.print_log(COLOR_RED % "错误：通讯异常。")
             print(err)
             # self.print_log(COLOR_RED % "未释放资源，请15s后再试。如无法触发下载，拔插type-c接口再试。")
 
@@ -449,12 +500,12 @@ class DownloadController(object):
         #     self.print_log("\n生成的序列号为: " + ecdata)
         #     self.form.SNLineEdit.setText(ecdata)
         #     self.act_button_click()
+            
+        # self.esp_reboot()  # 手动复位芯片
+        time.sleep(4)   # 等待文件系统初始化完成
+        self.auto_active()
 
-        self.progress_bar_time_cnt = 0  # 复位进度条
-
-        self.form.UpdatePushButton.setEnabled(True)
-        self.form.UpdateModeMethodRadioButton.setEnabled(True)
-        self.form.ClearModeMethodRadioButton.setEnabled(True)
+        self.reset_ui_button()
 
     def get_flash_size(self, select_com):
         """
@@ -464,9 +515,13 @@ class DownloadController(object):
         global default_wallpaper
         flash_size = 0
         flash_size_text = ""
+        self.print_log("正在获取存空间大小...")
         try:
             if self.ser != None:
+                # 串口已被self.ser占用
                 return 0, "0MB"
+
+            printed_data = ""
 
             # 创建一个字符串缓冲区
             output_buffer = io.StringIO()
@@ -484,6 +539,7 @@ class DownloadController(object):
             
             # 获取打印的数据
             printed_data = output_buffer.getvalue()
+            # self.print_log(COLOR_RED % printed_data)
             
             line_data = printed_data.split("\n")
             for line in line_data:
@@ -493,9 +549,9 @@ class DownloadController(object):
             flash_size = int(flash_size_text[:-2]) * 1024 * 1024
 
         except Exception as err:
-            print(err)
-            self.print_log(COLOR_RED % "错误：通讯异常。检查设备或稍后再试！")
-            pass
+            print(str(traceback.format_exc()))
+            self.print_log(COLOR_RED % "错误：无法获取存空间大小！")
+            return 0, "0MB"
         
         return flash_size, flash_size_text
 
@@ -515,17 +571,13 @@ class DownloadController(object):
                 self.download_thread = None
                 self.release_serial()
             except Exception as err:
+                print(str(traceback.format_exc()))
                 print(err)
 
         # self.scan_com()
 
-        # 复位进度条
-        self.progress_bar_time_cnt = 0
+        self.reset_ui_button()
         self.form.progressBar.setValue(0)
-
-        self.form.UpdatePushButton.setEnabled(True)
-        self.form.UpdateModeMethodRadioButton.setEnabled(True)
-        self.form.ClearModeMethodRadioButton.setEnabled(True)
 
     def release_serial(self):
         """
@@ -569,7 +621,7 @@ class DownloadController(object):
 
         machine_code = "查询失败"
         try:
-            self.ser = serial.Serial(select_com, INFO_BAUD_RATE, timeout=10)
+            self.ser = serial.Serial(select_com, info_baud_rate, timeout=10)
         except Exception as err:
             self.print_log((COLOR_RED % "串口打开失败"))
             return machine_code
@@ -622,7 +674,7 @@ class DownloadController(object):
 
         sn = ""
         try:
-            self.ser = serial.Serial(select_com, INFO_BAUD_RATE, timeout=10)
+            self.ser = serial.Serial(select_com, info_baud_rate, timeout=10)
         except Exception as err:
             self.print_log((COLOR_RED % "串口打开失败"))
             return sn
@@ -729,7 +781,8 @@ class DownloadController(object):
 
         try:
             cmd = ['SnailHeater_TOOL.py', '--port', select_com,
-                '--baud', str(BAUD_RATE),
+                '--baud', baud_rate,
+                '--after', 'hard_reset',
                 'write_flash',
                 WALLPAPER_ADDR_IN_FLASH, wallpaper_name
                 ]
@@ -986,7 +1039,8 @@ class DownloadController(object):
             pass
 
         cmd = ['SnailHeater_TOOL.py', '--port', select_com,
-               '--baud', str(BAUD_RATE),
+               '--baud', baud_rate,
+               '--after', 'hard_reset',
                'write_flash',
                WALLPAPER_ADDR_IN_FLASH, default_wallpaper_clean
                ]
@@ -1005,29 +1059,22 @@ class DownloadController(object):
     def esp_reboot(self):
         """
         重启芯片(控制USB-TLL的rst dst引脚)
+        DST RST设置接口都是 true为低电平
+        参考文档 https://blog.csdn.net/qq_37388044/article/details/111035944
         :return:
         """
-
-        time.sleep(0.1)
+        
         select_com = self.getSafeCom()
         if select_com == None:
             return None
-        self.ser = serial.Serial(select_com, BAUD_RATE, timeout=10)
+        self.ser = serial.Serial(select_com, baud_rate, timeout=10)
 
-        # self.ser.setRTS(True)  # EN->LOW
-        # self.ser.setDTR(self.ser.dtr)
-        # time.sleep(0.2)
-        # self.ser.setRTS(False)
-        # self.ser.setDTR(self.ser.dtr) 
-
-        self._setDTR(False)  # IO0=HIGH
-        self._setRTS(True)  # EN=LOW, chip in reset
+        self.ser.setDTR(False)  # IO0=HIGH
+        self.ser.setRTS(True)  # EN=LOW, chip in reset
         time.sleep(0.1)
-        self._setDTR(True)  # IO0=LOW
-        self._setRTS(False)  # EN=HIGH, chip out of reset
+        self.ser.setRTS(False)  # EN=HIGH, chip out of reset
         # 0.5 needed for ESP32 rev0 and rev1
-        time.sleep(0.05)  # 0.5 / 0.05
-        self._setDTR(False)  # IO0=HIGH, done
+        time.sleep(0.1)  # 0.5 / 0.05
 
         self.release_serial()
 
