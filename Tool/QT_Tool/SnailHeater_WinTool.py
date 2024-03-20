@@ -296,7 +296,7 @@ class DownloadController(object):
         自动激活
         """
         self.print_log((COLOR_RED % "执行自动激活程序"))
-        self.esp_reboot()  # 手动复位芯片
+        self.hard_reset()  # 复位芯片
         time.sleep(2)   # 等待重启结束查询
 
         if self.query_button_click() == False:
@@ -501,7 +501,7 @@ class DownloadController(object):
         #     self.form.SNLineEdit.setText(ecdata)
         #     self.act_button_click()
             
-        # self.esp_reboot()  # 手动复位芯片
+        # self.hard_reset()  # 复位芯片
         time.sleep(4)   # 等待文件系统初始化完成
         self.auto_active()
 
@@ -789,6 +789,7 @@ class DownloadController(object):
             time = int(os.path.getsize(wallpaper_name)) / 2097152 * 30
             self.print_log("正在烧入壁纸数据到主机，请等待（%ds）......" % time)
             esptool.main(cmd[1:])
+            # self.hard_reset()  # 复位芯片
             self.print_log("成功烧入壁纸数据到主机")
         except Exception as e:
             self.print_log(COLOR_RED % "错误：通讯异常。")
@@ -1046,6 +1047,7 @@ class DownloadController(object):
                ]
         try:
             esptool.main(cmd[1:])
+            # self.hard_reset()  # 复位芯片
             self.print_log("成功清空壁纸.")
         except Exception as e:
             self.print_log(COLOR_RED % "错误：通讯异常。")
@@ -1056,11 +1058,12 @@ class DownloadController(object):
         QApplication.processEvents()
         # self.form.LogInfoTextBrowser.
 
-    def esp_reboot(self):
+    def hard_reset(self):
         """
         重启芯片(控制USB-TLL的rst dst引脚)
         DST RST设置接口都是 true为低电平
         参考文档 https://blog.csdn.net/qq_37388044/article/details/111035944
+        可以把以下代码修改到 esptool/targets/esp32s2.py 的 hard_reset()中
         :return:
         """
         
@@ -1071,10 +1074,10 @@ class DownloadController(object):
 
         self.ser.setDTR(False)  # IO0=HIGH
         self.ser.setRTS(True)  # EN=LOW, chip in reset
-        time.sleep(0.1)
+        time.sleep(0.05)
         self.ser.setRTS(False)  # EN=HIGH, chip out of reset
         # 0.5 needed for ESP32 rev0 and rev1
-        time.sleep(0.1)  # 0.5 / 0.05
+        time.sleep(0.05)  # 0.5 / 0.05
 
         self.release_serial()
 
