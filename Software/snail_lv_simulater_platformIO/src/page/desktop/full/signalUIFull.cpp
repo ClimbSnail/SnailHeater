@@ -10,6 +10,8 @@ static lv_obj_t *signalImg;
 static lv_obj_t *earphone3Img;
 static lv_obj_t *ui_signalTypeBtn;
 static lv_obj_t *ui_freqSet;
+static lv_obj_t *ui_realFreqLabel;
+static lv_obj_t *ui_realFreqValueLabel;
 static lv_obj_t *ui_dutyCycleLabel;
 static lv_obj_t *ui_dutyCycleBtn;
 static lv_obj_t *ui_pulseWidthLabel;
@@ -20,6 +22,8 @@ static lv_obj_t *ui_scaleLabel;
 static lv_obj_t *ui_scaleDropdown;
 static lv_obj_t *ui_phaseLabel;
 static lv_obj_t *ui_phaseDropdown;
+static lv_obj_t *ui_offsetLabel;
+static lv_obj_t *ui_offsetBtn;
 
 static lv_group_t *btn_group = NULL;
 
@@ -110,18 +114,23 @@ static void setSignalImg()
         lv_group_remove_obj(ui_dutyCycleBtn);
         lv_group_add_obj(btn_group, ui_scaleDropdown);
         lv_group_add_obj(btn_group, ui_phaseDropdown);
+        lv_group_add_obj(btn_group, ui_offsetBtn);
         lv_group_add_obj(btn_group, ui_enableSwitch);
         // 显示控件
         lv_obj_set_style_text_opa(ui_scaleLabel, 255, LV_PART_MAIN);
         lv_obj_set_style_text_opa(ui_phaseLabel, 255, LV_PART_MAIN);
+        lv_obj_set_style_text_opa(ui_offsetLabel, 255, LV_PART_MAIN);
         lv_obj_set_style_text_opa(ui_scaleDropdown, 255, LV_PART_MAIN);
         lv_obj_set_style_text_opa(ui_phaseDropdown, 255, LV_PART_MAIN);
+        lv_obj_set_style_text_opa(ui_offsetBtn, 255, LV_PART_MAIN);
 
         lv_obj_set_style_border_width(ui_scaleDropdown, 2, LV_PART_MAIN);
         lv_obj_set_style_bg_opa(ui_scaleDropdown, 255, LV_PART_MAIN);
         lv_obj_set_style_border_width(ui_phaseDropdown, 2, LV_PART_MAIN);
         lv_obj_set_style_bg_opa(ui_phaseDropdown, 255, LV_PART_MAIN);
         // 隐藏控件
+        lv_obj_set_style_text_opa(ui_realFreqLabel, 0, LV_PART_MAIN);
+        lv_obj_set_style_text_opa(ui_realFreqValueLabel, 0, LV_PART_MAIN);
         lv_obj_set_style_text_opa(ui_dutyCycleLabel, 0, LV_PART_MAIN);
         lv_obj_set_style_text_opa(ui_dutyCycleBtn, 0, LV_PART_MAIN);
         lv_obj_set_style_text_opa(ui_pulseWidthLabel, 0, LV_PART_MAIN);
@@ -137,25 +146,30 @@ static void setSignalImg()
         lv_group_remove_obj(ui_enableSwitch);
         lv_group_remove_obj(ui_scaleDropdown);
         lv_group_remove_obj(ui_phaseDropdown);
+        lv_group_remove_obj(ui_offsetBtn);
         lv_group_add_obj(btn_group, ui_dutyCycleBtn);
         lv_group_add_obj(btn_group, ui_enableSwitch);
         // 隐藏控件
         lv_obj_set_style_text_opa(ui_scaleLabel, 0, LV_PART_MAIN);
         lv_obj_set_style_text_opa(ui_phaseLabel, 0, LV_PART_MAIN);
+        lv_obj_set_style_text_opa(ui_offsetLabel, 0, LV_PART_MAIN);
         lv_obj_set_style_text_opa(ui_scaleDropdown, 0, LV_PART_MAIN);
         lv_obj_set_style_text_opa(ui_phaseDropdown, 0, LV_PART_MAIN);
+        lv_obj_set_style_text_opa(ui_offsetBtn, 0, LV_PART_MAIN);
 
         lv_obj_set_style_border_width(ui_scaleDropdown, 0, LV_PART_MAIN);
         lv_obj_set_style_bg_opa(ui_scaleDropdown, 0, LV_PART_MAIN);
         lv_obj_set_style_border_width(ui_phaseDropdown, 0, LV_PART_MAIN);
         lv_obj_set_style_bg_opa(ui_phaseDropdown, 0, LV_PART_MAIN);
         // 显示控件
+        lv_obj_set_style_text_opa(ui_realFreqLabel, 255, LV_PART_MAIN);
+        lv_obj_set_style_text_opa(ui_realFreqValueLabel, 255, LV_PART_MAIN);
         lv_obj_set_style_text_opa(ui_dutyCycleLabel, 255, LV_PART_MAIN);
         lv_obj_set_style_text_opa(ui_dutyCycleBtn, 255, LV_PART_MAIN);
         lv_obj_set_style_text_opa(ui_pulseWidthLabel, 255, LV_PART_MAIN);
         lv_obj_set_style_text_opa(ui_pulseWidth, 255, LV_PART_MAIN);
         // 频率限制
-        lv_numberbtn_set_range(ui_freqSet, 1, 80000);
+        lv_numberbtn_set_range(ui_freqSet, 3, 2499584);
         lv_numberbtn_set_value(ui_freqSet, signalGeneratorModel.utilConfig.freqPwm);
     }
 }
@@ -186,6 +200,11 @@ static void setFreqStep(lv_obj_t *obj, unsigned int step)
         ind = 3;
     }
     break;
+    case 10000:
+    {
+        ind = 4;
+    }
+    break;
     default:
     {
         ind = 0;
@@ -198,15 +217,35 @@ static void setFreqStep(lv_obj_t *obj, unsigned int step)
 
 static void countPulseWidth()
 {
-    double pulseWidth = 1000000.0 / signalGeneratorModel.utilConfig.freqPwm * (signalGeneratorModel.utilConfig.duty / 1000.0);
+    if (SIGNAL_TYPE::SIGNAL_TYPE_SINE_WARE == signalGeneratorModel.utilConfig.signalType)
+    {
+        return;
+    }
+
+    lv_label_set_text_fmt(ui_realFreqValueLabel, "%lu", signalGeneratorModel.realFreqPwm);
+    // 文本长度（对象长宽）改变重新对齐
+    lv_obj_align_to(ui_realFreqValueLabel, ui_freqSet, LV_ALIGN_OUT_BOTTOM_MID, 0, 11);
+    if (0 == signalGeneratorModel.realFreqPwm)
+    {
+        lv_label_set_text_fmt(ui_pulseWidth, "%.4gns", 0.000);
+        return;
+    }
+    // double pulseWidth = 1000000000.0 / signalGeneratorModel.realFreqPwm * (signalGeneratorModel.utilConfig.duty / 1000.0);
+    double pulseWidth = 1000000.0 / signalGeneratorModel.realFreqPwm * signalGeneratorModel.utilConfig.duty;
     if (pulseWidth < 1000)
     {
-        lv_label_set_text_fmt(ui_pulseWidth, "%.1fus", pulseWidth);
+        lv_label_set_text_fmt(ui_pulseWidth, "%.4gns", pulseWidth);
     }
     else if (pulseWidth < 1000000)
     {
-        lv_label_set_text_fmt(ui_pulseWidth, "%.1fms", pulseWidth / 1000.0);
+        lv_label_set_text_fmt(ui_pulseWidth, "%.4gus", pulseWidth / 1000.0);
     }
+    else if (pulseWidth < 1000000000)
+    {
+        lv_label_set_text_fmt(ui_pulseWidth, "%.4gms", pulseWidth / 1000000.0);
+    }
+    // 文本长度（对象长宽）改变重新对齐
+    lv_obj_align_to(ui_pulseWidth, ui_dutyCycleBtn, LV_ALIGN_OUT_BOTTOM_MID, 0, 12);
 }
 
 static bool signalPageUI_init(lv_obj_t *father)
@@ -230,15 +269,15 @@ static bool signalPageUI_init(lv_obj_t *father)
 
     // 频率调节步进
     lv_obj_t *ui_freqSetStepLabel = lv_label_create(ui_ButtonTmp);
-    lv_obj_align(ui_freqSetStepLabel, LV_ALIGN_TOP_RIGHT, -85, 20);
+    lv_obj_align(ui_freqSetStepLabel, LV_ALIGN_TOP_RIGHT, -90, 20);
     lv_label_set_text_fmt(ui_freqSetStepLabel, "%s", TEXT_SIGNAL_FREQ_STEP);
     lv_obj_add_style(ui_freqSetStepLabel, &label_text_style, 0);
 
     ui_freqStepDropdown = lv_dropdown_create(ui_ButtonTmp);
-    lv_dropdown_set_options(ui_freqStepDropdown, "1\n10\n100\n1K");
+    lv_dropdown_set_options(ui_freqStepDropdown, "1\n10\n100\n1K\n10K");
     // 初始已当前选择的烙铁芯为主
     setFreqStep(ui_freqStepDropdown, signalGeneratorModel.freqStep);
-    lv_obj_set_size(ui_freqStepDropdown, 50, LV_SIZE_CONTENT);
+    lv_obj_set_size(ui_freqStepDropdown, 60, 30);
     lv_obj_align_to(ui_freqStepDropdown, ui_freqSetStepLabel, LV_ALIGN_OUT_RIGHT_MID, 10, 0);
     lv_obj_add_flag(ui_freqStepDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_set_style_text_font(ui_freqStepDropdown, &lv_font_montserrat_12, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -249,7 +288,7 @@ static bool signalPageUI_init(lv_obj_t *father)
 
     // 频率
     lv_obj_t *ui_freqSetLabel = lv_label_create(ui_ButtonTmp);
-    lv_obj_align_to(ui_freqSetLabel, ui_freqSetStepLabel, LV_ALIGN_OUT_BOTTOM_MID, 0, 20);
+    lv_obj_align_to(ui_freqSetLabel, ui_freqSetStepLabel, LV_ALIGN_OUT_BOTTOM_MID, 0, 12);
     lv_label_set_text_fmt(ui_freqSetLabel, "%s", TEXT_SIGNAL_FREQ);
     lv_obj_add_style(ui_freqSetLabel, &label_text_style, 0);
 
@@ -260,20 +299,34 @@ static bool signalPageUI_init(lv_obj_t *father)
     lv_numberbtn_set_range(ui_freqSet, 130, 55000);
     lv_numberbtn_set_value(ui_freqSet, signalGeneratorModel.utilConfig.freqDAC);
     lv_obj_remove_style_all(ui_freqSet);
-    lv_obj_set_size(ui_freqSet, 70, 20);
-    lv_obj_align_to(ui_freqSet, ui_freqSetLabel, LV_ALIGN_OUT_RIGHT_MID, 5, -2);
+    lv_obj_set_size(ui_freqSet, 90, 20);
+    lv_obj_align_to(ui_freqSet, ui_freqSetLabel, LV_ALIGN_OUT_RIGHT_MID, -5, -1);
     lv_obj_add_flag(ui_freqSet, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_clear_flag(ui_freqSet, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_freqSet, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_freqSet, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(ui_freqSet, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_freqSet, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_freqSet, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_style(ui_freqSet, &btn_type1_focused_style, LV_STATE_FOCUSED);
     lv_obj_add_style(ui_freqSet, &btn_type1_pressed_style, LV_STATE_EDITED);
 
+    // 方波的真实频率
+    ui_realFreqLabel = lv_label_create(ui_ButtonTmp);
+    lv_obj_align_to(ui_realFreqLabel, ui_freqSetLabel, LV_ALIGN_OUT_BOTTOM_MID, -5, 10);
+    lv_label_set_text_fmt(ui_realFreqLabel, "%s", TEXT_SIGNAL_REAL_FREQ);
+    lv_obj_add_style(ui_realFreqLabel, &label_text_style, 0);
+
+    ui_realFreqValueLabel = lv_label_create(ui_ButtonTmp);
+    signalGeneratorModel.realFreqPwm = 20000;
+    lv_obj_align_to(ui_realFreqValueLabel, ui_freqSet, LV_ALIGN_OUT_BOTTOM_MID, 0, 11);
+    lv_label_set_text_fmt(ui_realFreqValueLabel, "%lu", signalGeneratorModel.realFreqPwm);
+    lv_obj_add_style(ui_realFreqValueLabel, &label_text_style, 0);
+    lv_obj_set_style_text_color(ui_realFreqValueLabel, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_realFreqValueLabel, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
+
     // 占空比
     ui_dutyCycleLabel = lv_label_create(ui_ButtonTmp);
-    lv_obj_align_to(ui_dutyCycleLabel, ui_freqSetLabel, LV_ALIGN_OUT_BOTTOM_MID, -3, 20);
+    lv_obj_align_to(ui_dutyCycleLabel, ui_realFreqLabel, LV_ALIGN_OUT_BOTTOM_MID, -3, 10);
     lv_label_set_text_fmt(ui_dutyCycleLabel, "%s", TEXT_SIGNAL_DUTY_CYCLE);
     lv_obj_add_style(ui_dutyCycleLabel, &label_text_style, 0);
 
@@ -290,36 +343,34 @@ static bool signalPageUI_init(lv_obj_t *father)
     lv_obj_clear_flag(ui_dutyCycleBtn, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_dutyCycleBtn, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_dutyCycleBtn, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(ui_dutyCycleBtn, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_dutyCycleBtn, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_dutyCycleBtn, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_style(ui_dutyCycleBtn, &btn_type1_focused_style, LV_STATE_FOCUSED);
     lv_obj_add_style(ui_dutyCycleBtn, &btn_type1_pressed_style, LV_STATE_EDITED);
 
     // 脉宽
     ui_pulseWidthLabel = lv_label_create(ui_ButtonTmp);
-    lv_obj_align_to(ui_pulseWidthLabel, ui_dutyCycleLabel, LV_ALIGN_OUT_BOTTOM_MID, 5, 20);
+    lv_obj_align_to(ui_pulseWidthLabel, ui_dutyCycleLabel, LV_ALIGN_OUT_BOTTOM_MID, 5, 10);
     lv_label_set_text_fmt(ui_pulseWidthLabel, "%s", TEXT_SIGNAL_PULSE_WIDTH);
     lv_obj_add_style(ui_pulseWidthLabel, &label_text_style, 0);
 
     ui_pulseWidth = lv_label_create(ui_ButtonTmp);
-    // lv_obj_align_to(ui_pulseWidth, ui_pulseWidthLabel, LV_ALIGN_OUT_RIGHT_MID, 12, -3);
-    // lv_obj_align_to(ui_pulseWidth, ui_freqSet, LV_ALIGN_OUT_BOTTOM_MID, -20, 65);
-    lv_obj_align_to(ui_pulseWidth, ui_freqSet, LV_ALIGN_CENTER, -15, 80);
+    lv_obj_align_to(ui_pulseWidth, ui_dutyCycleBtn, LV_ALIGN_OUT_BOTTOM_MID, 0, 12);
     countPulseWidth();
     lv_obj_add_style(ui_pulseWidth, &label_text_style, 0);
-    lv_obj_set_style_text_color(ui_pulseWidth, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_pulseWidth, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_pulseWidth, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     // 振幅
     ui_scaleLabel = lv_label_create(ui_ButtonTmp);
-    lv_obj_align_to(ui_scaleLabel, ui_freqSetLabel, LV_ALIGN_OUT_BOTTOM_MID, 7, 20);
+    lv_obj_align_to(ui_scaleLabel, ui_freqSetLabel, LV_ALIGN_OUT_BOTTOM_MID, 7, 12);
     lv_label_set_text_fmt(ui_scaleLabel, "%s", TEXT_SIGNAL_SCALE);
     lv_obj_add_style(ui_scaleLabel, &label_text_style, 0);
 
     ui_scaleDropdown = lv_dropdown_create(ui_ButtonTmp);
     lv_dropdown_set_options(ui_scaleDropdown, "1/1\n1/2\n1/4\n1/8");
     lv_dropdown_set_selected(ui_scaleDropdown, signalGeneratorModel.utilConfig.scale);
-    lv_obj_set_size(ui_scaleDropdown, 50, LV_SIZE_CONTENT);
+    lv_obj_set_size(ui_scaleDropdown, 50, 30);
     lv_obj_align_to(ui_scaleDropdown, ui_scaleLabel, LV_ALIGN_OUT_RIGHT_MID, 10, 0);
     lv_obj_add_flag(ui_scaleDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_set_style_text_font(ui_scaleDropdown, &lv_font_montserrat_12, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -329,14 +380,14 @@ static bool signalPageUI_init(lv_obj_t *father)
 
     // 相位
     ui_phaseLabel = lv_label_create(ui_ButtonTmp);
-    lv_obj_align_to(ui_phaseLabel, ui_scaleLabel, LV_ALIGN_OUT_BOTTOM_MID, 2, 20);
+    lv_obj_align_to(ui_phaseLabel, ui_scaleLabel, LV_ALIGN_OUT_BOTTOM_MID, 2, 15);
     lv_label_set_text_fmt(ui_phaseLabel, "%s", TEXT_SIGNAL_PHASE);
     lv_obj_add_style(ui_phaseLabel, &label_text_style, 0);
 
     ui_phaseDropdown = lv_dropdown_create(ui_ButtonTmp);
     lv_dropdown_set_options(ui_phaseDropdown, "0\n180");
     lv_dropdown_set_selected(ui_phaseDropdown, signalGeneratorModel.utilConfig.phase - 0x2);
-    lv_obj_set_size(ui_phaseDropdown, 50, LV_SIZE_CONTENT);
+    lv_obj_set_size(ui_phaseDropdown, 50, 30);
     lv_obj_align_to(ui_phaseDropdown, ui_phaseLabel, LV_ALIGN_OUT_RIGHT_MID, 10, 0);
     lv_obj_add_flag(ui_phaseDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_set_style_text_font(ui_phaseDropdown, &lv_font_montserrat_12, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -344,11 +395,35 @@ static bool signalPageUI_init(lv_obj_t *father)
     lv_obj_set_style_outline_opa(ui_phaseDropdown, 255, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
     lv_obj_set_style_outline_pad(ui_phaseDropdown, 2, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
 
+    // 偏移
+    ui_offsetLabel = lv_label_create(ui_ButtonTmp);
+    lv_obj_align_to(ui_offsetLabel, ui_phaseLabel, LV_ALIGN_OUT_BOTTOM_MID, 2, 15);
+    lv_label_set_text_fmt(ui_offsetLabel, "%s", TEXT_SIGNAL_OFFSET);
+    lv_obj_add_style(ui_offsetLabel, &label_text_style, 0);
+
+    ui_offsetBtn = lv_numberbtn_create(ui_ButtonTmp);
+    lv_obj_t *offsetBtnLabel = lv_label_create(ui_offsetBtn);
+    lv_numberbtn_set_label_and_format(ui_offsetBtn,
+                                      offsetBtnLabel, "%d", 1);
+    lv_numberbtn_set_range(ui_offsetBtn, -127, 128);
+    lv_numberbtn_set_value(ui_offsetBtn, signalGeneratorModel.utilConfig.offset);
+    lv_obj_remove_style_all(ui_offsetBtn);
+    lv_obj_set_size(ui_offsetBtn, 50, 20);
+    lv_obj_align_to(ui_offsetBtn, ui_offsetLabel, LV_ALIGN_OUT_RIGHT_MID, 10, -2);
+    lv_obj_add_flag(ui_offsetBtn, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+    lv_obj_clear_flag(ui_offsetBtn, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_radius(ui_offsetBtn, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_offsetBtn, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_offsetBtn, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_offsetBtn, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_add_style(ui_offsetBtn, &btn_type1_focused_style, LV_STATE_FOCUSED);
+    lv_obj_add_style(ui_offsetBtn, &btn_type1_pressed_style, LV_STATE_EDITED);
+
     // 使能开关
     ui_enableSwitch = lv_switch_create(ui_ButtonTmp);
     lv_obj_add_flag(ui_enableSwitch, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_set_size(ui_enableSwitch, 60, 30);
-    lv_obj_align_to(ui_enableSwitch, ui_freqSetLabel, LV_ALIGN_OUT_BOTTOM_MID, 40, 95);
+    lv_obj_align_to(ui_enableSwitch, ui_freqSetLabel, LV_ALIGN_OUT_BOTTOM_MID, 40, 105);
     if (ENABLE_STATE_OPEN == signalGeneratorModel.workState)
     {
         lv_obj_add_state(ui_enableSwitch, LV_STATE_CHECKED); // 开
@@ -371,12 +446,11 @@ static bool signalPageUI_init(lv_obj_t *father)
     // lv_obj_set_style_img_recolor_opa(earphone3Img, LV_OPA_70, 0);
     // lv_obj_set_style_img_recolor(earphone3Img, SIGNAL_THEME_COLOR1, 0);
 
-    lv_obj_t *pwmLabel = lv_label_create(ui_ButtonTmp);
-    lv_obj_remove_style_all(pwmLabel);
-    lv_label_set_text(pwmLabel, "PWM");
-    lv_obj_align_to(pwmLabel, earphone3Img, LV_ALIGN_OUT_RIGHT_MID, -12, -10);
-    lv_obj_add_style(pwmLabel, &label_text_style, 0);
-    lv_obj_set_style_text_font(pwmLabel, &lv_font_montserrat_10, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_t *pwmImg = lv_img_create(ui_ButtonTmp);
+    lv_img_set_src(pwmImg, &signal_square_small);
+    lv_obj_align_to(pwmImg, earphone3Img, LV_ALIGN_OUT_RIGHT_MID, -12, -12);
+    lv_obj_set_style_img_recolor_opa(pwmImg, LV_OPA_70, 0);
+    lv_obj_set_style_img_recolor(pwmImg, SIGNAL_THEME_COLOR1, 0);
 
     lv_obj_t *gndLabel = lv_label_create(ui_ButtonTmp);
     lv_obj_remove_style_all(gndLabel);
@@ -385,13 +459,11 @@ static bool signalPageUI_init(lv_obj_t *father)
     lv_obj_add_style(gndLabel, &label_text_style, 0);
     lv_obj_set_style_text_font(gndLabel, &lv_font_montserrat_10, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    lv_obj_t *DACLabel = lv_label_create(ui_ButtonTmp);
-    lv_obj_remove_style_all(DACLabel);
-    lv_label_set_text(DACLabel, "DAC");
-    lv_obj_align_to(DACLabel, earphone3Img, LV_ALIGN_OUT_RIGHT_MID, -30, 14);
-    lv_obj_add_style(DACLabel, &label_text_style, 0);
-    lv_obj_set_style_text_font(DACLabel, &lv_font_montserrat_10, LV_PART_MAIN | LV_STATE_DEFAULT);
-
+    lv_obj_t *adcImg = lv_img_create(ui_ButtonTmp);
+    lv_img_set_src(adcImg, &signal_sine_small);
+    lv_obj_align_to(adcImg, earphone3Img, LV_ALIGN_OUT_RIGHT_MID, -30, 14);
+    lv_obj_set_style_img_recolor_opa(adcImg, LV_OPA_70, 0);
+    lv_obj_set_style_img_recolor(adcImg, SIGNAL_THEME_COLOR1, 0);
 
     // 信号图片
     signalImg = lv_img_create(ui_ButtonTmp);
@@ -421,6 +493,7 @@ static bool signalPageUI_init(lv_obj_t *father)
     lv_obj_add_event_cb(ui_dutyCycleBtn, ui_bnt_obj_pressed, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(ui_scaleDropdown, ui_scale_change, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_event_cb(ui_phaseDropdown, ui_phase_change, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_add_event_cb(ui_offsetBtn, ui_bnt_obj_pressed, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(ui_enableSwitch, ui_set_obj_change, LV_EVENT_VALUE_CHANGED, NULL);
 
     btn_group = lv_group_create();
@@ -432,6 +505,7 @@ static bool signalPageUI_init(lv_obj_t *father)
     {
         lv_group_add_obj(btn_group, ui_scaleDropdown);
         lv_group_add_obj(btn_group, ui_phaseDropdown);
+        lv_group_add_obj(btn_group, ui_offsetBtn);
     }
     else
     {
@@ -486,6 +560,8 @@ void ui_updateSignalData(void)
         return;
     }
 
+    countPulseWidth();
+
     // if (SIGNAL_TYPE::SIGNAL_TYPE_SINE_WARE == signalGeneratorModel.utilConfig.signalType)
     // {
     //     lv_numberbtn_set_value(ui_freqSet, signalGeneratorModel.utilConfig.freqDAC);
@@ -536,12 +612,14 @@ static void ui_bnt_obj_pressed(lv_event_t *e)
             {
                 signalGeneratorModel.utilConfig.freqPwm = lv_numberbtn_get_value(ui_freqSet);
             }
-            countPulseWidth();
         }
         else if (target == ui_dutyCycleBtn)
         {
             signalGeneratorModel.utilConfig.duty = lv_numberbtn_get_value(ui_dutyCycleBtn) * 10;
-            countPulseWidth();
+        }
+        else if (target == ui_offsetBtn)
+        {
+            signalGeneratorModel.utilConfig.offset = (int8_t)lv_numberbtn_get_value(ui_offsetBtn);
         }
     }
 }

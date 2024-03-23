@@ -15,6 +15,9 @@ static lv_obj_t *settingPageUI = NULL;
 static lv_group_t *btn_group = NULL;
 static lv_obj_t *settingTabview = NULL;
 static lv_obj_t *qq_group_icon;
+
+#define SETTING_OBJ_SIZE 6
+static lv_obj_t *settingBnt[SETTING_OBJ_SIZE];
 // tab
 static lv_obj_t *ui_tabSystem = NULL;
 static lv_obj_t *ui_tabSoder = NULL;
@@ -24,19 +27,24 @@ static lv_obj_t *ui_tabAdjPwr = NULL;
 static lv_obj_t *ui_tabBack = NULL;
 
 static lv_timer_t *dispPageTimer = NULL;
-static int pageId = 1000; // 当前刷新完成的页面id
+#define PAGE_ID_DEFAULT 0
+static int pageId = PAGE_ID_DEFAULT; // 当前刷新完成的页面id
 
 static void settingPageUI_focused(lv_event_t *e)
 {
-    lv_group_focus_obj(ui_backBtn);
+    // 关闭按钮全局加速
+    sysInfoModel.setIntellectRateFlag(false);
     lv_indev_set_group(knobs_indev, btn_group);
 }
 
 void ui_tab_back_btn_pressed(lv_event_t *e)
 {
     lv_obj_clear_state(ui_subBackBtn, LV_STATE_FOCUSED);
-    lv_indev_set_group(knobs_indev, btn_group);
-    lv_group_focus_obj(lv_tabview_get_tab_btns(settingTabview));
+
+    settingPageUI_focused(e);
+    lv_group_focus_obj(settingBnt[pageId]);
+
+    // lv_group_focus_obj(lv_tabview_get_tab_btns(settingTabview));
 }
 
 static void ui_info_init(lv_obj_t *father)
@@ -55,20 +63,30 @@ static void ui_info_init(lv_obj_t *father)
 
 static void value_change_tab(lv_event_t *e)
 {
-    // 进入按键组
-    // uint16_t id = lv_tabview_get_tab_act(settingTabview);
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t *target = lv_event_get_target(e);
 
-    uint16_t id = lv_btnmatrix_get_selected_btn(lv_tabview_get_tab_btns(settingTabview));
+    LV_LOG_USER("before event_code = %d", event_code);
 
-    if (pageId != id)
+    if (event_code != LV_EVENT_PRESSED)
     {
-        // 界面未刷机，本次不绑定案件组
         return;
     }
 
-    LV_LOG_USER("value_change_tab id = %d", id);
+    // 进入按键组
+    // uint16_t id = lv_tabview_get_tab_act(settingTabview);
 
-    switch (id)
+    // uint16_t id = lv_btnmatrix_get_selected_btn(lv_tabview_get_tab_btns(settingTabview));
+
+    // if (pageId != id)
+    // {
+    //     // 界面未刷机，本次不绑定案件组
+    //     return;
+    // }
+
+    LV_LOG_USER("after pageId = %d", pageId);
+
+    switch (pageId)
     {
     case 0:
     {
@@ -97,7 +115,7 @@ static void value_change_tab(lv_event_t *e)
     break;
     case 5:
     {
-        lv_event_send(ui_backBtn, LV_EVENT_PRESSED, 0);
+        // lv_event_send(ui_backBtn, LV_EVENT_PRESSED, 0);
     }
     break;
     default:
@@ -105,12 +123,31 @@ static void value_change_tab(lv_event_t *e)
     }
 }
 
-// 暂时废弃
 static void focused_tab(lv_event_t *e)
 {
-    // uint16_t id = lv_tabview_get_tab_act(settingTabview);
-    uint16_t id = lv_btnmatrix_get_selected_btn(lv_tabview_get_tab_btns(settingTabview));
-    LV_LOG_USER("my focused id = %d", id);
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t *target = lv_event_get_target(e);
+
+    // uint16_t id = lv_btnmatrix_get_selected_btn(lv_tabview_get_tab_btns(settingTabview));
+    // LV_LOG_USER("my focused id = %d", id);
+
+    if (event_code != LV_EVENT_FOCUSED)
+    {
+        return;
+    }
+
+    // 开启按钮全局加速
+    sysInfoModel.setIntellectRateFlag(true);
+
+    int ind = 0;
+    for (ind = 0; ind < SETTING_OBJ_SIZE; ++ind)
+    {
+        if (target == settingBnt[ind])
+        {
+            pageId = ind;
+            break;
+        }
+    }
 
     ui_sys_setting_release(ui_tabSystem);
     ui_solder_setting_release(ui_tabSoder);
@@ -119,7 +156,7 @@ static void focused_tab(lv_event_t *e)
     ui_adjpwr_setting_release(ui_tabAdjPwr);
     lv_obj_clean(ui_tabBack);
 
-    lv_tabview_set_act(settingTabview, id, LV_ANIM_ON);
+    // lv_tabview_set_act(settingTabview, id, LV_ANIM_ON);
 
     if (NULL != sub_btn_group)
     {
@@ -127,7 +164,7 @@ static void focused_tab(lv_event_t *e)
         sub_btn_group = NULL;
     }
 
-    switch (id)
+    switch (pageId)
     {
     case 0:
     {
@@ -191,7 +228,8 @@ static void dispPage_timeout(lv_timer_t *timer)
         sub_btn_group = NULL;
     }
 
-    switch (id)
+    pageId = id;
+    switch (pageId)
     {
     case 0:
     {
@@ -227,7 +265,6 @@ static void dispPage_timeout(lv_timer_t *timer)
         break;
     }
 
-    pageId = id;
     LV_LOG_USER("my focused id = %d, pageId = %d", id, pageId);
 }
 
@@ -266,45 +303,98 @@ static bool settingPageUI_init(lv_obj_t *father)
 
     lv_obj_t *ui_ButtonTmp = settingPageUI;
 
-    // Tabview
-    settingTabview = lv_tabview_create(ui_ButtonTmp, LV_DIR_LEFT, 50);
-    lv_obj_add_style(settingTabview, &label_text_style, 0);
-    lv_obj_add_style(settingTabview, &black_white_theme_style, 0);
-    lv_obj_set_style_border_color(settingTabview,
-                                  lv_palette_darken(LV_PALETTE_GREY, 3),
-                                  LV_PART_MAIN | LV_STATE_ANY);
+    ui_tabSystem = lv_obj_create(ui_ButtonTmp);
+    lv_obj_set_size(ui_tabSystem, SH_SCREEN_WIDTH - 55, 200);
+    lv_obj_align(ui_tabSystem, LV_ALIGN_TOP_LEFT, 45, 5);
+    lv_obj_add_style(ui_tabSystem, &label_text_style, 0);
+    lv_obj_add_style(ui_tabSystem, &black_white_theme_style, 0);
+    // lv_obj_set_style_radius(ui_tabSystem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    // lv_obj_set_style_border_width(ui_tabSystem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    lv_obj_t *tab_btns = lv_tabview_get_tab_btns(settingTabview);
-    lv_obj_add_style(tab_btns, &label_text_style, 0);
-    lv_obj_add_style(tab_btns, &black_white_theme_style, 0);
-    // lv_obj_set_style_bg_color(tab_btns, lv_palette_darken(LV_PALETTE_GREY, 3), 0);
-    // lv_obj_set_style_text_color(tab_btns, lv_palette_lighten(LV_PALETTE_GREY, 5), 0);
-    lv_obj_set_style_border_side(tab_btns, LV_BORDER_SIDE_NONE, LV_PART_ITEMS | LV_STATE_CHECKED);
-    // lv_obj_set_style_border_color(tab_btns, SETTING_THEME_COLOR1, LV_PART_ITEMS | LV_STATE_PRESSED);
-    lv_obj_set_style_border_color(tab_btns, lv_palette_darken(LV_PALETTE_GREY, 3), LV_PART_MAIN | LV_STATE_ANY);
-
-    /*Add 3 tabs (the tabs are page (lv_page) and can be scrolled*/
-    ui_tabSystem = lv_tabview_add_tab(settingTabview, "系统");
-    ui_tabSoder = lv_tabview_add_tab(settingTabview, "烙铁");
-    ui_tabAirhot = lv_tabview_add_tab(settingTabview, "风枪");
-    ui_tabHp = lv_tabview_add_tab(settingTabview, "热台");
-    ui_tabAdjPwr = lv_tabview_add_tab(settingTabview, "电源");
-    ui_tabBack = lv_tabview_add_tab(settingTabview, "返回");
-
-    // lv_obj_add_event_cb(tab_btns, focused_tab, LV_EVENT_FOCUSED, NULL);
-    lv_obj_add_event_cb(settingTabview, value_change_tab, LV_EVENT_VALUE_CHANGED, NULL);
-    lv_obj_clear_flag(lv_tabview_get_content(settingTabview), LV_OBJ_FLAG_SCROLLABLE);
+    ui_tabSystem = ui_tabSystem;
+    ui_tabSoder = ui_tabSystem;
+    ui_tabAirhot = ui_tabSystem;
+    ui_tabHp = ui_tabSystem;
+    ui_tabAdjPwr = ui_tabSystem;
+    ui_tabBack = ui_tabSystem;
 
     btn_group = lv_group_create();
     lv_group_add_obj(btn_group, ui_backBtn);
-    lv_group_add_obj(btn_group, tab_btns);
-    // lv_group_focus_obj(tab_btns);
-    lv_indev_set_group(knobs_indev, btn_group);
+    char settingLabel[SETTING_OBJ_SIZE][8] = {"系统", "烙铁", "风枪", "热台", "电源", "更多"};
+    lv_color_t bntColor[SETTING_OBJ_SIZE] = {
+        SETTING_THEME_COLOR1,
+        SOLDER_THEME_COLOR1,
+        AIR_HOT_THEME_COLOR1,
+        HEAT_PLAT_THEME_COLOR1,
+        ADJ_POWER_THEME_COLOR1,
+        SPOT_WELDER_THEME_COLOR1
+        // SIGNAL_THEME_COLOR1
+    };
 
-    // lv_event_send(tab_btns, LV_EVENT_PRESSED, 0);
+    int ind = 0;
+    for (ind = 0; ind < SETTING_OBJ_SIZE; ++ind)
+    {
+        settingBnt[ind] = lv_btn_create(ui_ButtonTmp);
+        lv_obj_remove_style_all(settingBnt[ind]);
+        lv_obj_set_size(settingBnt[ind], 35, 25);
+        lv_obj_align(settingBnt[ind], LV_ALIGN_TOP_LEFT, 3, 10 + 30 * ind);
+        lv_obj_add_flag(settingBnt[ind], LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+        lv_obj_clear_flag(settingBnt[ind], LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_add_style(settingBnt[ind], &btn_type1_style, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_add_style(settingBnt[ind], &btn_type1_focused_style, LV_STATE_FOCUSED);
+        lv_obj_set_style_radius(settingBnt[ind], 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_border_width(settingBnt[ind], 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    dispPageTimer = lv_timer_create(dispPage_timeout, 1000, NULL);
-    lv_timer_set_repeat_count(dispPageTimer, -1);
+        lv_obj_t *ui_settingBntLabel = lv_label_create(settingBnt[ind]);
+        lv_obj_set_align(ui_settingBntLabel, LV_ALIGN_CENTER);
+        lv_label_set_text_fmt(ui_settingBntLabel, "%s", settingLabel[ind]);
+        lv_obj_set_style_text_color(ui_settingBntLabel, bntColor[ind], LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_font(ui_settingBntLabel, &FontDeyi_16, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+        lv_obj_add_event_cb(settingBnt[ind], focused_tab, LV_EVENT_FOCUSED, NULL);
+        lv_obj_add_event_cb(settingBnt[ind], value_change_tab, LV_EVENT_PRESSED, NULL);
+        lv_group_add_obj(btn_group, settingBnt[ind]);
+    }
+
+    settingPageUI_focused(NULL);
+    lv_group_focus_obj(settingBnt[pageId]);
+
+    // // Tabview
+    // settingTabview = lv_tabview_create(ui_ButtonTmp, LV_DIR_LEFT, 50);
+    // lv_obj_add_style(settingTabview, &label_text_style, 0);
+    // lv_obj_add_style(settingTabview, &black_white_theme_style, 0);
+    // lv_obj_set_style_border_color(settingTabview,
+    //                               lv_palette_darken(LV_PALETTE_GREY, 3),
+    //                               LV_PART_MAIN | LV_STATE_ANY);
+
+    // lv_obj_t *tab_btns = lv_tabview_get_tab_btns(settingTabview);
+    // lv_obj_add_style(tab_btns, &label_text_style, 0);
+    // lv_obj_add_style(tab_btns, &black_white_theme_style, 0);
+    // // lv_obj_set_style_bg_color(tab_btns, lv_palette_darken(LV_PALETTE_GREY, 3), 0);
+    // // lv_obj_set_style_text_color(tab_btns, lv_palette_lighten(LV_PALETTE_GREY, 5), 0);
+    // lv_obj_set_style_border_side(tab_btns, LV_BORDER_SIDE_NONE, LV_PART_ITEMS | LV_STATE_CHECKED);
+    // // lv_obj_set_style_border_color(tab_btns, SETTING_THEME_COLOR1, LV_PART_ITEMS | LV_STATE_PRESSED);
+    // lv_obj_set_style_border_color(tab_btns, lv_palette_darken(LV_PALETTE_GREY, 3), LV_PART_MAIN | LV_STATE_ANY);
+
+    // /*Add 3 tabs (the tabs are page (lv_page) and can be scrolled*/
+    // ui_tabSystem = lv_tabview_add_tab(settingTabview, "系统");
+    // ui_tabSoder = lv_tabview_add_tab(settingTabview, "烙铁");
+    // ui_tabAirhot = lv_tabview_add_tab(settingTabview, "风枪");
+    // ui_tabHp = lv_tabview_add_tab(settingTabview, "热台");
+    // ui_tabAdjPwr = lv_tabview_add_tab(settingTabview, "电源");
+    // ui_tabBack = lv_tabview_add_tab(settingTabview, "更多");
+
+    // // lv_obj_add_event_cb(tab_btns, focused_tab, LV_EVENT_FOCUSED, NULL);
+    // lv_obj_add_event_cb(settingTabview, value_change_tab, LV_EVENT_VALUE_CHANGED, NULL);
+    // lv_obj_clear_flag(lv_tabview_get_content(settingTabview), LV_OBJ_FLAG_SCROLLABLE);
+
+    // btn_group = lv_group_create();
+    // // lv_group_add_obj(btn_group, ui_backBtn);
+    // lv_group_add_obj(btn_group, tab_btns);
+    // lv_indev_set_group(knobs_indev, btn_group);
+
+    // dispPageTimer = lv_timer_create(dispPage_timeout, 1000, NULL);
+    // lv_timer_set_repeat_count(dispPageTimer, -1);
 
     return true;
 }
@@ -343,6 +433,8 @@ void settingPageUI_release()
         settingPageUI = NULL;
         settingUIObj.mainButtonUI = NULL;
     }
+
+    pageId = PAGE_ID_DEFAULT;
 
     // 保存设置
     sysInfoModel.saveConfAPI(NULL);

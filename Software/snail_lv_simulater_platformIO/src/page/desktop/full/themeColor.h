@@ -47,7 +47,8 @@
 #define BLACK_THEME_LABEL_TEXT_COLOR lv_color_hex(0xc0c0c0)
 
 #define BTN_TYPE1_BORDER_COLOR lv_color_hex(0x666666)
-#define BTN_TYPE1_TEXT_COLOR lv_color_hex(0x989798)
 
 #define BTN_BACK_TEXT_COLOR lv_color_hex(0xa5a5a5)
+
+#define ALL_GREY_COLOR lv_color_hex(0x999798)
 #endif

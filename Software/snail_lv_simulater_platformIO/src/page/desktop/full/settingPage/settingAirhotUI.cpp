@@ -218,7 +218,7 @@ void ui_airhot_setting_init(lv_obj_t *father)
     lv_obj_t *airhotQuickSetupTempLabel0 = lv_label_create(airhotQuickSetupTemp0);
     lv_numberbtn_set_label_and_format(airhotQuickSetupTemp0,
                                       airhotQuickSetupTempLabel0, "%d", 1);
-    lv_numberbtn_set_range(airhotQuickSetupTemp0, 0, 500);
+    lv_numberbtn_set_range(airhotQuickSetupTemp0, MIN_SET_TEMPERATURE, MAX_SET_TEMPERATURE);
     lv_numberbtn_set_value(airhotQuickSetupTemp0, airhotModel.utilConfig.quickSetupTemp_0);
     lv_obj_set_size(airhotQuickSetupTemp0, 50, 20);
     lv_obj_align_to(airhotQuickSetupTemp0, airhotQuickSetupTempLabel,
@@ -228,7 +228,7 @@ void ui_airhot_setting_init(lv_obj_t *father)
     lv_obj_clear_flag(airhotQuickSetupTemp0, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(airhotQuickSetupTemp0, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(airhotQuickSetupTemp0, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(airhotQuickSetupTemp0, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(airhotQuickSetupTemp0, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(airhotQuickSetupTemp0, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_style(airhotQuickSetupTemp0, &setting_btn_focused_style, LV_STATE_FOCUSED);
     lv_obj_add_style(airhotQuickSetupTemp0, &setting_btn_pressed_style, LV_STATE_EDITED);
@@ -237,7 +237,7 @@ void ui_airhot_setting_init(lv_obj_t *father)
     lv_obj_t *airhotQuickSetupTempLabel1 = lv_label_create(airhotQuickSetupTemp1);
     lv_numberbtn_set_label_and_format(airhotQuickSetupTemp1,
                                       airhotQuickSetupTempLabel1, "%d", 1);
-    lv_numberbtn_set_range(airhotQuickSetupTemp1, 0, 500);
+    lv_numberbtn_set_range(airhotQuickSetupTemp1, MIN_SET_TEMPERATURE, MAX_SET_TEMPERATURE);
     lv_numberbtn_set_value(airhotQuickSetupTemp1, airhotModel.utilConfig.quickSetupTemp_1);
     lv_obj_set_size(airhotQuickSetupTemp1, 50, 20);
     lv_obj_align_to(airhotQuickSetupTemp1, airhotQuickSetupTemp0,
@@ -247,7 +247,7 @@ void ui_airhot_setting_init(lv_obj_t *father)
     lv_obj_clear_flag(airhotQuickSetupTemp1, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(airhotQuickSetupTemp1, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(airhotQuickSetupTemp1, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(airhotQuickSetupTemp1, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(airhotQuickSetupTemp1, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(airhotQuickSetupTemp1, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_style(airhotQuickSetupTemp1, &setting_btn_focused_style, LV_STATE_FOCUSED);
     lv_obj_add_style(airhotQuickSetupTemp1, &setting_btn_pressed_style, LV_STATE_EDITED);
@@ -256,7 +256,7 @@ void ui_airhot_setting_init(lv_obj_t *father)
     lv_obj_t *airhotQuickSetupTempLabel2 = lv_label_create(airhotQuickSetupTemp2);
     lv_numberbtn_set_label_and_format(airhotQuickSetupTemp2,
                                       airhotQuickSetupTempLabel2, "%d", 1);
-    lv_numberbtn_set_range(airhotQuickSetupTemp2, 0, 500);
+    lv_numberbtn_set_range(airhotQuickSetupTemp2, MIN_SET_TEMPERATURE, MAX_SET_TEMPERATURE);
     lv_numberbtn_set_value(airhotQuickSetupTemp2, airhotModel.utilConfig.quickSetupTemp_2);
     lv_obj_set_size(airhotQuickSetupTemp2, 50, 20);
     lv_obj_align_to(airhotQuickSetupTemp2, airhotQuickSetupTemp1,
@@ -266,7 +266,7 @@ void ui_airhot_setting_init(lv_obj_t *father)
     lv_obj_clear_flag(airhotQuickSetupTemp2, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(airhotQuickSetupTemp2, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(airhotQuickSetupTemp2, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(airhotQuickSetupTemp2, lv_color_hex(0x989798),
+    lv_obj_set_style_text_color(airhotQuickSetupTemp2, ALL_GREY_COLOR,
                                 LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(airhotQuickSetupTemp2, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_style(airhotQuickSetupTemp2, &setting_btn_focused_style, LV_STATE_FOCUSED);
@@ -293,7 +293,7 @@ void ui_airhot_setting_init(lv_obj_t *father)
     lv_obj_clear_flag(ui_coolingFinishTempBtn, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_coolingFinishTempBtn, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_coolingFinishTempBtn, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(ui_coolingFinishTempBtn, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_coolingFinishTempBtn, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_coolingFinishTempBtn, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_style(ui_coolingFinishTempBtn, &setting_btn_focused_style, LV_STATE_FOCUSED);
     lv_obj_add_style(ui_coolingFinishTempBtn, &setting_btn_pressed_style, LV_STATE_EDITED);
@@ -447,7 +447,7 @@ void ui_airhot_setting_init(lv_obj_t *father)
     ui_subBackBtn = lv_btn_create(father);
     lv_obj_remove_style_all(ui_subBackBtn);
     lv_obj_align_to(ui_subBackBtn, ui_airhotTempCalibrateObj,
-                    LV_ALIGN_OUT_BOTTOM_LEFT, 20, 20);
+                    LV_ALIGN_OUT_BOTTOM_LEFT, 120, 20);
     lv_obj_add_flag(ui_subBackBtn, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_clear_flag(ui_subBackBtn, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_add_style(ui_subBackBtn, &back_btn_style, LV_STATE_DEFAULT);
@@ -461,8 +461,8 @@ void ui_airhot_setting_init(lv_obj_t *father)
     ui_saveBtn = lv_btn_create(father);
     lv_obj_remove_style_all(ui_saveBtn);
     lv_obj_align_to(ui_saveBtn, ui_airhotTempCalibrateObj,
-                    LV_ALIGN_OUT_BOTTOM_LEFT, 120, 20);
-    lv_obj_set_size(ui_saveBtn, 65, LV_SIZE_CONTENT);
+                    LV_ALIGN_OUT_BOTTOM_LEFT, 20, 20);
+    lv_obj_set_size(ui_saveBtn, 65, 25);
     lv_obj_add_flag(ui_saveBtn, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_clear_flag(ui_saveBtn, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_add_style(ui_saveBtn, &back_btn_style, LV_STATE_DEFAULT);
@@ -500,6 +500,7 @@ void ui_airhot_setting_init_group(lv_obj_t *father)
         sub_btn_group = NULL;
     }
     sub_btn_group = lv_group_create();
+    lv_group_add_obj(sub_btn_group, ui_subBackBtn);
     lv_group_add_obj(sub_btn_group, ui_airhotGridSwitch);
     lv_group_add_obj(sub_btn_group, airhotQuickSetupTemp0);
     lv_group_add_obj(sub_btn_group, airhotQuickSetupTemp1);
@@ -516,7 +517,6 @@ void ui_airhot_setting_init_group(lv_obj_t *father)
     {
         lv_group_add_obj(sub_btn_group, ui_airhotRealTemp[index]);
     }
-    lv_group_add_obj(sub_btn_group, ui_subBackBtn);
     lv_group_add_obj(sub_btn_group, ui_saveBtn);
     lv_indev_set_group(knobs_indev, sub_btn_group);
 }

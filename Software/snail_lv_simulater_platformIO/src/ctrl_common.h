@@ -6,7 +6,16 @@
 #include "driver/knobs.h"
 
 #define DISCONNCT_TEMP 600
+
+#define MIN_SET_TEMPERATURE 0
+#define MAX_SET_TEMPERATURE 500
+#define MAX_SET_HP_TIME 1800 // 加热台的时间轴最大值
 #define DAC_DEFAULT_RESOLUTION 4096
+
+#define SOLDER_EASY_SLEEP_TIME_MIN 1000    // 单位是ms
+#define SOLDER_EASY_SLEEP_TIME_MAX 1800000 // 单位是ms
+#define SOLDER_SLEEP_TEMP_MIN 25           // 休眠温度的下限
+#define SOLDER_SLEEP_TEMP_MAX 250          // 休眠温度的上限
 
 // 版本信息
 enum VERSION_INFO
@@ -43,8 +52,10 @@ enum CTRL_WORK_EN : unsigned char
 
     SOLDER_CTRL_WORK_EN = 0x8,
     ADJPOWER_CTRL_WORK_EN = 0x10,
+    SIGNAL_CTRL_WORK_EN = 0x20,
+    SPOT_CTRL_WORK_EN = 0x40,
 
-    CTRL_WORK_EN_MAX = 5
+    CTRL_WORK_EN_MAX = 7
 };
 
 const char version_info[VERSION_INFO_MAX][8] = {
@@ -447,8 +458,6 @@ struct SolderUtilConfig
 
     int16_t targetTemp;          // 设定的目标温度
     int16_t easySleepTemp;       // 浅度休眠的温度
-    int32_t enterEasySleepTime;  // 进入浅休眠的时间
-    int32_t enterDeepSleepTime;  // 进入深度休眠的时间
     int16_t alarmValue;          // 超温报警阈值
     uint16_t coreCnt;            // 发热芯数量
     uint16_t coreIDRecord;       // 使用位标志发热芯id编号 1~31位
@@ -456,6 +465,8 @@ struct SolderUtilConfig
     ENABLE_STATE shortCircuit;   // 烙铁短路保护
     ENABLE_STATE autoTypeSwitch; // 自动类型切换
     ENABLE_STATE fastPID;        // 使能便捷PID
+
+    uint16_t identifyValue[SOLDER_TYPE_MAX]; // 识别电阻的电压值
 };
 
 // 发热芯配置文件中的参数
@@ -463,6 +474,8 @@ struct SolderCoreConfig
 {
     unsigned int id;                     // 发热芯id 用户只读属性
     unsigned int wakeSensitivity;        // 唤醒灵敏度
+    int32_t enterEasySleepTime;          // 进入浅休眠的时间（ms）
+    int32_t enterDeepSleepTime;          // 进入深度休眠的时间（ms）
     SOLDER_PWM_FREQ solderPwmFreq;       // 烙铁驱动频率
     SOLDER_TYPE solderType;              // 烙铁类型
     SOLDER_SHAKE_TYPE wakeSwitchType;    // 唤醒开关类型
@@ -519,12 +532,13 @@ enum SIGNAL_TYPE : unsigned char
 struct SignalConfig
 {
     SIGNAL_TYPE signalType; // 波形
-    uint32_t freqDAC;       // 频率 hz
-    uint32_t freqPwm;       // 频率 hz
+    uint32_t freqDAC;       // 正弦频率 hz
+    uint32_t freqPwm;       // 方波频率 hz
     uint32_t cycle;         // 周期 us
-    uint16_t duty;          // 占空比 千分为单位
-    uint8_t scale;          // 振幅
-    uint8_t phase;          // 相位
+    uint16_t duty;          // 占空比 千分为单位（仅方波使用）
+    uint8_t scale;          // 振幅（正弦波）
+    uint8_t phase;          // 相位（正弦波）
+    int8_t offset;          // 偏移（正弦波）
 };
 
 #endif

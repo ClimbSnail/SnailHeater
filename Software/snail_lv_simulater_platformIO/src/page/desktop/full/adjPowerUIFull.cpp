@@ -134,7 +134,7 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     lv_obj_align_to(ui_voltageUnitLabel, ui_voltageLabel,
                     LV_ALIGN_OUT_RIGHT_MID, 0, -5);
     lv_label_set_text(ui_voltageUnitLabel, "V");
-    lv_obj_set_style_text_color(ui_voltageUnitLabel, lv_color_hex(0x999798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_voltageUnitLabel, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_voltageUnitLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_voltageUnitLabel, &FontRoboto_36, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -165,7 +165,7 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     lv_obj_align(ui_settingVoltageUnitLabel, LV_ALIGN_RIGHT_MID, -10, -30);
 #endif
     lv_label_set_text(ui_settingVoltageUnitLabel, "V");
-    lv_obj_set_style_text_color(ui_settingVoltageUnitLabel, lv_color_hex(0x999798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_settingVoltageUnitLabel, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_settingVoltageUnitLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_settingVoltageUnitLabel, &FontRoboto_24, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -185,7 +185,7 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     lv_obj_clear_flag(ui_settingVoltageButton, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_settingVoltageButton, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_settingVoltageButton, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(ui_settingVoltageButton, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_settingVoltageButton, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_settingVoltageButton, &FontRoboto_36, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_style(ui_settingVoltageButton, &btn_type1_focused_style, LV_STATE_FOCUSED);
     lv_obj_add_style(ui_settingVoltageButton, &btn_type1_pressed_style, LV_STATE_EDITED);
@@ -205,7 +205,7 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     lv_obj_align_to(ui_currentUnitLabel, ui_currentLabel,
                     LV_ALIGN_OUT_RIGHT_MID, 0, -5);
     lv_label_set_text(ui_currentUnitLabel, "A");
-    lv_obj_set_style_text_color(ui_currentUnitLabel, lv_color_hex(0x999798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_currentUnitLabel, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_currentUnitLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_currentUnitLabel, &FontRoboto_36, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -214,7 +214,7 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     lv_obj_align_to(ui_settingCurrentUnitLabel, ui_settingVoltageUnitLabel,
                     LV_ALIGN_OUT_BOTTOM_MID, 5, 40);
     lv_label_set_text(ui_settingCurrentUnitLabel, "A");
-    lv_obj_set_style_text_color(ui_settingCurrentUnitLabel, lv_color_hex(0x999798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_settingCurrentUnitLabel, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_settingCurrentUnitLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_settingCurrentUnitLabel, &FontRoboto_24, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -234,7 +234,7 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     lv_obj_clear_flag(ui_settingCurrentButton, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_settingCurrentButton, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_settingCurrentButton, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(ui_settingCurrentButton, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_settingCurrentButton, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_settingCurrentButton, &FontRoboto_36, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_style(ui_settingCurrentButton, &btn_type1_focused_style, LV_STATE_FOCUSED);
     lv_obj_add_style(ui_settingCurrentButton, &btn_type1_pressed_style, LV_STATE_EDITED);
@@ -254,7 +254,7 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     lv_obj_align_to(ui_capacityUnitLabel, ui_capacityLabel,
                     LV_ALIGN_OUT_RIGHT_MID, 0, -5);
     lv_label_set_text(ui_capacityUnitLabel, "W");
-    lv_obj_set_style_text_color(ui_capacityUnitLabel, lv_color_hex(0x999798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_capacityUnitLabel, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_capacityUnitLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_capacityUnitLabel, &FontRoboto_36, LV_PART_MAIN | LV_STATE_DEFAULT);
 

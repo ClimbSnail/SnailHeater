@@ -112,16 +112,20 @@ void userdata_verification_init(lv_obj_t *father, lv_obj_t *triggerObj,
 
     ui_passwd_obj = lv_obj_create(father);
     lv_obj_set_size(ui_passwd_obj, 180, 150);
-    lv_obj_set_pos(ui_passwd_obj, 0, lv_obj_get_y(ui_triggerObj) - 150);
+    lv_obj_align(ui_passwd_obj, LV_ALIGN_CENTER, 0, lv_obj_get_y(ui_triggerObj) - 120);
     lv_obj_add_style(ui_passwd_obj, &black_white_theme_style,
                      LV_PART_MAIN | LV_STATE_DEFAULT);
-    // lv_obj_set_style_bg_color(ui_passwd_obj, lv_color_white(),
-    //                  LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_keyLabel = lv_label_create(ui_passwd_obj);
     lv_obj_set_size(ui_keyLabel, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
     lv_obj_align(ui_keyLabel, LV_ALIGN_TOP_LEFT, 0, 5);
     lv_label_set_text(ui_keyLabel, "超级密码");
+    lv_obj_set_style_text_color(ui_keyLabel,
+                                sysInfoModel.utilConfig.uiParam.uiGlobalParam.whiteThemeEnable ==
+                                        ENABLE_STATE::ENABLE_STATE_OPEN
+                                    ? lv_color_black()
+                                    : lv_color_white(),
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_keyTextArea = lv_textarea_create(ui_passwd_obj);
     lv_obj_set_size(ui_keyTextArea, 80, LV_SIZE_CONTENT);
@@ -137,7 +141,7 @@ void userdata_verification_init(lv_obj_t *father, lv_obj_t *triggerObj,
     // lv_style_set_text_font(&keyboard_style, &FontDeyi_16);
     lv_style_set_text_font(&keyboard_style, &lv_font_montserrat_14);
     lv_style_set_border_color(&keyboard_style, BTN_TYPE1_BORDER_COLOR);
-    lv_style_set_text_color(&keyboard_style, BTN_TYPE1_TEXT_COLOR);
+    lv_style_set_text_color(&keyboard_style, ALL_GREY_COLOR);
 
     // static const char *btnm_map[] = {"1", "2", "3", "\n",
     //                                  "4", "5", "6", "\n",

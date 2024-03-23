@@ -66,6 +66,7 @@ struct AirhotModel
     HA_CoreConfig editCoreConfig; // 正在编辑的发热芯参数
 
     int curTemp;                           // 当前的温度
+    uint8_t curAirSpeed;                   // 当前运行的风速
     unsigned long curRunTime;              // 当前运行时间
     uint16_t powerRatio;                   // 供电能量占比
     INFO_MANAGE_ACTION manageCoreAction;   // 发热芯的管理动作
@@ -88,7 +89,8 @@ struct HeatplatformModel
     HP_CurveConfig curveConfig;   // 温度曲线
 
     int curTemp;                           // 当前的温度
-    int curveTemp;                         // 回流焊温度
+    uint8_t curAirSpeed;                   // 当前运行的风速
+    int m_curveTargetTemp;                 // 回流焊的目标温度
     unsigned long curRunTime;              // 当前运行时间(ms)
     uint16_t powerRatio;                   // 供电能量占比
     INFO_MANAGE_ACTION manageCurveAction;  // 曲线管理动作
@@ -119,7 +121,9 @@ extern struct AdjPowerModel adjPowerModel;
 struct StopWelderModel
 {
     unsigned char workState;         // 工作状态
-    unsigned char manualTriggerFlag; // 手动触发标志
+    unsigned char forcedOpenMosFlag; // 控制mos是否强制打开
+
+    ENABLE_STATE manualTriggerFlag; // 手动触发标志
 
     uint16_t voltage; // 当前电容的电压
     uint16_t count;   // 点焊计数
@@ -133,7 +137,8 @@ struct SignalGeneratorModel
 {
     unsigned char workState; // 工作状态
 
-    uint16_t freqStep;       // 频率调节的不进
+    uint32_t freqStep;       // 频率调节的不进
+    uint32_t realFreqPwm;    // 方波真实频率 hz
     SignalConfig utilConfig; // 通用配置
 };
 

@@ -29,6 +29,7 @@ static lv_group_t *btn_group = NULL;
 #define CHART_TEMP_LEN 28
 static uint8_t chartTempData[CHART_TEMP_LEN] = {0};
 static uint8_t chartTempDataSaveInd; // 循环储存的下标
+static uint8_t pre_airFanSpeed;      // 记录上一次的风枪风速
 
 static void ui_set_temp_btn_pressed(lv_event_t *e);
 static void ui_set_air_duty_btn_change(lv_event_t *e);
@@ -248,7 +249,7 @@ static bool airhotPageUI_init(lv_obj_t *father)
     ui_curTempCLabel = lv_label_create(ui_ButtonTmp);
     lv_obj_align(ui_curTempCLabel, LV_ALIGN_TOP_LEFT, 172, 56);
     lv_label_set_text(ui_curTempCLabel, "°C");
-    lv_obj_set_style_text_color(ui_curTempCLabel, lv_color_hex(0x999798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_curTempCLabel, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_curTempCLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_curTempCLabel, &FontJost_36, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -263,7 +264,7 @@ static bool airhotPageUI_init(lv_obj_t *father)
     lv_obj_t *targetTempLabel = lv_label_create(ui_targetTempButton);
     lv_numberbtn_set_label_and_format(ui_targetTempButton,
                                       targetTempLabel, "%d°C", 1);
-    lv_numberbtn_set_range(ui_targetTempButton, 0, 500);
+    lv_numberbtn_set_range(ui_targetTempButton, MIN_SET_TEMPERATURE, MAX_SET_TEMPERATURE);
     lv_numberbtn_set_value(ui_targetTempButton, airhotModel.utilConfig.targetTemp);
     lv_obj_remove_style_all(ui_targetTempButton);
     lv_obj_set_size(ui_targetTempButton, 60, 20);
@@ -272,7 +273,7 @@ static bool airhotPageUI_init(lv_obj_t *father)
     lv_obj_clear_flag(ui_targetTempButton, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_targetTempButton, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_targetTempButton, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(ui_targetTempButton, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_targetTempButton, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_targetTempButton, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_style(ui_targetTempButton, &btn_type1_focused_style, LV_STATE_FOCUSED);
     lv_obj_add_style(ui_targetTempButton, &btn_type1_pressed_style, LV_STATE_EDITED);
@@ -281,17 +282,22 @@ static bool airhotPageUI_init(lv_obj_t *father)
     ui_imgFan = lv_img_create(ui_ButtonTmp);
     lv_img_set_src(ui_imgFan, &img_fan_speed);
     lv_obj_align(ui_imgFan, LV_ALIGN_CENTER, 103, -76);
-    // lv_anim_init(&fan_anim);
-    // lv_anim_set_exec_cb(&fan_anim, rotate_anim_cb);
-    // lv_anim_set_var(&fan_anim, ui_imgFan);
-    // lv_anim_set_values(&fan_anim, 0, 3600);
-    // lv_anim_set_repeat_count(&fan_anim, LV_ANIM_REPEAT_INFINITE);
-
-    // if (airhotModel.utilConfig.workAirSpeed != 0)
-    // {
-    //     lv_anim_set_time(&fan_anim, 4960 - (airhotModel.utilConfig.workAirSpeed - 1) * 40);
-    //     lv_anim_start(&fan_anim);
-    // }
+    lv_anim_init(&fan_anim);
+    lv_anim_set_exec_cb(&fan_anim, rotate_anim_cb);
+    lv_anim_set_var(&fan_anim, ui_imgFan);
+    lv_anim_set_values(&fan_anim, 0, 3600);
+    if (airhotModel.curAirSpeed != 0)
+    {
+        lv_anim_set_repeat_count(&fan_anim, LV_ANIM_REPEAT_INFINITE);
+        lv_anim_set_time(&fan_anim, 4960 - (airhotModel.curAirSpeed - 1) * 40);
+        lv_anim_start(&fan_anim);
+    }
+    else
+    {
+        lv_anim_set_repeat_count(&fan_anim, 1);
+        lv_anim_start(&fan_anim);
+    }
+    pre_airFanSpeed = airhotModel.curAirSpeed;
 
     ui_setAirDutyButton = lv_numberbtn_create(ui_ButtonTmp);
 
@@ -307,7 +313,7 @@ static bool airhotPageUI_init(lv_obj_t *father)
     lv_obj_clear_flag(ui_setAirDutyButton, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_setAirDutyButton, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_setAirDutyButton, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(ui_setAirDutyButton, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_setAirDutyButton, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_setAirDutyButton, &FontJost_24, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_style(ui_setAirDutyButton, &btn_type1_focused_style, LV_STATE_FOCUSED);
     lv_obj_add_style(ui_setAirDutyButton, &btn_type1_pressed_style, LV_STATE_EDITED);
@@ -363,7 +369,7 @@ static bool airhotPageUI_init(lv_obj_t *father)
         lv_obj_clear_flag(ui_paramKp, LV_OBJ_FLAG_SCROLLABLE);
         lv_obj_set_style_radius(ui_paramKp, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_border_width(ui_paramKp, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_color(ui_paramKp, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ui_paramKp, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_text_font(ui_paramKp, &FontDeyi_16, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_add_style(ui_paramKp, &btn_type1_focused_style, LV_STATE_FOCUSED);
         lv_obj_add_style(ui_paramKp, &btn_type1_pressed_style, LV_STATE_EDITED);
@@ -382,7 +388,7 @@ static bool airhotPageUI_init(lv_obj_t *father)
         lv_obj_clear_flag(ui_paramKi, LV_OBJ_FLAG_SCROLLABLE);
         lv_obj_set_style_radius(ui_paramKi, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_border_width(ui_paramKi, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_color(ui_paramKi, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ui_paramKi, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_text_font(ui_paramKi, &FontDeyi_16, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_add_style(ui_paramKi, &btn_type1_focused_style, LV_STATE_FOCUSED);
         lv_obj_add_style(ui_paramKi, &btn_type1_pressed_style, LV_STATE_EDITED);
@@ -398,7 +404,7 @@ static bool airhotPageUI_init(lv_obj_t *father)
         lv_obj_set_size(ui_paramKd, 50, 20);
         lv_obj_align_to(ui_paramKd, ui_paramKi,
                         LV_ALIGN_OUT_RIGHT_MID, 5, 0);
-        lv_obj_set_style_text_color(ui_paramKd, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ui_paramKd, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_text_font(ui_paramKd, &FontDeyi_16, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_add_style(ui_paramKd, &btn_type1_focused_style, LV_STATE_FOCUSED);
         lv_obj_add_style(ui_paramKd, &btn_type1_pressed_style, LV_STATE_EDITED);
@@ -493,6 +499,22 @@ void ui_updateAirhotData(void)
         chartTempData[chartTempDataSaveInd] = (uint8_t)(airhotModel.curTemp >> 2);
         lv_chart_set_next_value(chartTemp, chartSer1, chartTempData[chartTempDataSaveInd]);
         chartTempDataSaveInd = (chartTempDataSaveInd + 1) % CHART_TEMP_LEN;
+
+        if (airhotModel.curAirSpeed != pre_airFanSpeed)
+        {
+            if (airhotModel.curAirSpeed != 0)
+            {
+                lv_anim_set_repeat_count(&fan_anim, LV_ANIM_REPEAT_INFINITE);
+                lv_anim_set_time(&fan_anim, 4960 - (airhotModel.curAirSpeed - 1) * 40);
+                lv_anim_start(&fan_anim);
+            }
+            else
+            {
+                lv_anim_set_repeat_count(&fan_anim, 1);
+                lv_anim_start(&fan_anim);
+            }
+            pre_airFanSpeed = airhotModel.curAirSpeed;
+        }
     }
 }
 
@@ -515,17 +537,6 @@ static void ui_set_air_duty_btn_change(lv_event_t *e)
     if (LV_EVENT_VALUE_CHANGED == event_code)
     {
         airhotModel.utilConfig.workAirSpeed = lv_numberbtn_get_value(ui_setAirDutyButton);
-        // if (airhotModel.utilConfig.workAirSpeed != 0)
-        // {
-        //     lv_anim_set_repeat_count(&fan_anim, LV_ANIM_REPEAT_INFINITE);
-        //     lv_anim_set_time(&fan_anim, 4960 - (airhotModel.utilConfig.workAirSpeed - 1) * 40);
-        //     lv_anim_start(&fan_anim);
-        // }
-        // else
-        // {
-        //     lv_anim_set_repeat_count(&fan_anim, 1);
-        //     lv_anim_start(&fan_anim);
-        // }
 
         LV_LOG_USER("set_tempArc LV_EVENT_VALUE_CHANGED % u", event_code);
     }

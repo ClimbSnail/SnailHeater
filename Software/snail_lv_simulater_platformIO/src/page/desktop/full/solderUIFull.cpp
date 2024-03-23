@@ -181,27 +181,39 @@ static void setSolderCoreType()
     {
     case SOLDER_TYPE_UNHNOWN:
         lv_img_set_src(solder_type_text_img, &img_name_noc_ico);
+        lv_img_set_src(soldering_icon, &img_soldering_gray);
         break;
     case SOLDER_TYPE_T12:
         lv_img_set_src(solder_type_text_img, &img_name_t12_ico);
+        lv_img_set_src(soldering_icon, &T12_CORE_INDEXED_4);
         break;
     case SOLDER_TYPE_JBC210:
         lv_img_set_src(solder_type_text_img, &img_name_c210_ico);
+        lv_img_set_src(soldering_icon, &C210_CORE_INDEXED_4);
         break;
     case SOLDER_TYPE_JBC245:
         lv_img_set_src(solder_type_text_img, &img_name_c245_ico);
+        lv_img_set_src(soldering_icon, &C245_CORE_INDEXED_4);
         break;
     case SOLDER_TYPE_JBC470:
         lv_img_set_src(solder_type_text_img, &img_name_c470_ico);
+        lv_img_set_src(soldering_icon, &C470_CORE_INDEXED_4);
         break;
     case SOLDER_TYPE_JBC115:
         lv_img_set_src(solder_type_text_img, &img_name_c115_ico);
+        lv_img_set_src(soldering_icon, &C115_CORE_INDEXED_4);
         break;
     case SOLDER_TYPE_T20:
         lv_img_set_src(solder_type_text_img, &img_name_t20_ico);
+        lv_img_set_src(soldering_icon, &T20_CORE_COLOR_ALPHA);
+        break;
+    case SOLDER_TYPE_TK:
+        lv_img_set_src(solder_type_text_img, &img_name_tx_ico);
+        lv_img_set_src(soldering_icon, &T936_CORE_INDEXED_4);
         break;
     default:
-        lv_img_set_src(solder_type_text_img, &img_text_noc);
+        lv_img_set_src(solder_type_text_img, &img_name_noc_ico);
+        lv_img_set_src(soldering_icon, &img_name_noc_ico);
         break;
     }
 }
@@ -348,7 +360,7 @@ static bool solderPageUI_init(lv_obj_t *father)
     ui_curTempCLabel = lv_label_create(ui_ButtonTmp);
     lv_obj_align(ui_curTempCLabel, LV_ALIGN_TOP_LEFT, 172, 56);
     lv_label_set_text(ui_curTempCLabel, "°C");
-    lv_obj_set_style_text_color(ui_curTempCLabel, lv_color_hex(0x999798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_curTempCLabel, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_curTempCLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_curTempCLabel, &FontJost_36, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -363,7 +375,7 @@ static bool solderPageUI_init(lv_obj_t *father)
     lv_obj_t *targetTempLabel = lv_label_create(ui_targetTempButton);
     lv_numberbtn_set_label_and_format(ui_targetTempButton,
                                       targetTempLabel, "%d°C", 1);
-    lv_numberbtn_set_range(ui_targetTempButton, 0, 500);
+    lv_numberbtn_set_range(ui_targetTempButton, MIN_SET_TEMPERATURE, MAX_SET_TEMPERATURE);
     lv_numberbtn_set_value(ui_targetTempButton, solderModel.utilConfig.targetTemp);
     lv_obj_remove_style_all(ui_targetTempButton);
     lv_obj_set_size(ui_targetTempButton, 60, 20);
@@ -372,17 +384,17 @@ static bool solderPageUI_init(lv_obj_t *father)
     lv_obj_clear_flag(ui_targetTempButton, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_targetTempButton, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_targetTempButton, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(ui_targetTempButton, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_targetTempButton, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_targetTempButton, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_style(ui_targetTempButton, &btn_type1_focused_style, LV_STATE_FOCUSED);
     lv_obj_add_style(ui_targetTempButton, &btn_type1_pressed_style, LV_STATE_EDITED);
 
     // 烙铁图片
     soldering_icon = lv_img_create(ui_ButtonTmp);
-    lv_img_set_src(soldering_icon, &img_soldering_gray);
+    lv_img_set_src(soldering_icon, &T20_CORE_INDEXED_4);
     lv_obj_align(soldering_icon, LV_ALIGN_CENTER, 105, -58);
-    lv_obj_set_style_img_recolor_opa(soldering_icon, LV_OPA_70, 0);
-    lv_obj_set_style_img_recolor(soldering_icon, lv_color_hex(0xff3964), 0);
+    // lv_obj_set_style_img_recolor_opa(soldering_icon, LV_OPA_70, 0);
+    // lv_obj_set_style_img_recolor(soldering_icon, lv_color_hex(0xff3964), 0);
 
     // 分割线
     /*Create an array for the points of the line*/
@@ -496,7 +508,7 @@ static bool solderPageUI_init(lv_obj_t *father)
         lv_obj_clear_flag(ui_paramKp, LV_OBJ_FLAG_SCROLLABLE);
         lv_obj_set_style_radius(ui_paramKp, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_border_width(ui_paramKp, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_color(ui_paramKp, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ui_paramKp, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_text_font(ui_paramKp, &FontDeyi_16, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_add_style(ui_paramKp, &btn_type1_focused_style, LV_STATE_FOCUSED);
         lv_obj_add_style(ui_paramKp, &btn_type1_pressed_style, LV_STATE_EDITED);
@@ -515,7 +527,7 @@ static bool solderPageUI_init(lv_obj_t *father)
         lv_obj_clear_flag(ui_paramKi, LV_OBJ_FLAG_SCROLLABLE);
         lv_obj_set_style_radius(ui_paramKi, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_border_width(ui_paramKi, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_color(ui_paramKi, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ui_paramKi, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_text_font(ui_paramKi, &FontDeyi_16, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_add_style(ui_paramKi, &btn_type1_focused_style, LV_STATE_FOCUSED);
         lv_obj_add_style(ui_paramKi, &btn_type1_pressed_style, LV_STATE_EDITED);
@@ -531,7 +543,7 @@ static bool solderPageUI_init(lv_obj_t *father)
         lv_obj_set_size(ui_paramKd, 50, 20);
         lv_obj_align_to(ui_paramKd, ui_paramKi,
                         LV_ALIGN_OUT_RIGHT_MID, 5, 0);
-        lv_obj_set_style_text_color(ui_paramKd, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ui_paramKd, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_text_font(ui_paramKd, &FontDeyi_16, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_add_style(ui_paramKd, &btn_type1_focused_style, LV_STATE_FOCUSED);
         lv_obj_add_style(ui_paramKd, &btn_type1_pressed_style, LV_STATE_EDITED);

@@ -7,6 +7,7 @@ static lv_timer_t *spotWelderTimer = NULL;
 static lv_obj_t *spotWelderPageUI = NULL;
 static lv_obj_t *ui_enableSwitch;
 static lv_obj_t *ui_modeSwitch;
+static lv_obj_t *ui_forcedMosSwitch;
 static lv_obj_t *pulseWidthLabel_0;
 static lv_obj_t *ui_pulseWidth_0;
 static lv_obj_t *ui_pulseWidth_1;
@@ -55,11 +56,13 @@ static void setMode()
         lv_group_remove_obj(ui_triggerDeyal);
         lv_group_remove_obj(ui_enableSwitch);
         lv_group_remove_obj(ui_manualTrigger);
+        lv_group_remove_obj(ui_forcedMosSwitch);
         lv_group_add_obj(btn_group, ui_pulseWidth_0);
         lv_group_add_obj(btn_group, ui_pulseWidth_1);
         lv_group_add_obj(btn_group, ui_triggerDeyal);
         lv_group_add_obj(btn_group, ui_enableSwitch);
         lv_group_add_obj(btn_group, ui_manualTrigger);
+        lv_group_add_obj(btn_group, ui_forcedMosSwitch);
         // 显示控件
         lv_obj_set_style_text_opa(pulseWidthLabel_0, 255, LV_PART_MAIN);
         lv_obj_set_style_text_opa(ui_pulseWidth_0, 255, LV_PART_MAIN);
@@ -137,7 +140,7 @@ static bool spotWelderPageUI_init(lv_obj_t *father)
     lv_obj_clear_flag(ui_pulseWidth_0, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_pulseWidth_0, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_pulseWidth_0, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(ui_pulseWidth_0, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_pulseWidth_0, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_pulseWidth_0, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_style(ui_pulseWidth_0, &btn_type1_focused_style, LV_STATE_FOCUSED);
     lv_obj_add_style(ui_pulseWidth_0, &btn_type1_pressed_style, LV_STATE_EDITED);
@@ -162,7 +165,7 @@ static bool spotWelderPageUI_init(lv_obj_t *father)
     lv_obj_clear_flag(ui_pulseWidth_1, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_pulseWidth_1, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_pulseWidth_1, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(ui_pulseWidth_1, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_pulseWidth_1, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_pulseWidth_1, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_style(ui_pulseWidth_1, &btn_type1_focused_style, LV_STATE_FOCUSED);
     lv_obj_add_style(ui_pulseWidth_1, &btn_type1_pressed_style, LV_STATE_EDITED);
@@ -187,7 +190,7 @@ static bool spotWelderPageUI_init(lv_obj_t *father)
     lv_obj_clear_flag(ui_triggerDeyal, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_triggerDeyal, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_triggerDeyal, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(ui_triggerDeyal, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_triggerDeyal, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_triggerDeyal, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_style(ui_triggerDeyal, &btn_type1_focused_style, LV_STATE_FOCUSED);
     lv_obj_add_style(ui_triggerDeyal, &btn_type1_pressed_style, LV_STATE_EDITED);
@@ -202,7 +205,7 @@ static bool spotWelderPageUI_init(lv_obj_t *father)
     lv_obj_align_to(ui_voltage, ui_triggerDeyal, LV_ALIGN_OUT_BOTTOM_MID, -10, 10);
     lv_label_set_text_fmt(ui_voltage, "%.2fV", stopWelderModel.voltage / 1000.0);
     lv_obj_add_style(ui_voltage, &label_text_style, 0);
-    lv_obj_set_style_text_color(ui_voltage, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_voltage, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_voltage, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_voltage, 150, LV_PART_MAIN);
 
@@ -216,7 +219,7 @@ static bool spotWelderPageUI_init(lv_obj_t *father)
     lv_obj_align_to(ui_count, ui_voltage, LV_ALIGN_OUT_BOTTOM_MID, -10, 10);
     lv_label_set_text_fmt(ui_count, "%d", stopWelderModel.count);
     lv_obj_add_style(ui_count, &label_text_style, 0);
-    lv_obj_set_style_text_color(ui_count, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_count, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_count, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_count, 150, LV_PART_MAIN);
 
@@ -256,7 +259,31 @@ static bool spotWelderPageUI_init(lv_obj_t *father)
     lv_obj_set_align(manualTriggerLabel, LV_ALIGN_CENTER);
     lv_label_set_text_fmt(manualTriggerLabel, "%s", TEXT_SPOTWELDER_MANUAL_TRIGGER);
     lv_obj_add_style(manualTriggerLabel, &label_text_style, 0);
-    
+
+    // 强制mos打开
+    lv_obj_t *mosForcedLabel = lv_label_create(ui_ButtonTmp);
+    lv_obj_align_to(mosForcedLabel, manualTriggerLabel, LV_ALIGN_OUT_BOTTOM_MID, -50, 20);
+    // lv_obj_align(mosForcedLabel, LV_ALIGN_TOP_LEFT, 25, 20);
+    lv_label_set_text_fmt(mosForcedLabel, "%s", TEXT_SPOTWELDER_MOS_FORCED_OPEN);
+    lv_obj_add_style(mosForcedLabel, &label_text_style, 0);
+
+    ui_forcedMosSwitch = lv_switch_create(ui_ButtonTmp);
+    lv_obj_add_flag(ui_forcedMosSwitch, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+    lv_obj_set_size(ui_forcedMosSwitch, 30, 15);
+    lv_obj_align_to(ui_forcedMosSwitch, mosForcedLabel, LV_ALIGN_OUT_RIGHT_MID, 20, 0);
+    if (ENABLE_STATE::ENABLE_STATE_OPEN == stopWelderModel.forcedOpenMosFlag)
+    {
+        lv_obj_add_state(ui_forcedMosSwitch, LV_STATE_CHECKED); // 开
+    }
+    else
+    {
+        lv_obj_clear_state(ui_forcedMosSwitch, LV_STATE_CHECKED); // 关
+    }
+    // 注意，这里触发的是3个状态 CHECKED 、LV_STATE_FOCUS 、 和 LV_STATE_FOCUS_KEY，必须设置成KEY才有效
+    lv_obj_set_style_outline_color(ui_forcedMosSwitch, SPOT_WELDER_THEME_COLOR1, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
+    lv_obj_set_style_bg_color(ui_forcedMosSwitch, SPOT_WELDER_THEME_COLOR1, LV_PART_INDICATOR | LV_STATE_CHECKED);
+    lv_obj_set_style_outline_opa(ui_forcedMosSwitch, 255, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
+    lv_obj_set_style_outline_pad(ui_forcedMosSwitch, 4, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
 
     lv_obj_add_event_cb(ui_modeSwitch, ui_set_obj_change, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_event_cb(ui_pulseWidth_0, ui_bnt_obj_pressed, LV_EVENT_PRESSED, NULL);
@@ -264,6 +291,7 @@ static bool spotWelderPageUI_init(lv_obj_t *father)
     lv_obj_add_event_cb(ui_triggerDeyal, ui_bnt_obj_pressed, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(ui_enableSwitch, ui_set_obj_change, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_event_cb(ui_manualTrigger, ui_bnt_obj_pressed, LV_EVENT_PRESSED, NULL);
+    lv_obj_add_event_cb(ui_forcedMosSwitch, ui_set_obj_change, LV_EVENT_VALUE_CHANGED, NULL);
 
     btn_group = lv_group_create();
     lv_group_add_obj(btn_group, ui_backBtn);
@@ -273,6 +301,7 @@ static bool spotWelderPageUI_init(lv_obj_t *father)
     lv_group_add_obj(btn_group, ui_triggerDeyal);
     lv_group_add_obj(btn_group, ui_enableSwitch);
     lv_group_add_obj(btn_group, ui_manualTrigger);
+    lv_group_add_obj(btn_group, ui_forcedMosSwitch);
     lv_indev_set_group(knobs_indev, btn_group);
 
     setMode();
@@ -364,7 +393,7 @@ static void ui_bnt_obj_pressed(lv_event_t *e)
         }
         else if (target == ui_manualTrigger)
         {
-            stopWelderModel.manualTriggerFlag = 1;
+            stopWelderModel.manualTriggerFlag = ENABLE_STATE::ENABLE_STATE_OPEN;
         }
     }
 }
@@ -387,6 +416,12 @@ static void ui_set_obj_change(lv_event_t *e)
             bool isEnable = lv_obj_has_state(target, LV_STATE_CHECKED); // 返回 bool 类型， 开-1 ； 关-2
             stopWelderModel.utilConfig.mode = isEnable == true ? SPOTWELDER_MODE_DOUBLE : SPOTWELDER_MODE_SINGLE;
             setMode();
+        }
+        else if (target == ui_forcedMosSwitch)
+        {
+
+            bool isEnable = lv_obj_has_state(target, LV_STATE_CHECKED); // 返回 bool 类型， 开-1 ； 关-2
+            stopWelderModel.forcedOpenMosFlag = isEnable == true ? ENABLE_STATE_OPEN : ENABLE_STATE_CLOSE;
         }
     }
 }

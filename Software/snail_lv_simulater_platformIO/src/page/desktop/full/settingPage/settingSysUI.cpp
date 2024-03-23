@@ -238,7 +238,7 @@ void ui_sys_setting_init(lv_obj_t *father)
     lv_obj_clear_flag(ui_beepVolumeBtn, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_beepVolumeBtn, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_beepVolumeBtn, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(ui_beepVolumeBtn, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_beepVolumeBtn, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_beepVolumeBtn, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_style(ui_beepVolumeBtn, &setting_btn_focused_style, LV_STATE_FOCUSED);
     lv_obj_add_style(ui_beepVolumeBtn, &setting_btn_pressed_style, LV_STATE_EDITED);
@@ -389,7 +389,7 @@ void ui_sys_setting_init(lv_obj_t *father)
     lv_obj_clear_flag(ui_wallpaperDelayBtn, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_wallpaperDelayBtn, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_wallpaperDelayBtn, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(ui_wallpaperDelayBtn, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_wallpaperDelayBtn, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_wallpaperDelayBtn, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_style(ui_wallpaperDelayBtn, &setting_btn_focused_style, LV_STATE_FOCUSED);
     lv_obj_add_style(ui_wallpaperDelayBtn, &setting_btn_pressed_style, LV_STATE_EDITED);
@@ -415,7 +415,7 @@ void ui_sys_setting_init(lv_obj_t *father)
     lv_obj_clear_flag(ui_wallpaperSwTimeBtn, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_wallpaperSwTimeBtn, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_wallpaperSwTimeBtn, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(ui_wallpaperSwTimeBtn, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_wallpaperSwTimeBtn, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_wallpaperSwTimeBtn, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_style(ui_wallpaperSwTimeBtn, &setting_btn_focused_style, LV_STATE_FOCUSED);
     lv_obj_add_style(ui_wallpaperSwTimeBtn, &setting_btn_pressed_style, LV_STATE_EDITED);
@@ -441,7 +441,7 @@ void ui_sys_setting_init(lv_obj_t *father)
     lv_obj_clear_flag(ui_pilotLampLightBtn, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_pilotLampLightBtn, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_pilotLampLightBtn, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(ui_pilotLampLightBtn, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_pilotLampLightBtn, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_pilotLampLightBtn, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_style(ui_pilotLampLightBtn, &setting_btn_focused_style, LV_STATE_FOCUSED);
     lv_obj_add_style(ui_pilotLampLightBtn, &setting_btn_pressed_style, LV_STATE_EDITED);
@@ -467,7 +467,7 @@ void ui_sys_setting_init(lv_obj_t *father)
     lv_obj_clear_flag(ui_pilotLampTimeBtn, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_pilotLampTimeBtn, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_pilotLampTimeBtn, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(ui_pilotLampTimeBtn, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_pilotLampTimeBtn, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_pilotLampTimeBtn, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_style(ui_pilotLampTimeBtn, &setting_btn_focused_style, LV_STATE_FOCUSED);
     lv_obj_add_style(ui_pilotLampTimeBtn, &setting_btn_pressed_style, LV_STATE_EDITED);

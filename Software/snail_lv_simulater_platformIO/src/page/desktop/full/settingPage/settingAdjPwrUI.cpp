@@ -120,7 +120,7 @@ void ui_adjpwr_setting_init(lv_obj_t *father)
     lv_obj_clear_flag(powerQuickSetupVol0, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(powerQuickSetupVol0, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(powerQuickSetupVol0, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(powerQuickSetupVol0, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(powerQuickSetupVol0, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(powerQuickSetupVol0, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_style(powerQuickSetupVol0, &setting_btn_focused_style, LV_STATE_FOCUSED);
     lv_obj_add_style(powerQuickSetupVol0, &setting_btn_pressed_style, LV_STATE_EDITED);
@@ -139,7 +139,7 @@ void ui_adjpwr_setting_init(lv_obj_t *father)
     lv_obj_clear_flag(powerQuickSetupVol1, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(powerQuickSetupVol1, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(powerQuickSetupVol1, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(powerQuickSetupVol1, lv_color_hex(0x989798), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(powerQuickSetupVol1, ALL_GREY_COLOR, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(powerQuickSetupVol1, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_style(powerQuickSetupVol1, &setting_btn_focused_style, LV_STATE_FOCUSED);
     lv_obj_add_style(powerQuickSetupVol1, &setting_btn_pressed_style, LV_STATE_EDITED);
@@ -158,7 +158,7 @@ void ui_adjpwr_setting_init(lv_obj_t *father)
     lv_obj_clear_flag(powerQuickSetupVol2, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(powerQuickSetupVol2, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(powerQuickSetupVol2, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(powerQuickSetupVol2, lv_color_hex(0x989798),
+    lv_obj_set_style_text_color(powerQuickSetupVol2, ALL_GREY_COLOR,
                                 LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(powerQuickSetupVol2, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_style(powerQuickSetupVol2, &setting_btn_focused_style, LV_STATE_FOCUSED);

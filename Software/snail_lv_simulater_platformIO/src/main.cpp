@@ -21,7 +21,7 @@
 #include <SDL2/SDL_timer.h>
 #include "demos/lv_demos.h"
 
-#define SNAILHEATER_VERSION "2.1.0"
+#define SNAILHEATER_VERSION "2.1.6"
 
 int saveSettingAPI(void *parameter)
 {
@@ -100,7 +100,7 @@ void SnailHeater_UI()
             model.coreConfig.realTemp[i] = i * DISPLAY_TEMP_STEP;
         }
 
-        model.curveConfig.id = 1;
+        model.curveConfig.id = 2;
         model.curveConfig.stageNum = 6;
         int data[MAX_STAGE_NUM] = {0, 150, 200, 240, 240, 25};
         int time[MAX_STAGE_NUM] = {2, 150, 240, 276, 294, 375};
@@ -133,6 +133,8 @@ void SnailHeater_UI()
         snprintf(model.curCoreName, 16, "1_T12");
         model.coreConfig.solderPwmFreq = SOLDER_PWM_FREQ::SOLDER_PWM_FREQ_128;
         model.coreConfig.solderType = SOLDER_TYPE_T12;
+        model.coreConfig.enterEasySleepTime = 120000;
+        model.coreConfig.enterDeepSleepTime = 300000;
         model.coreConfig.wakeSwitchType = SOLDER_SHAKE_TYPE_NONE;
         model.coreConfig.powerLimit = 0.8;
         model.coreConfig.kp = 150;
@@ -185,7 +187,7 @@ void SnailHeater_UI()
     {
         StopWelderModel model;
         model.workState = ENABLE_STATE_CLOSE;
-        model.manualTriggerFlag = 0;
+        model.manualTriggerFlag = ENABLE_STATE::ENABLE_STATE_CLOSE;
         model.utilConfig.mode = SPOTWELDER_MODE::SPOTWELDER_MODE_DOUBLE;
         model.utilConfig.pulseWidth_0 = 3;
         model.utilConfig.pulseWidth_1 = 10;
@@ -201,12 +203,14 @@ void SnailHeater_UI()
         model.workState = ENABLE_STATE_CLOSE;
 
         model.freqStep = 1;
-        model.utilConfig.signalType = SIGNAL_TYPE::SIGNAL_TYPE_SINE_WARE;
-        model.utilConfig.freqPwm = 1000;
+        model.realFreqPwm = 5000;
+        model.utilConfig.signalType = SIGNAL_TYPE::SIGNAL_TYPE_SQUARE_WARE;
+        model.utilConfig.freqPwm = 2499584;
         model.utilConfig.freqDAC = 1000;
         model.utilConfig.scale = 1;
         model.utilConfig.duty = 500;
-        model.utilConfig.phase = 5000;
+        model.utilConfig.phase = 2;
+        model.utilConfig.offset = 0;
         setSignalGeneratorInfo(&model);
     }
 
@@ -227,7 +231,7 @@ void SnailHeater_UI()
         model.utilConfig.isStartupAnim = ENABLE_STATE_OPEN;
         model.utilConfig.isStartupBell = ENABLE_STATE_OPEN;
         model.utilConfig.isRunAnim = ENABLE_STATE_OPEN;
-        model.utilConfig.enableWallpaper = ENABLE_STATE_OPEN;
+        model.utilConfig.enableWallpaper = ENABLE_STATE_CLOSE;
         model.utilConfig.enableStaticWallpaper = ENABLE_STATE_OPEN;
         model.utilConfig.enableDynamicWallpaper = ENABLE_STATE_OPEN;
         model.utilConfig.pilotLampLight = 128;

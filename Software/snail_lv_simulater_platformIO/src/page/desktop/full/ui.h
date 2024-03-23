@@ -61,15 +61,23 @@ extern "C"
     LV_FONT_DECLARE(FontJost_24);
     LV_FONT_DECLARE(FontJost_36);
     LV_FONT_DECLARE(FontJost);
-    LV_IMG_DECLARE(img_soldering_gray);
     LV_IMG_DECLARE(qq_group);
     LV_IMG_DECLARE(img_fan_speed);
-    LV_IMG_DECLARE(img_text_c245);
-    LV_IMG_DECLARE(img_text_c210);
-    LV_IMG_DECLARE(img_text_t12);
-    LV_IMG_DECLARE(img_text_noc);
+
+    LV_IMG_DECLARE(img_soldering_gray);
+    LV_IMG_DECLARE(T12_CORE_INDEXED_4);
+    LV_IMG_DECLARE(T20_CORE_INDEXED_4);
+    LV_IMG_DECLARE(T20_CORE_INDEXED_8);
+    LV_IMG_DECLARE(T20_CORE_COLOR_ALPHA);
+    LV_IMG_DECLARE(C115_CORE_INDEXED_4);
+    LV_IMG_DECLARE(C210_CORE_INDEXED_4);
+    LV_IMG_DECLARE(C245_CORE_INDEXED_4);
+    LV_IMG_DECLARE(C470_CORE_INDEXED_4);
+    LV_IMG_DECLARE(T936_CORE_INDEXED_4);
+    
 
     LV_IMG_DECLARE(img_name_noc_ico);
+    LV_IMG_DECLARE(img_name_tx_ico);
     LV_IMG_DECLARE(img_name_c105_ico);
     LV_IMG_DECLARE(img_name_c115_ico);
     LV_IMG_DECLARE(img_name_c210_ico);
@@ -84,6 +92,8 @@ extern "C"
     LV_IMG_DECLARE(img_wake_type_low);
     LV_IMG_DECLARE(img_wake_type_change);
 
+    LV_IMG_DECLARE(signal_sine_small);
+    LV_IMG_DECLARE(signal_square_small);
     LV_IMG_DECLARE(signal_sine);
     LV_IMG_DECLARE(signal_square);
     LV_IMG_DECLARE(earphone3);

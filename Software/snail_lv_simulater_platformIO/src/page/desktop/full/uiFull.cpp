@@ -36,8 +36,6 @@ static int lockScreenImageIndex = 0;     // 锁屏壁纸播放的下标
 #define WALLPAPER_NUM 6
 static int wallpaperSwitchLeaveTime = 0; // 锁屏切换的打点器
 
-uint32_t lastTimeStamp = 0;
-
 // // 壁纸列表
 // #if SH_HARDWARE_VER >= SH_ESP32S2_WROOM_V26
 // static lv_img_dsc_t wallpaperList[] = {lighthouse_320x240, bridge_320x240,
@@ -247,12 +245,6 @@ void show_arc_menu()
         // 关闭按钮全局加速
         sysInfoModel.setIntellectRateFlag(false);
 
-        // #ifndef SIMULATOR
-        //         lastTimeStamp = (uint32_t)GET_SYS_MILLIS();
-        //         LV_LOG_USER("show_arc_menu lastTimeStamp = %lu\n",
-        //                     lastTimeStamp);
-        // #endif
-
 #if USE_MENU_STYLE == 3
         lv_anim_del(&menu_anim, set_bg_opa);
         lv_anim_init(&menu_anim);
@@ -264,11 +256,6 @@ void show_arc_menu()
         lv_anim_set_time(&menu_anim, 300);
         lv_anim_set_var(&menu_anim, arcMenu);
         lv_anim_start(&menu_anim);
-        // if (lastTimeStamp > 99221709767064)
-        // {
-        //     lastTimeStamp = 0;
-        // }
-        // UART_PORT.printf("getState lastTimeStamp = %lu\n", lastTimeStamp);
 #endif
 #if USE_MENU_STYLE == 2
         lv_anim_del(&menu_anim, set_x_pos);
@@ -567,11 +554,6 @@ void top_layer_init(lv_obj_t *parent)
     lv_obj_set_style_text_opa(ui_topLabel1, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_topLabel1, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    // 顶上的分割线，实测好像不太好看，取消了
-    // lv_obj_set_style_border_width(ui_topLabel1,1,0);
-    // lv_obj_set_style_border_side(ui_topLabel1,LV_BORDER_SIDE_RIGHT,0);
-    // lv_obj_set_style_border_color(ui_topLabel1,isWhiteTheme ? lv_color_hex(0xe0e0e0) : lv_color_hex(0x666666),0);
-
     ui_topLabel2 = lv_label_create(ui_PanelTopBgImg);
     lv_obj_set_size(ui_topLabel2, 47, 24);
     lv_obj_align(ui_topLabel2, LV_ALIGN_TOP_MID, 0, 0);
@@ -580,10 +562,6 @@ void top_layer_init(lv_obj_t *parent)
     lv_obj_set_style_text_opa(ui_topLabel2, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_topLabel2, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    // 顶上的分割线，实测好像不太好看，取消了
-    // lv_obj_set_style_border_width(ui_topLabel2,1,0);
-    // lv_obj_set_style_border_side(ui_topLabel2,LV_BORDER_SIDE_RIGHT,0);
-    // lv_obj_set_style_border_color(ui_topLabel2,isWhiteTheme ? lv_color_hex(0xe0e0e0) : lv_color_hex(0x666666),0);
     x_pos += 48;
 
     ui_topLabel3 = lv_label_create(ui_PanelTopBgImg);
@@ -606,7 +584,12 @@ void top_layer_init(lv_obj_t *parent)
     lv_obj_center(ui_backBtnLabel);
     lv_label_set_text(ui_backBtnLabel, LV_SYMBOL_LEFT);
 
-    lv_obj_add_event_cb(ui_backBtn, ui_back_btn_pressed, LV_EVENT_PRESSED, NULL);
+    // #ifdef SIMULATOR
+    if (ENABLE_STATE::ENABLE_STATE_CLOSE == sysInfoModel.utilConfig.enableWallpaper)
+    {
+        lv_obj_add_event_cb(ui_backBtn, ui_back_btn_pressed, LV_EVENT_PRESSED, NULL);
+    }
+    // #endif
 
     topLayerTimer = lv_timer_create(toplayTimer_timeout, 1000, NULL);
     lv_timer_set_repeat_count(topLayerTimer, -1);
@@ -622,13 +605,6 @@ static void arc_menu_event_handler(lv_event_t *e)
     )
     {
         uint16_t index = lv_arcmenu_get_value(arcMenu);
-        // #ifndef SIMULATOR
-        //         // if (
-        //         //     // index != PAGE_INDEX_AIR_HOT ||
-        //         //     GET_SYS_MILLIS() - lastTimeStamp > 300)
-
-        //         if (true)
-        // #endif
 
         {
             lv_obj_t *obj = lv_event_get_target(e);
@@ -643,20 +619,9 @@ static void arc_menu_event_handler(lv_event_t *e)
                     currPageIndex = index;
                     ui_Page[currPageIndex]->ui_init(ui_PanelMain);
                 }
-                // #ifndef SIMULATOR
-                //                 LV_LOG_USER("if lastTimeStamp = %lu, nowTimeStamp = %lu\n",
-                //                             lastTimeStamp, GET_SYS_MILLIS());
-                // #endif
                 hide_arc_menu();
             }
         }
-        // #ifndef SIMULATOR
-        //         else
-        //         {
-        //             LV_LOG_USER("else lastTimeStamp = %lu, nowTimeStamp = %lu\n",
-        //                         lastTimeStamp, GET_SYS_MILLIS());
-        //         }
-        // #endif
     }
     else if (code == LV_EVENT_VALUE_CHANGED)
     {
@@ -910,7 +875,7 @@ void main_screen_init(lv_indev_t *indev)
     lv_style_set_text_opa(&btn_type1_style, 255);
     lv_style_set_text_font(&btn_type1_style, &FontJost_14);
     lv_style_set_border_color(&btn_type1_style, BTN_TYPE1_BORDER_COLOR);
-    lv_style_set_text_color(&btn_type1_style, BTN_TYPE1_TEXT_COLOR);
+    lv_style_set_text_color(&btn_type1_style, ALL_GREY_COLOR);
 
     lv_style_init(&btn_type1_focused_style);
     lv_style_set_radius(&btn_type1_focused_style, 4);
