@@ -9,10 +9,105 @@ static lv_obj_t *ui_father = NULL;
 
 static lv_obj_t *ui_pwrCurZeroBtn;
 static lv_obj_t *ui_activeCloseSolderSwitch;
+static lv_obj_t *ui_calibMsgBox = NULL;
 
 static lv_obj_t *powerQuickSetupVol0;
 static lv_obj_t *powerQuickSetupVol1;
 static lv_obj_t *powerQuickSetupVol2;
+static lv_timer_t *ui_calibTimer = NULL; // 校准的定时器
+static lv_obj_t *ui_timer_arc = NULL;
+static lv_obj_t *ui_timer_arc_label = NULL;
+
+static lv_group_t *msg_btn_group = NULL;
+
+static void adjCalibTimer_timeout(lv_timer_t *timer)
+{
+    LV_UNUSED(timer);
+
+    if (NULL != ui_timer_arc)
+    {
+        lv_obj_del(ui_timer_arc);
+        ui_timer_arc = NULL;
+    }
+
+    if (NULL != ui_calibMsgBox)
+    {
+        lv_obj_del(ui_calibMsgBox);
+        ui_calibMsgBox = NULL;
+    }
+    lv_indev_set_group(knobs_indev, sub_btn_group);
+
+    if (INFO_MANAGE_ACTION_ADJPWR_CALIB_FINISH == adjPowerModel.manageCalibAction)
+    {
+        adjPowerModel.manageCalibAction = INFO_MANAGE_ACTION_ADJPWR_CALIB_IDLE;
+    }
+}
+
+static void set_angle(void *obj, int32_t v)
+{
+    if (100 <= v)
+    {
+        lv_obj_set_style_text_font(ui_timer_arc_label, &FontDeyi_24, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_label_set_text_fmt(ui_timer_arc_label, "%s", "成功");
+    }
+    else
+    {
+        lv_arc_set_value((lv_obj_t *)obj, v);
+        lv_label_set_text_fmt(ui_timer_arc_label, "%d%%", v);
+    }
+    lv_obj_align(ui_timer_arc_label, LV_ALIGN_CENTER, 0, 0);
+}
+
+static void calib_msgbox_event_cb(lv_event_t *e)
+{
+    lv_obj_t *obj = lv_event_get_current_target(e);
+    LV_LOG_USER("Button %s clicked", lv_msgbox_get_active_btn_text(obj));
+
+    if (!strcmp(lv_msgbox_get_active_btn_text(obj), "返回"))
+    {
+        lv_indev_set_group(knobs_indev, sub_btn_group);
+        lv_group_remove_obj(lv_msgbox_get_btns(ui_calibMsgBox));
+        if (NULL != ui_calibMsgBox)
+        {
+            lv_obj_del(ui_calibMsgBox);
+            ui_calibMsgBox = NULL;
+        }
+    }
+    else
+    {
+        ui_timer_arc = lv_arc_create(ui_father);
+        lv_arc_set_rotation(ui_timer_arc, 270);
+        lv_arc_set_bg_angles(ui_timer_arc, 0, 360);
+        lv_obj_remove_style(ui_timer_arc, NULL, LV_PART_KNOB);  /*Be sure the knob is not displayed*/
+        lv_obj_clear_flag(ui_timer_arc, LV_OBJ_FLAG_CLICKABLE); /*To not allow adjusting by click*/
+        lv_obj_center(ui_timer_arc);
+
+        ui_timer_arc_label = lv_label_create(ui_timer_arc);
+        lv_label_set_text_fmt(ui_timer_arc_label, "%d", 0);
+        lv_obj_align(ui_timer_arc_label, LV_ALIGN_CENTER, 0, 0);
+        lv_obj_add_style(ui_timer_arc_label, &label_text_style, 0);
+        lv_obj_set_style_text_color(ui_timer_arc_label,
+                                    // lv_obj_get_style_arc_color_filtered(ui_timer_arc, LV_PART_MAIN),
+                                    lv_obj_get_style_arc_color(ui_timer_arc, LV_PART_INDICATOR),
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_font(ui_timer_arc_label, &FontRoboto_24, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+        lv_anim_t a;
+        lv_anim_init(&a);
+        lv_anim_set_var(&a, ui_timer_arc);
+        lv_anim_set_exec_cb(&a, set_angle);
+        lv_anim_set_time(&a, 50000);
+        // 重复次数。默认值为1。LV_ANIM_REPEAT_INFINIT用于无限重复
+        lv_anim_set_repeat_count(&a, 1);
+        lv_anim_set_repeat_delay(&a, 300);
+        lv_anim_set_values(&a, 0, 100);
+        lv_anim_start(&a);
+        adjPowerModel.manageCalibAction = INFO_MANAGE_ACTION_ADJPWR_CALIB_START;
+
+        ui_calibTimer = lv_timer_create(adjCalibTimer_timeout, 52000, NULL);
+        lv_timer_set_repeat_count(ui_calibTimer, 1);
+    }
+}
 
 static void ui_bnt_obj_pressed(lv_event_t *e)
 {
@@ -23,7 +118,20 @@ static void ui_bnt_obj_pressed(lv_event_t *e)
     {
         if (target == ui_pwrCurZeroBtn)
         {
-            adjPowerModel.curToZeroFlag = true;
+            static const char *btns[] = {"返回", "开始校准"};
+
+            ui_calibMsgBox = lv_msgbox_create(ui_father,
+                                              SETTING_TEXT_ADJPWR_MSGBOX_INFO_TITLE,
+                                              SETTING_TEXT_ADJPWR_MSGBOX_INFO, btns, false);
+            lv_obj_add_style(ui_calibMsgBox, &label_text_style, 0);
+            lv_obj_add_event_cb(ui_calibMsgBox, calib_msgbox_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+            lv_obj_center(ui_calibMsgBox);
+
+            lv_obj_t *btnmatrix = lv_msgbox_get_btns(ui_calibMsgBox);
+            lv_group_add_obj(msg_btn_group, btnmatrix);
+
+            lv_indev_set_group(knobs_indev, msg_btn_group);
+            lv_group_focus_obj(btnmatrix);
         }
     }
 }
@@ -48,10 +156,10 @@ static void ui_adj_obj_change(lv_event_t *e)
 void ui_adjpwr_setting_init(lv_obj_t *father)
 {
     ui_father = father;
-    // 静态电流
+    // 校准
     lv_obj_t *ui_pwrCurZeroLabel = lv_label_create(father);
     lv_obj_align(ui_pwrCurZeroLabel, LV_ALIGN_TOP_LEFT, 10, 10);
-    lv_label_set_text(ui_pwrCurZeroLabel, SETTING_TEXT_ADJPWR_CUR_ZERO);
+    lv_label_set_text(ui_pwrCurZeroLabel, SETTING_TEXT_ADJPWR_AUTO_CALIB);
     lv_obj_add_style(ui_pwrCurZeroLabel, &label_text_style, 0);
 
     ui_pwrCurZeroBtn = lv_btn_create(father);
@@ -68,7 +176,7 @@ void ui_adjpwr_setting_init(lv_obj_t *father)
 
     lv_obj_t *ui_pwrCurZeroBtnLabel = lv_label_create(ui_pwrCurZeroBtn);
     lv_obj_align(ui_pwrCurZeroBtnLabel, LV_ALIGN_CENTER, 0, 0);
-    lv_label_set_text(ui_pwrCurZeroBtnLabel, "归零");
+    lv_label_set_text(ui_pwrCurZeroBtnLabel, "进入");
     lv_obj_add_style(ui_pwrCurZeroBtnLabel, &label_text_style, 0);
     // lv_obj_set_style_bg_color(ui_pwrCurZeroBtnLabel, LV_PART_MAIN|LV_STATE_DEFAULT);
     // lv_obj_add_style(ui_pwrCurZeroBtnLabel, &setting_btn_focused_style, LV_STATE_FOCUSED);
@@ -217,6 +325,7 @@ void ui_adjpwr_setting_init_group(lv_obj_t *father)
         sub_btn_group = NULL;
     }
     sub_btn_group = lv_group_create();
+    msg_btn_group = lv_group_create();
     lv_group_add_obj(sub_btn_group, ui_pwrCurZeroBtn);
 #if SH_HARDWARE_VER >= SH_ESP32S2_WROOM_V25
     lv_group_add_obj(sub_btn_group, ui_activeCloseSolderSwitch);
@@ -240,6 +349,12 @@ void ui_adjpwr_setting_release(void *param)
     {
         lv_group_del(sub_btn_group);
         sub_btn_group = NULL;
+    }
+
+    if (NULL != msg_btn_group)
+    {
+        lv_group_del(msg_btn_group);
+        msg_btn_group = NULL;
     }
 }
 

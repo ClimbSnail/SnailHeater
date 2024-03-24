@@ -74,7 +74,6 @@ extern "C"
     LV_IMG_DECLARE(C245_CORE_INDEXED_4);
     LV_IMG_DECLARE(C470_CORE_INDEXED_4);
     LV_IMG_DECLARE(T936_CORE_INDEXED_4);
-    
 
     LV_IMG_DECLARE(img_name_noc_ico);
     LV_IMG_DECLARE(img_name_tx_ico);
@@ -204,6 +203,7 @@ extern "C"
     void ui_release(); // 基本不会调用此函数
     void ui_reload();
     void ui_page_move_center_by_ind(int index); // 后台请求主动页面切换
+    bool isInSettingPage(void);                 // 是否在设置界面
 
     void ui_updateSolderData(void);
     void ui_updateSolderPIDParam(void);

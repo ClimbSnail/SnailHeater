@@ -84,6 +84,9 @@ static void value_change_tab(lv_event_t *e)
     //     return;
     // }
 
+    // 开启按钮全局加速
+    sysInfoModel.setIntellectRateFlag(true);
+
     LV_LOG_USER("after pageId = %d", pageId);
 
     switch (pageId)
@@ -135,9 +138,6 @@ static void focused_tab(lv_event_t *e)
     {
         return;
     }
-
-    // 开启按钮全局加速
-    sysInfoModel.setIntellectRateFlag(true);
 
     int ind = 0;
     for (ind = 0; ind < SETTING_OBJ_SIZE; ++ind)

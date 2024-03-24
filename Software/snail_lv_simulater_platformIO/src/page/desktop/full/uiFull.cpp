@@ -1124,4 +1124,9 @@ void touch_event(unsigned int value)
     }
 }
 
+bool isInSettingPage(void)
+{
+    return currPageIndex == PAGE_INDEX_SETTING;
+}
+
 #endif

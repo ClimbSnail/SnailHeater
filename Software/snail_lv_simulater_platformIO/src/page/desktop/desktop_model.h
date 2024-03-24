@@ -108,11 +108,11 @@ struct AdjPowerModel
 {
     unsigned char workState; // 工作状态
 
-    AdjPowerConfig utilConfig;             // 通用配置
+    AdjPowerUtilConfig utilConfig;         // 通用配置
+    INFO_MANAGE_ACTION manageCalibAction;  // 校准动作
     int32_t voltage;                       // 当前电压
     int32_t current;                       // 当前的电流
     int32_t capacity;                      // 功率
-    bool curToZeroFlag;                    // 电流归零
     INFO_MANAGE_ACTION manageConfigAction; // 配置文件的管理动作
 };
 
