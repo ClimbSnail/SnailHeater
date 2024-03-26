@@ -1,0 +1,49 @@
+# 本行为yaml文件注释范例
+# yaml配置格式以空格缩进区分层级关系
+# key后面紧跟一个冒号 冒号后需加一个空格方可填写value
+
+windows_tool:
+  
+  # 本工具模板地址
+  tool_open_url: "本工具开源地址：https://github.com/ClimbSnail/esp_win_tool"
+
+  # 工具的名称
+  tool_name: "蜗牛台SnailHeater管理工具 "
+  
+  # 自定义QQ群信息 一共需填写两个群号，中间英文的分号隔开
+  qq_info: QQ_1群 148563337,QQ_2群 686756592
+  
+  # 自定义额外的视频或文档链接
+  
+  info_url_0: "<html><head/><body><p><a href=\"https://www.bilibili.com/video/BV1oG4y1h7A8?p=2\"><span style=\" text-decoration: underline; color:#0000ff;\">https://www.bilibili.com/video/BV1oG4y1h7A8?p=2</span></a></p></body></html>"
+  info_url_1: "<a href=\"https://docs.qq.com/doc/DQWdkTFpvV2ZSR29G\">https://docs.qq.com/doc/DQWdkTFpvV2ZSR29G"
+  
+  # 下载的波特率
+  baud_rate: "921600"
+  # 通讯的波特率
+  info_baud_rate: "921600"
+      
+  # 预留的读取激活码的本地缓存文件 用于不在联网状态下使用（本字段需要配合固件联调）
+  temp_sn_recode_path: temporary_sn_recode.txt
+  # 激活码查询的api 需要激活码管理员有服务器 http://127.0.0.1:5001/snailheater/sn/v1/search/
+  search_sn_url: http://climbsnail.cn:5001/snailheater/sn/v1/search/
+  # 获取最新固件版本的api http://127.0.0.1:5001/snailheater/sn/v1/version/firmware
+  get_firmware_new_ver_url: http://climbsnail.cn:5001/snailheater/sn/v1/version/firmware
+  # 获取最新工具版本的api http://127.0.0.1:5001/snailheater/sn/v1/version/tool
+  get_tool_new_ver_url: http://climbsnail.cn:5001/snailheater/sn/v1/version/tool
+  # 自动激活的api 用于工厂批量生产（应设超级权限）
+  # activate_sn_url: http://climbsnail.cn:5001/snailheater/sn/v1/
+
+sn_tool:
+  # 保存激活过的激活码路径
+  sn_save_path: "../../active_recode.txt"
+  # 保存工厂批量激活的序列号
+  sn_factory_save_path: "active_recode_factory.txt"
+
+sn_search_server:
+  # 读取的已激活过的机器激活码路径
+  active_recode_path: "../../active_recode.txt"
+  # server启动绑定的服务器ip
+  server_ip: "0.0.0.0"
+  # server启动绑定的服务器端口
+  server_port: "5001"

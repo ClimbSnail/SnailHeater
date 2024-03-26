@@ -40,7 +40,8 @@ import massagehead as mh
 #     sys.path.append("./esptool_v41")
 # else:
 #     sys.path.append("./")
-import esptool # sys.path.append("./esptool_v41") or pip install esptool==4.1 
+# import esptool # sys.path.append("./esptool_v41") or pip install esptool==4.1 
+from esptool_v41 import esptool
 # from esptool_v33 import esptool
 # from esptool_v33 import espefuse
 
@@ -94,12 +95,28 @@ activate_sn_url = win_cfg["activate_sn_url"] \
     if "activate_sn_url" in win_cfg.keys() else None
 get_firmware_new_ver_url = win_cfg["get_firmware_new_ver_url"] \
     if "get_firmware_new_ver_url" in win_cfg.keys() else None
+get_tool_new_ver_url = win_cfg["get_tool_new_ver_url"] \
+    if "get_tool_new_ver_url" in win_cfg.keys() else None
 baud_rate = win_cfg["baud_rate"] \
     if "baud_rate" in win_cfg.keys() else ""
 info_baud_rate = win_cfg["info_baud_rate"] \
     if "info_baud_rate" in win_cfg.keys() else ""
 
+
 cfg_fp.close()
+
+def get_version():
+    try:
+        response = requests.get(get_tool_new_ver_url, timeout=3) # , verify=False
+        new_version_info = re.findall(r'SH_TOOL v\d{1,2}\.\d{1,2}\.\d{1,2}', response.text)
+        new_version = new_version_info[0].split(" ")[1]
+        if common.TOOL_VERSION == new_version:
+            return "[已是最新版本]"
+        else:
+            return "[推荐升级最新版本 "+ new_version +"]"
+    except Exception as err:
+        print(err)
+        return "[无法获取到最新版本]"
 
 
 class DownloadController(object):
@@ -124,7 +141,7 @@ class DownloadController(object):
 
         _translate = QtCore.QCoreApplication.translate
         self.win_main.setWindowTitle(_translate("SanilHeaterTool",
-                                                tool_name + common.VERSION))
+                                                tool_name + common.TOOL_VERSION + " " + get_version()))
 
         # 设置文本可复制
         self.form.LinkInfolabel.setTextInteractionFlags(Qt.TextSelectableByMouse)
@@ -598,7 +615,7 @@ class DownloadController(object):
             self.print_log("联网查询最新固件版本...")
             response = requests.get(get_firmware_new_ver_url, timeout=3)  # , verify=False
             # sn = re.findall(r'\d+', response.text)
-            if 'SnailHeater_v' in response.text.strip() or 'SH_SW_v' in response.text.strip():
+            if 'SnailHeater_v' in response.text.strip() or 'SH_SW v' in response.text.strip():
                 new_ver = response.text.strip()
                 self.form.VerInfolabel.setText("最新固件版本 " + str(new_ver))
                 self.print_log("最新固件版本 " + (COLOR_RED % str(new_ver)))
