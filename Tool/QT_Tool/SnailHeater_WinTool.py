@@ -22,6 +22,7 @@ import struct
 import shutil
 import io
 from PIL import Image
+import datetime
 
 import serial  # pip install pyserial
 import serial.tools.list_ports
@@ -62,6 +63,8 @@ default_wallpaper_280 = os.path.join(cur_dir, "./base_data/Wallpaper_280x240.lsw
 default_wallpaper_320 = os.path.join(cur_dir, "./base_data/Wallpaper_320x240.lsw")
 default_wallpaper_clean = os.path.join(cur_dir, "./base_data/WallpaperClean.lsw")
 default_wallpaper = default_wallpaper_280
+# coredump目录
+coredump_dir = os.path.join(cur_dir, "Coredump")
 # 文件缓存目录
 wallpaper_cache_dir = os.path.join(cur_dir, "Wallpaper", "Cache")
 # 文件生存目录
@@ -102,18 +105,39 @@ baud_rate = win_cfg["baud_rate"] \
 info_baud_rate = win_cfg["info_baud_rate"] \
     if "info_baud_rate" in win_cfg.keys() else ""
 
-
 cfg_fp.close()
 
+support = None
+
+
+def getVerValue(ver):
+    """
+    获取版本的值
+    """
+    if "UNKNOWN" in ver:
+        return 100000000  # 返回最大值
+    value1_list = ver[1:].split(".")
+    sum = 0
+    for val in value1_list:
+        sum = sum * 100 + int(val)
+    return sum
+
+
 def get_version():
+    global support
     try:
-        response = requests.get(get_tool_new_ver_url, timeout=3) # , verify=False
-        new_version_info = re.findall(r'SH_TOOL v\d{1,2}\.\d{1,2}\.\d{1,2}', response.text)
-        new_version = new_version_info[0].split(" ")[1]
+        response = requests.get(get_tool_new_ver_url + "/" + common.TOOL_VERSION, timeout=3)  # , verify=False
+        new_version_info = re.findall(r'SH_TOOL v\d{1,2}\.\d{1,2}\.\d{1,2}', response.text.split("</p><p>")[1])
+        new_version = new_version_info[0].split(" ")[1].strip()
+
+        support_version_info = response.text.split("[")[1][:-3].split("]")[0].strip()
+        start = support_version_info.split("~")[0].strip().split(" ")[1]
+        end = support_version_info.split("~")[1].strip().split(" ")[1]
+        support = [start, end]
         if common.TOOL_VERSION == new_version:
             return "[已是最新版本]"
         else:
-            return "[推荐升级最新版本 "+ new_version +"]"
+            return "[推荐升级最新版本 " + new_version + "]"
     except Exception as err:
         print(err)
         return "[无法获取到最新版本]"
@@ -154,7 +178,8 @@ class DownloadController(object):
         self.form.QueryPushButton.clicked.connect(self.query_button_click)
         self.form.chooseWPButton.clicked.connect(self.chooseFile)
         self.form.ActivatePushButton.clicked.connect(self.act_button_click)
-        
+        # self.form.ActivatePushButton.clicked.connect(self.read_coredump)
+
         # self.form.UpdatePushButton.clicked.connect(self.update_button_click)
         self.form.UpdatePushButton.clicked.connect(self.UpdatePushButton_show_message)
         # self.form.WriteWallpaperButton.clicked.connect(self.writeWallpaper)
@@ -258,6 +283,49 @@ class DownloadController(object):
             return None
         return select_com
 
+    def read_coredump(self):
+        """
+        读取coredump的数据
+        """
+        self.print_log("正在获取异常信息...")
+
+        self.hard_reset()
+        time.sleep(1)
+        machine_code = self.get_machine_code()
+        if "查询失败" == machine_code:
+            self.print_log(COLOR_RED % "无法获取异常信息")
+            return None
+        try:
+            # idf.py coredump-info -C D:\Workspace\OpenWorkspace\PersionSnailHeater\Software\firmware_idf -c D:\Workspace\OpenWorkspace\SnailHeater\Tool\QT_Tool\Coredump\coredump.img
+            # idf.py coredump-info -s ./coredump.elf
+            # idf.py coredump-info -c ./coredump.elf
+            try:
+                os.makedirs(coredump_dir)
+            except Exception as e:
+                pass
+
+            select_com = self.getSafeCom()
+            if select_com == None:
+                self.print_log(COLOR_RED % "激活操作异常，激活中止...")
+                return None
+
+            nowTime = datetime.datetime.now().strftime('%Y%m%d_%H_%M_%S')
+            coredumpFile = os.path.join(coredump_dir, "SH_%s_%s.coredump" % (nowTime, machine_code))
+            print(coredumpFile)
+
+            cmd = ['SnailHeater_TOOL.py', '--port', select_com,
+                   '--baud', baud_rate,
+                   'read_flash', '0x1D0000',
+                   '0x10000', coredumpFile
+                   ]
+
+            esptool.main(cmd[1:])
+
+            self.print_log(COLOR_RED % ("异常报告已生成：" + coredumpFile))
+        except Exception as e:
+            self.print_log(COLOR_RED % "错误：通讯异常。")
+            pass
+
     def act_button_click(self):
         self.print_log("正在激活设备...")
 
@@ -305,7 +373,7 @@ class DownloadController(object):
                 self.print_log("激活成功")
             else:
                 self.print_log("激活失败")
-        
+
         self.release_serial()
 
     def auto_active(self):
@@ -314,7 +382,7 @@ class DownloadController(object):
         """
         self.print_log((COLOR_RED % "执行自动激活程序"))
         self.hard_reset()  # 复位芯片
-        time.sleep(2)   # 等待重启结束查询
+        time.sleep(2)  # 等待重启结束查询
 
         if self.query_button_click() == False:
             return False
@@ -361,9 +429,9 @@ class DownloadController(object):
         except Exception as err:
             print(str(traceback.format_exc()))
             self.print_log("获取异常异常")
-        
+
         return True
-    
+
     def reset_ui_button(self):
 
         self.progress_bar_time_cnt = 0  # 复位进度条
@@ -371,7 +439,6 @@ class DownloadController(object):
         self.form.UpdatePushButton.setEnabled(True)
         self.form.UpdateModeMethodRadioButton.setEnabled(True)
         self.form.ClearModeMethodRadioButton.setEnabled(True)
-
 
     def update_button_click(self):
         """
@@ -395,6 +462,16 @@ class DownloadController(object):
                 self.reset_ui_button()
                 return False
 
+            if support != None:
+                curSWVersion = re.findall(r'SH_SW_v\d{1,2}\.\d{1,2}\.\d{1,2}', firmware_path)[0][6:].strip()
+                if getVerValue(support[0]) > getVerValue(curSWVersion) or getVerValue(support[1]) < getVerValue(
+                        curSWVersion):
+                    self.print_log((COLOR_RED % "错误提示：") + "当前版本管理工具不支持该固件")
+                    self.form.UpdateModeMethodRadioButton.setEnabled(True)
+                    self.form.ClearModeMethodRadioButton.setEnabled(True)
+                    self.form.UpdatePushButton.setEnabled(True)
+                    return False
+
             self.print_log("串口号：" + (COLOR_RED % select_com))
             self.print_log("固件文件：" + (COLOR_RED % firmware_path))
             self.print_log("刷机模式：" + (COLOR_RED % mode))
@@ -415,16 +492,13 @@ class DownloadController(object):
             else:
                 all_time += 5
             file_list = ["./base_data/boot_app0.bin",
-                        "./base_data/bootloader_4MB.bin",
-                        "./base_data/partitions_4MB.bin",
-                        #  "./base_data/tinyuf2.bin",
-                        firmware_path,
-                        default_wallpaper]
+                         "./base_data/bootloader_4MB.bin",
+                         "./base_data/partitions_4MB.bin",
+                         #  "./base_data/tinyuf2.bin",
+                         firmware_path,
+                         default_wallpaper]
             for filepath in file_list:
                 all_time = all_time + os.path.getsize(filepath) * 10 / int(baud_rate)
-
-            # if os.path.exists(default_wallpaper):
-            #     all_time = all_time + os.path.getsize(default_wallpaper) * 10 / int(baud_rate) + 2
 
             self.print_log("刷机预计需要：" + (COLOR_RED % (str(all_time)[0:5] + "s")))
 
@@ -478,8 +552,9 @@ class DownloadController(object):
                    '--after', 'hard_reset',
                    'write_flash',
                    '--flash_size', flash_size_text,
-                   '0x00001000', "./base_data/bootloader_%s.bin"%(flash_size_text),
-                   '0x00008000', "./base_data/partitions_%s.bin"%(flash_size_text),
+                   #    '0x00001000', "./base_data/bootloader.bin",
+                   '0x00001000', "./base_data/bootloader_%s.bin" % (flash_size_text),
+                   '0x00008000', "./base_data/partitions_%s.bin" % (flash_size_text),
                    '0x0000e000', "./base_data/boot_app0.bin",
                    # '0x002d0000', "./base_data/tinyuf2.bin",
                    '0x00010000', firmware_path,
@@ -517,9 +592,9 @@ class DownloadController(object):
         #     self.print_log("\n生成的序列号为: " + ecdata)
         #     self.form.SNLineEdit.setText(ecdata)
         #     self.act_button_click()
-            
+
         # self.hard_reset()  # 复位芯片
-        time.sleep(4)   # 等待文件系统初始化完成
+        time.sleep(4)  # 等待文件系统初始化完成
         self.auto_active()
 
         self.reset_ui_button()
@@ -542,34 +617,34 @@ class DownloadController(object):
 
             # 创建一个字符串缓冲区
             output_buffer = io.StringIO()
-            
+
             # 将sys.stdout重定向到缓冲区
             original_stdout = sys.stdout
             sys.stdout = output_buffer
-            
+
             # 调用函数
             cmd = ['--port', select_com, 'flash_id']
             esptool.main(cmd)
-            
+
             # 恢复sys.stdout
             sys.stdout = original_stdout
-            
+
             # 获取打印的数据
             printed_data = output_buffer.getvalue()
             # self.print_log(COLOR_RED % printed_data)
-            
+
             line_data = printed_data.split("\n")
             for line in line_data:
                 if "Detected flash size: " in line:
                     flash_size_text = line.split(": ")[1]
-            
+
             flash_size = int(flash_size_text[:-2]) * 1024 * 1024
 
         except Exception as err:
             print(str(traceback.format_exc()))
             self.print_log(COLOR_RED % "错误：无法获取存空间大小！")
             return 0, "0MB"
-        
+
         return flash_size, flash_size_text
 
     def cancle_button_click(self):
@@ -604,7 +679,7 @@ class DownloadController(object):
             self.ser.close()  # 关闭串口
             del self.ser
             self.ser = None
-    
+
     def get_firmware_version(self):
         """
         获取最新版
@@ -625,7 +700,7 @@ class DownloadController(object):
         except Exception as err:
             print(str(traceback.format_exc()))
             self.print_log((COLOR_RED % "联网异常"))
-        
+
         return new_ver
 
     def get_machine_code(self):
@@ -730,7 +805,7 @@ class DownloadController(object):
                 self.print_log((COLOR_RED % "SN查询失败"))
             else:
                 self.print_log("SN查询成功")
-                
+
         self.release_serial()
         return sn
 
@@ -785,7 +860,7 @@ class DownloadController(object):
 
             # 50为预留值
             rate = int(os.path.getsize(wallpaper_name) / wallpaper_all_size * 100)
-            self.print_log((COLOR_RED % "壁纸可用的全容量为 ") + str(int(wallpaper_all_size/1024))+" KB")
+            self.print_log((COLOR_RED % "壁纸可用的全容量为 ") + str(int(wallpaper_all_size / 1024)) + " KB")
             self.print_log((COLOR_RED % "本次壁纸占用全容量的 ") + str(rate) + "%")
             if os.path.getsize(wallpaper_name) > wallpaper_all_size:
                 self.print_log(COLOR_RED % "异常终止：壁纸数据过大，请适当降低帧率或截取更短的时间。")
@@ -795,14 +870,13 @@ class DownloadController(object):
         except Exception as err:
             return False
 
-
         try:
             cmd = ['SnailHeater_TOOL.py', '--port', select_com,
-                '--baud', baud_rate,
-                '--after', 'hard_reset',
-                'write_flash',
-                WALLPAPER_ADDR_IN_FLASH, wallpaper_name
-                ]
+                   '--baud', baud_rate,
+                   '--after', 'hard_reset',
+                   'write_flash',
+                   WALLPAPER_ADDR_IN_FLASH, wallpaper_name
+                   ]
             time = int(os.path.getsize(wallpaper_name)) / 2097152 * 30
             self.print_log("正在烧入壁纸数据到主机，请等待（%ds）......" % time)
             esptool.main(cmd[1:])
@@ -946,7 +1020,7 @@ class DownloadController(object):
             elif param["format"][ind] in IMAGE_FORMAT:
                 wallpaper_cache_path = param["src_path"][ind]
                 src_im: Image.Image = Image.open(wallpaper_cache_path)
-                
+
                 mode = "保持比例裁剪" if self.form.PictureModeRadioButton_0.isChecked() else "全尺寸缩放"
                 if mode == "保持比例裁剪":
                     # 裁剪
@@ -1083,7 +1157,7 @@ class DownloadController(object):
         可以把以下代码修改到 esptool/targets/esp32s2.py 的 hard_reset()中
         :return:
         """
-        
+
         select_com = self.getSafeCom()
         if select_com == None:
             return None
