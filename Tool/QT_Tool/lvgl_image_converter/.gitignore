@@ -1,0 +1,8 @@
+.idea
+lvgl_img_conv_core.php
+__pycache__
+*.spec
+build
+*.c
+*.bin
+venv

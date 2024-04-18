@@ -230,7 +230,7 @@ static void countPulseWidth()
         lv_label_set_text_fmt(ui_pulseWidth, "%.4gns", 0.000);
         return;
     }
-    // double pulseWidth = 1000000000.0 / signalGeneratorModel.realFreqPwm * (signalGeneratorModel.utilConfig.duty / 1000.0);
+    
     double pulseWidth = 1000000.0 / signalGeneratorModel.realFreqPwm * signalGeneratorModel.utilConfig.duty;
     if (pulseWidth < 1000)
     {

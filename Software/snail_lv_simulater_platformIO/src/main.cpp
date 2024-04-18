@@ -12,7 +12,7 @@
 #include "app_hal.h"
 
 #include "ctrl_common.h"
-#include "driver/knobs.h"
+#include "sh_driver/knobs.h"
 #include "page/desktop/desktop_model.h"
 #include "page/desktop/snail_ui.h"
 #include "page/startup/startup.h"
@@ -81,7 +81,7 @@ void SnailHeater_UI()
         model.utilConfig.quickSetupTemp_2 = 400;
         model.utilConfig.targetTemp = 230;
         model.curTemp = 100;
-        model.curveTemp = 25;
+        model.m_curveTargetTemp = 25;
         model.curRunTime = 10000;
         model.utilConfig.workAirSpeed = 30;
         model.utilConfig.coolingFinishTemp = 50;
@@ -179,7 +179,7 @@ void SnailHeater_UI()
         model.voltage = 20000;
         model.current = 3200;
         model.capacity = model.capacity * model.current;
-        model.curToZeroFlag = 0;
+        model.manageCalibAction = INFO_MANAGE_ACTION_ADJPWR_CALIB_IDLE;
         setAdjPowerInfo(&model);
     }
 
@@ -231,6 +231,7 @@ void SnailHeater_UI()
         model.utilConfig.isStartupAnim = ENABLE_STATE_OPEN;
         model.utilConfig.isStartupBell = ENABLE_STATE_OPEN;
         model.utilConfig.isRunAnim = ENABLE_STATE_OPEN;
+        model.utilConfig.enableBackgroud = ENABLE_STATE_CLOSE;
         model.utilConfig.enableWallpaper = ENABLE_STATE_CLOSE;
         model.utilConfig.enableStaticWallpaper = ENABLE_STATE_OPEN;
         model.utilConfig.enableDynamicWallpaper = ENABLE_STATE_OPEN;

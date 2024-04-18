@@ -1,7 +1,7 @@
 #ifndef DESKTOP_MODEL_H
 #define DESKTOP_MODEL_H
 
-#include "driver/knobs.h"
+#include "sh_driver/knobs.h"
 
 #ifdef SIMULATOR
 #include "ctrl_common.h"

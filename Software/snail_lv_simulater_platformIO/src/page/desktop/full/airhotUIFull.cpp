@@ -334,6 +334,7 @@ static bool airhotPageUI_init(lv_obj_t *father)
     lv_obj_remove_style_all(chartTemp);
     lv_obj_set_style_bg_color(chartTemp, IS_WHITE_THEME ? WHITE_THEME_CHART_COLOR1 : BLACK_THEME_CHART_COLOR1, LV_PART_MAIN);
     lv_obj_set_style_bg_opa(chartTemp, LV_OPA_COVER, LV_PART_MAIN);
+    SET_CHART_OPA(chartTemp);
     lv_obj_set_size(chartTemp, SH_SCREEN_WIDTH, CURVE_HIGH);
     lv_obj_align(chartTemp, LV_ALIGN_BOTTOM_MID, 0, 0);
     lv_chart_set_type(chartTemp, LV_CHART_TYPE_LINE);
@@ -377,7 +378,7 @@ static bool airhotPageUI_init(lv_obj_t *father)
         ui_paramKi = lv_numberbtn_create(chartTemp);
         lv_obj_t *solderParamKiLabel = lv_label_create(ui_paramKi);
         lv_numberbtn_set_label_and_format(ui_paramKi,
-                                          solderParamKiLabel, "I->%.1lf", 0.1);
+                                          solderParamKiLabel, "I->%.1f", 0.1);
         lv_numberbtn_set_range(ui_paramKi, 0, 200);
         lv_numberbtn_set_value(ui_paramKi, airhotModel.coreConfig.ki);
         // lv_obj_remove_style_all(ui_paramKi);

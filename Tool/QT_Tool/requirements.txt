@@ -1,0 +1,7 @@
+Pillow~=9.5.0
+pyserial~=3.5
+pyyaml
+requests
+pyqt5
+pyqt5-stubs
+pyqt5-tools

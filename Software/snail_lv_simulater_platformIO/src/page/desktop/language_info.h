@@ -18,6 +18,7 @@
 #define SETTING_TEXT_KNOB_DIR "旋钮反向"
 #define SETTING_TEXT_AUTO_HEAT "热台自动加热"
 #define SETTING_TEXT_WHITE_THEME "主题黑/白"
+#define SETTING_TEXT_BACKGROUD "背景图"
 #define SETTING_TEXT_WALLPAPER "锁屏壁纸"
 #define SETTING_TEXT_WALLPAPER_DEYLAY "锁屏延时(s)"
 #define SETTING_TEXT_WALLPAPER_SW_TIME "壁纸切换(s)"

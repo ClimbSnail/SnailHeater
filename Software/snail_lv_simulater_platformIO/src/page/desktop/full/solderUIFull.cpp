@@ -1,6 +1,7 @@
 #include "./ui.h"
 #include "../desktop_model.h"
 
+
 #ifdef FULL_UI
 
 static lv_timer_t *solderTimer = NULL;
@@ -250,7 +251,7 @@ static void solderTimer_timeout(lv_timer_t *timer)
 
     if (NULL != vol_val_text)
     {
-        lv_label_set_text_fmt(vol_val_text, "%.2lf V", solderModel.volValue / 1000.0);
+        lv_label_set_text_fmt(vol_val_text, "%.2f V", solderModel.volValue / 1000.0);
     }
 
     ui_updateSolderData();
@@ -443,6 +444,7 @@ static bool solderPageUI_init(lv_obj_t *father)
     lv_obj_remove_style_all(chartTemp);
     lv_obj_set_style_bg_color(chartTemp, IS_WHITE_THEME ? WHITE_THEME_CHART_COLOR1 : BLACK_THEME_CHART_COLOR1, LV_PART_MAIN);
     lv_obj_set_style_bg_opa(chartTemp, LV_OPA_COVER, LV_PART_MAIN);
+    SET_CHART_OPA(chartTemp);
     lv_obj_set_size(chartTemp, SH_SCREEN_WIDTH, CURVE_HIGH);
     lv_obj_align(chartTemp, LV_ALIGN_BOTTOM_MID, 0, 0);
     lv_chart_set_type(chartTemp, LV_CHART_TYPE_LINE);

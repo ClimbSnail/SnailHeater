@@ -103,7 +103,7 @@ static void displayCurve()
         heatplatformModel.curveConfig.time[heatplatformModel.curveConfig.stageNum - 1];
 
     // 温控曲线数据
-    double div_x = (SH_SCREEN_WIDTH - 20) / 1.0 / heatplatformModel.curveAllTime;
+    float div_x = (SH_SCREEN_WIDTH - 20) / 1.0 / heatplatformModel.curveAllTime;
     for (uint32_t i = 0; i < heatplatformModel.curveConfig.stageNum; ++i)
     {
         curveline_points[i].x = div_x * heatplatformModel.curveConfig.time[i] + 10;
@@ -561,6 +561,7 @@ static bool hpPageUI_init(lv_obj_t *father)
     lv_obj_remove_style_all(chartTemp);
     lv_obj_set_style_bg_color(chartTemp, IS_WHITE_THEME ? WHITE_THEME_CHART_COLOR1 : BLACK_THEME_CHART_COLOR1, LV_PART_MAIN);
     lv_obj_set_style_bg_opa(chartTemp, LV_OPA_COVER, LV_PART_MAIN);
+    SET_CHART_OPA(chartTemp);
     lv_obj_set_size(chartTemp, SH_SCREEN_WIDTH, CURVE_HIGH);
     lv_obj_align(chartTemp, LV_ALIGN_BOTTOM_MID, 0, 0);
     lv_chart_set_type(chartTemp, LV_CHART_TYPE_LINE);
@@ -608,7 +609,7 @@ static bool hpPageUI_init(lv_obj_t *father)
     lv_obj_add_style(curvelineNameLabel, &label_text_style, 0);
 
     startTimeLabel = lv_label_create(chartTemp);
-    lv_label_set_text_fmt(startTimeLabel, "%03d:%02d",
+    lv_label_set_text_fmt(startTimeLabel, "%03ld:%02ld",
                           heatplatformModel.curRunTime / 60000,
                           heatplatformModel.curRunTime % 60000 / 1000);
     lv_obj_align(startTimeLabel, LV_ALIGN_TOP_RIGHT, -5, 2);
@@ -675,7 +676,7 @@ static bool hpPageUI_init(lv_obj_t *father)
         ui_paramKi = lv_numberbtn_create(chartTemp);
         lv_obj_t *solderParamKiLabel = lv_label_create(ui_paramKi);
         lv_numberbtn_set_label_and_format(ui_paramKi,
-                                          solderParamKiLabel, "I->%.1lf", 0.1);
+                                          solderParamKiLabel, "I->%.1f", 0.1);
         lv_numberbtn_set_range(ui_paramKi, 0, 200);
         lv_numberbtn_set_value(ui_paramKi, heatplatformModel.coreConfig.ki);
         // lv_obj_remove_style_all(ui_paramKi);
@@ -714,8 +715,8 @@ static bool hpPageUI_init(lv_obj_t *father)
         // 隐藏
         lv_label_set_text_fmt(curvelineNameLabel, SETTING_TEXT_CONFIG_CURVE_0 "%d",
                               heatplatformModel.curveConfig.id);
-        lv_obj_set_style_text_opa(ui_curveTargetTemp, 150, LV_PART_MAIN);
-        lv_obj_set_style_opa(ui_curveTargetTemp, 150, LV_PART_MAIN);
+        lv_obj_set_style_text_opa(ui_curveTargetTemp, 50, LV_PART_MAIN);
+        lv_obj_set_style_opa(ui_curveTargetTemp, 50, LV_PART_MAIN);
 
         lv_obj_set_style_text_opa(ui_targetTempButton, 255, LV_PART_MAIN);
         lv_obj_set_style_opa(ui_targetTempButton, 255, LV_PART_MAIN);
@@ -727,8 +728,8 @@ static bool hpPageUI_init(lv_obj_t *father)
         lv_obj_set_style_text_opa(ui_curveTargetTemp, 255, LV_PART_MAIN);
         lv_obj_set_style_opa(ui_curveTargetTemp, 255, LV_PART_MAIN);
 
-        lv_obj_set_style_text_opa(ui_targetTempButton, 150, LV_PART_MAIN);
-        lv_obj_set_style_opa(ui_targetTempButton, 150, LV_PART_MAIN);
+        lv_obj_set_style_text_opa(ui_targetTempButton, 50, LV_PART_MAIN);
+        lv_obj_set_style_opa(ui_targetTempButton, 50, LV_PART_MAIN);
     }
 
     lv_obj_add_event_cb(ui_fastSetTempButton0, ui_fast_temp_btn_pressed, LV_EVENT_PRESSED, NULL);
@@ -1030,8 +1031,8 @@ static void managerInfoTimer_timeout(lv_timer_t *timer)
             // 隐藏
             lv_label_set_text_fmt(curvelineNameLabel, SETTING_TEXT_CONFIG_CURVE_0 "%d",
                                   heatplatformModel.curveConfig.id);
-            lv_obj_set_style_text_opa(ui_curveTargetTemp, 150, LV_PART_MAIN);
-            lv_obj_set_style_opa(ui_curveTargetTemp, 150, LV_PART_MAIN);
+            lv_obj_set_style_text_opa(ui_curveTargetTemp, 50, LV_PART_MAIN);
+            lv_obj_set_style_opa(ui_curveTargetTemp, 50, LV_PART_MAIN);
 
             lv_obj_set_style_text_opa(ui_targetTempButton, 255, LV_PART_MAIN);
             lv_obj_set_style_opa(ui_targetTempButton, 255, LV_PART_MAIN);
@@ -1044,8 +1045,8 @@ static void managerInfoTimer_timeout(lv_timer_t *timer)
             lv_obj_set_style_text_opa(ui_curveTargetTemp, 255, LV_PART_MAIN);
             lv_obj_set_style_opa(ui_curveTargetTemp, 255, LV_PART_MAIN);
 
-            lv_obj_set_style_text_opa(ui_targetTempButton, 150, LV_PART_MAIN);
-            lv_obj_set_style_opa(ui_targetTempButton, 150, LV_PART_MAIN);
+            lv_obj_set_style_text_opa(ui_targetTempButton, 50, LV_PART_MAIN);
+            lv_obj_set_style_opa(ui_targetTempButton, 50, LV_PART_MAIN);
         }
     }
 }
@@ -1082,7 +1083,7 @@ void ui_updateHeatplatformData(void)
         chartTempDataSaveInd = (chartTempDataSaveInd + 1) % CHART_TEMP_LEN;
 
         // 单位时间的x的div
-        double div_x = (SH_SCREEN_WIDTH - 20) / 1.0 / heatplatformModel.curveAllTime;
+        float div_x = (SH_SCREEN_WIDTH - 20) / 1.0 / heatplatformModel.curveAllTime;
 
         unsigned long curRunTime = heatplatformModel.curRunTime / 1000;
         if (curRunTime > heatplatformModel.curveAllTime)
@@ -1095,7 +1096,7 @@ void ui_updateHeatplatformData(void)
         cur_point[1].y = cur_point[0].y + 1;
         lv_line_set_points(curveCurline, cur_point, 2); /*Set the points*/
 
-        lv_label_set_text_fmt(startTimeLabel, "%03d:%02d",
+        lv_label_set_text_fmt(startTimeLabel, "%03ld:%02ld",
                               heatplatformModel.curRunTime / 60000,
                               heatplatformModel.curRunTime % 60000 / 1000);
 

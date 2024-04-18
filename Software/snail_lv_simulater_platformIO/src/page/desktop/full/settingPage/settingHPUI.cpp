@@ -117,6 +117,7 @@ static void ui_hp_bnt_pressed(lv_event_t *e)
         if (target == ui_saveBtn)
         {
             heatplatformModel.manageConfigAction = INFO_MANAGE_ACTION_HP_WRITE;
+            heatplatformModel.manageCoreAction = INFO_MANAGE_ACTION_HP_WRITE;
             lv_obj_clear_state(ui_saveBtn, LV_STATE_FOCUSED);
             lv_group_focus_obj(ui_subBackBtn);
         }
@@ -365,7 +366,7 @@ void ui_hp_setting_init(lv_obj_t *father)
     ui_heatplatParamKi = lv_numberbtn_create(father);
     lv_obj_t *heatplatParamKiLabel = lv_label_create(ui_heatplatParamKi);
     lv_numberbtn_set_label_and_format(ui_heatplatParamKi,
-                                      heatplatParamKiLabel, "I->%.1lf", 0.1);
+                                      heatplatParamKiLabel, "I->%.1f", 0.1);
     lv_numberbtn_set_range(ui_heatplatParamKi, 0, 200);
     lv_numberbtn_set_value(ui_heatplatParamKi, heatplatformModel.editCoreConfig.ki);
     // lv_obj_remove_style_all(ui_heatplatParamKi);

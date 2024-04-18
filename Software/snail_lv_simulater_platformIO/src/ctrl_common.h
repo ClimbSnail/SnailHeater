@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include "stdio.h"
-#include "driver/knobs.h"
+#include "sh_driver/knobs.h"
 
 #define DISCONNCT_TEMP 600
 
@@ -102,7 +102,7 @@ struct SysUtilConfig
 {
     uint8_t isFirstStart;   // 是否第一次启动
     uint8_t backLight;      // 屏幕背光亮度
-    uint8_t pilotLampLight; // 指示灯亮度
+    uint8_t pilotLampLight; // 指示灯亮度 0-255
     uint8_t pilotLampSpeed; // 指示灯渐变速度
     ENABLE_STATE touchFlag; // 触摸开关
     uint8_t beepVolume;     // 蜂鸣器音量 0~100
@@ -113,6 +113,7 @@ struct SysUtilConfig
     ENABLE_STATE isStartupAnim;          // 是否启动开机动画 0不启动 1启动
     ENABLE_STATE isStartupBell;          // 是否开启开机铃声
     ENABLE_STATE isRunAnim;              // 是否开启运行动画
+    ENABLE_STATE enableBackgroud;        // 背景开关
     ENABLE_STATE enableWallpaper;        // 壁纸总开关
     ENABLE_STATE enableStaticWallpaper;  // 静态壁纸
     ENABLE_STATE enableDynamicWallpaper; // 动态壁纸
@@ -122,6 +123,9 @@ struct SysUtilConfig
 
     uint16_t adcVrefVoltage; // ADC的基准电压（mv）
     uint16_t sysVoltage;     // 系统的供电电压（mv）
+
+    // string hostName; // 主机名（用户名称）
+    // string password; // 用户密码
 
     union UI_Param
     {
@@ -180,9 +184,9 @@ struct HP_CoreConfig
 {
     unsigned int id; // 风枪的ID
 
-    double kp;                        // PID参数
-    double ki;                        // PID参数
-    double kd;                        // PID参数
+    float kp;                         // PID参数
+    float ki;                         // PID参数
+    float kd;                         // PID参数
     unsigned int kt;                  // PID参数
     unsigned int pid_start_value_low; // PID调控的最低值
     unsigned int pid_end_value_high;  // PID调控的最高值
@@ -201,8 +205,8 @@ struct HP_CurveConfig
     unsigned int id;                    // ID
     uint16_t stageNum;                  // 阶段数
     uint16_t temperatur[MAX_STAGE_NUM]; // 温度
-    uint16_t time[MAX_STAGE_NUM];       // 时间
-    double slope[MAX_STAGE_NUM];        // 斜率
+    uint16_t time[MAX_STAGE_NUM];       // 时间点s
+    float slope[MAX_STAGE_NUM];         // 斜率
 };
 
 enum HEAT_PLATFORM_STATE
@@ -277,9 +281,9 @@ struct HA_CoreConfig
 {
     unsigned int id; // 风枪的ID
 
-    double kp;                        // PID参数
-    double ki;                        // PID参数
-    double kd;                        // PID参数
+    float kp;                         // PID参数
+    float ki;                         // PID参数
+    float kd;                         // PID参数
     unsigned int kt;                  // PID参数
     unsigned int pid_start_value_low; // PID调控的最低值
     unsigned int pid_end_value_high;  // PID调控的最高值
@@ -301,8 +305,8 @@ enum ADJ_POWER_MODE
     ADJ_POWER_MODE_MAX_NUM
 };
 
-// 配置文件中的参数
-struct AdjPowerConfig
+// 可调电源通用设置参数
+struct AdjPowerUtilConfig
 {
     uint8_t autoOpen; // 开机自动开启输出
     uint8_t mode;     // 模式 （0恒压 1横流）
@@ -314,9 +318,8 @@ struct AdjPowerConfig
     uint16_t volDacValue;    // dac value 电源电压环的dac输出值
     uint16_t curDacValue;    // dac value 电源电流环的dac输出值
     uint32_t settingVoltage; // 设定的电压（mv）/ 占空比
-    uint32_t settingCurrent; // 设定的电流（mA）
-    uint16_t curZeroValue;   // 静态电流值（mA），用于去皮
-    uint32_t stepByStep;     // 调节的不进（mV/mA）
+    uint32_t settingCurrent; // 设定的电流（mA）6000
+    uint32_t stepByStep;     // 调节的步进（mV/mA）
 
     uint32_t volTheory_1; // 电压理论值1
     uint32_t volReally_1; // 电压实际值1
@@ -428,7 +431,14 @@ enum INFO_MANAGE_ACTION : unsigned char
     INFO_MANAGE_ACTION_CONFIG_UTIL_RESET,
     INFO_MANAGE_ACTION_CONFIG_UTIL_RESET_OK,
     INFO_MANAGE_ACTION_CONFIG_CORE_RESET,
-    INFO_MANAGE_ACTION_CONFIG_CORE_RESET_OK
+    INFO_MANAGE_ACTION_CONFIG_CORE_RESET_OK,
+    
+    INFO_MANAGE_ACTION_ADJPWR_CALIB_IDLE,
+    INFO_MANAGE_ACTION_ADJPWR_CALIB_START,
+    INFO_MANAGE_ACTION_ADJPWR_CALIB_RUNNING,
+    INFO_MANAGE_ACTION_ADJPWR_CALIB_FINISH,
+
+    INFO_MANAGE_ACTION_MAX
 };
 
 enum SOLDER_STATE
@@ -479,10 +489,10 @@ struct SolderCoreConfig
     SOLDER_PWM_FREQ solderPwmFreq;       // 烙铁驱动频率
     SOLDER_TYPE solderType;              // 烙铁类型
     SOLDER_SHAKE_TYPE wakeSwitchType;    // 唤醒开关类型
-    double powerLimit;                   // 功率限制系数 0.01~1.0
-    double kp;                           // PID参数
-    double ki;                           // PID参数
-    double kd;                           // PID参数
+    float powerLimit;                    // 功率限制系数 0.01~1.0
+    float kp;                            // PID参数
+    float ki;                            // PID参数
+    float kd;                            // PID参数
     unsigned int kt;                     // PID参数
     unsigned int pid_start_d_value_low;  // PID调控的差值
     unsigned int pid_start_d_value_high; // PID调控的差值

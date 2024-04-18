@@ -813,7 +813,7 @@ void ui_solder_core_manage_init(lv_obj_t *father)
     ui_solderParamKi = lv_numberbtn_create(father);
     lv_obj_t *solderParamKiLabel = lv_label_create(ui_solderParamKi);
     lv_numberbtn_set_label_and_format(ui_solderParamKi,
-                                      solderParamKiLabel, "I->%.1lf", 0.1);
+                                      solderParamKiLabel, "I->%.1f", 0.1);
     lv_numberbtn_set_range(ui_solderParamKi, 0, 200);
     lv_numberbtn_set_value(ui_solderParamKi, solderModel.editCoreConfig.ki);
     // lv_obj_remove_style_all(ui_solderParamKi);

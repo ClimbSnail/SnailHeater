@@ -12,6 +12,7 @@ static lv_obj_t *ui_beepVolumeBtn;
 static lv_obj_t *ui_sysToneSwitch;
 static lv_obj_t *ui_knobsToneSwitch;
 static lv_obj_t *ui_knobsDirSwitch;
+static lv_obj_t *ui_backgroudSwitch;
 static lv_obj_t *ui_wallpaperSwitch;
 static lv_obj_t *ui_wallpaperDelayBtn;
 static lv_obj_t *ui_wallpaperSwTimeBtn;
@@ -25,7 +26,7 @@ static lv_obj_t *ui_userDataBnt;
 
 static void setHwVer(lv_obj_t *obj, VERSION_INFO ver)
 {
-    uint8_t verInd;
+    uint16_t verInd = 0;
     switch (ver)
     {
     case VERSION_INFO_OUT_BOARD_V20:
@@ -122,6 +123,10 @@ static void ui_sys_setting_pressed(lv_event_t *e)
         {
             sysInfoModel.utilConfig.knobDir = (KNOBS_DIR)flag;
         }
+        else if (target == ui_backgroudSwitch)
+        {
+            sysInfoModel.utilConfig.enableBackgroud = (ENABLE_STATE)flag;
+        }
         else if (target == ui_wallpaperSwitch)
         {
             sysInfoModel.utilConfig.enableWallpaper = (ENABLE_STATE)flag;
@@ -155,7 +160,7 @@ static void ui_white_theme_pressed(lv_event_t *e)
             sysInfoModel.utilConfig.uiParam.uiGlobalParam.whiteThemeEnable =
                 ENABLE_STATE::ENABLE_STATE_OPEN;
             lv_style_set_bg_color(&black_white_theme_style, lv_color_white());
-            lv_img_set_src(ui_PanelTopBgImg, &img_top_bar_white);
+            // lv_img_set_src(ui_PanelTopBgImg, &img_top_bar_white);
             lv_style_set_text_color(&label_text_style, WHITE_THEME_LABEL_TEXT_COLOR);
 #if USE_MENU_STYLE == 3
             lv_style_set_text_color(&menu_button_style, WHITE_THEME_ARCMENU_TEXT_COLOR);
@@ -171,7 +176,7 @@ static void ui_white_theme_pressed(lv_event_t *e)
         {
             sysInfoModel.utilConfig.uiParam.uiGlobalParam.whiteThemeEnable = ENABLE_STATE_CLOSE;
             lv_style_set_bg_color(&black_white_theme_style, lv_color_black());
-            lv_img_set_src(ui_PanelTopBgImg, &img_top_bar_black);
+            // lv_img_set_src(ui_PanelTopBgImg, &img_top_bar_black);
             lv_style_set_text_color(&label_text_style, BLACK_THEME_LABEL_TEXT_COLOR);
 #if USE_MENU_STYLE == 3
             lv_style_set_text_color(&menu_button_style, BLACK_THEME_ARCMENU_TEXT_COLOR);
@@ -343,9 +348,34 @@ void ui_sys_setting_init(lv_obj_t *father)
     lv_obj_set_style_outline_opa(ui_whiteThemeSwitch, 255, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
     lv_obj_set_style_outline_pad(ui_whiteThemeSwitch, 4, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
 
+    // 背景
+    lv_obj_t *ui_backgroudLabel = lv_label_create(father);
+    lv_obj_align_to(ui_backgroudLabel, ui_whiteThemeLabel,
+                    LV_ALIGN_OUT_BOTTOM_LEFT, 0, 20);
+    lv_label_set_text(ui_backgroudLabel, SETTING_TEXT_BACKGROUD);
+    lv_obj_add_style(ui_backgroudLabel, &label_text_style, 0);
+
+    ui_backgroudSwitch = lv_switch_create(father);
+    lv_obj_add_flag(ui_backgroudSwitch, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+    lv_obj_set_size(ui_backgroudSwitch, 40, 20);
+    lv_obj_align_to(ui_backgroudSwitch, ui_backgroudLabel,
+                    LV_ALIGN_OUT_LEFT_MID, 140, 0);
+    if (sysInfoModel.utilConfig.enableBackgroud)
+    {
+        lv_obj_add_state(ui_backgroudSwitch, LV_STATE_CHECKED); // 反向
+    }
+    else
+    {
+        lv_obj_clear_state(ui_backgroudSwitch, LV_STATE_CHECKED);
+    }
+    // 注意，这里触发的是3个状态 CHECKED 、LV_STATE_FOCUS 、 和 LV_STATE_FOCUS_KEY，必须设置成KEY才有效
+    lv_obj_set_style_outline_color(ui_backgroudSwitch, SETTING_THEME_COLOR1, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
+    lv_obj_set_style_outline_opa(ui_backgroudSwitch, 255, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
+    lv_obj_set_style_outline_pad(ui_backgroudSwitch, 4, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
+
     // 锁屏壁纸
     lv_obj_t *ui_wallpaperLabel = lv_label_create(father);
-    lv_obj_align_to(ui_wallpaperLabel, ui_whiteThemeLabel,
+    lv_obj_align_to(ui_wallpaperLabel, ui_backgroudLabel,
                     LV_ALIGN_OUT_BOTTOM_LEFT, 0, 20);
     lv_label_set_text(ui_wallpaperLabel, SETTING_TEXT_WALLPAPER);
     lv_obj_add_style(ui_wallpaperLabel, &label_text_style, 0);
@@ -611,6 +641,7 @@ void ui_sys_setting_init_group(lv_obj_t *father)
     lv_obj_add_event_cb(ui_knobsToneSwitch, ui_sys_setting_pressed, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_event_cb(ui_knobsDirSwitch, ui_sys_setting_pressed, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_event_cb(ui_whiteThemeSwitch, ui_white_theme_pressed, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_add_event_cb(ui_backgroudSwitch, ui_sys_setting_pressed, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_event_cb(ui_wallpaperSwitch, ui_sys_setting_pressed, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_event_cb(ui_wallpaperDelayBtn, ui_sys_param_pressed, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(ui_wallpaperSwTimeBtn, ui_sys_param_pressed, LV_EVENT_PRESSED, NULL);
@@ -633,6 +664,7 @@ void ui_sys_setting_init_group(lv_obj_t *father)
     lv_group_add_obj(sub_btn_group, ui_knobsToneSwitch);
     lv_group_add_obj(sub_btn_group, ui_knobsDirSwitch);
     lv_group_add_obj(sub_btn_group, ui_whiteThemeSwitch);
+    lv_group_add_obj(sub_btn_group, ui_backgroudSwitch);
     lv_group_add_obj(sub_btn_group, ui_wallpaperSwitch);
     lv_group_add_obj(sub_btn_group, ui_wallpaperDelayBtn);
     lv_group_add_obj(sub_btn_group, ui_wallpaperSwTimeBtn);

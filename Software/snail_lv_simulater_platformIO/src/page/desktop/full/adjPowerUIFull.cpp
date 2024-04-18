@@ -86,7 +86,7 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
 
     lv_obj_t *ui_quickSetupVolLabel1 = lv_label_create(ui_quickSetupVolButton0);
     lv_obj_set_align(ui_quickSetupVolLabel1, LV_ALIGN_CENTER);
-    lv_label_set_text_fmt(ui_quickSetupVolLabel1, "%.1lf",
+    lv_label_set_text_fmt(ui_quickSetupVolLabel1, "%.1f",
                           adjPowerModel.utilConfig.quickSetupVoltage_0 / 1000.0);
 
     ui_quickSetupVolButton1 = lv_btn_create(ui_ButtonTmp);
@@ -102,7 +102,7 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
 
     lv_obj_t *ui_quickSetupVolLabel2 = lv_label_create(ui_quickSetupVolButton1);
     lv_obj_set_align(ui_quickSetupVolLabel2, LV_ALIGN_CENTER);
-    lv_label_set_text_fmt(ui_quickSetupVolLabel2, "%.1lf",
+    lv_label_set_text_fmt(ui_quickSetupVolLabel2, "%.1f",
                           adjPowerModel.utilConfig.quickSetupVoltage_1 / 1000.0);
 
     ui_quickSetupVolButton2 = lv_btn_create(ui_ButtonTmp);
@@ -118,13 +118,13 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
 
     lv_obj_t *ui_quickSetupVolLabel3 = lv_label_create(ui_quickSetupVolButton2);
     lv_obj_set_align(ui_quickSetupVolLabel3, LV_ALIGN_CENTER);
-    lv_label_set_text_fmt(ui_quickSetupVolLabel3, "%.1lf",
+    lv_label_set_text_fmt(ui_quickSetupVolLabel3, "%.1f",
                           adjPowerModel.utilConfig.quickSetupVoltage_2 / 1000.0);
 
     ui_voltageLabel = lv_label_create(ui_ButtonTmp);
     lv_obj_set_size(ui_voltageLabel, 140, 52);
     lv_obj_align(ui_voltageLabel, LV_ALIGN_TOP_LEFT, 5, 45);
-    lv_label_set_text_fmt(ui_voltageLabel, "%.2lf", adjPowerModel.voltage / 1000.0);
+    lv_label_set_text_fmt(ui_voltageLabel, "%.2f", adjPowerModel.voltage / 1000.0);
     lv_obj_set_style_text_align(ui_voltageLabel, LV_TEXT_ALIGN_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_color(ui_voltageLabel, ADJ_POWER_THEME_COLOR1, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_voltageLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -173,7 +173,7 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
 
     lv_obj_t *settingVoltageLabel = lv_label_create(ui_settingVoltageButton);
     lv_numberbtn_set_label_and_format(ui_settingVoltageButton,
-                                      settingVoltageLabel, "%.2lf", 0.05);
+                                      settingVoltageLabel, "%.2f", 0.05);
     lv_numberbtn_set_range(ui_settingVoltageButton, 0.6, ADJ_POWER_VOL_MAX / 1000.0);
     lv_numberbtn_set_value(ui_settingVoltageButton, adjPowerModel.utilConfig.settingVoltage / 1000.0);
     lv_numberbtn_set_align(ui_settingVoltageButton, LV_ALIGN_RIGHT_MID);
@@ -195,7 +195,7 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     lv_obj_set_size(ui_currentLabel, 140, 55);
     lv_obj_align_to(ui_currentLabel, ui_voltageLabel,
                     LV_ALIGN_OUT_BOTTOM_MID, 0, 5);
-    lv_label_set_text_fmt(ui_currentLabel, "%.2lf", adjPowerModel.current / 1000.0);
+    lv_label_set_text_fmt(ui_currentLabel, "%.2f", adjPowerModel.current / 1000.0);
     lv_obj_set_style_text_align(ui_currentLabel, LV_TEXT_ALIGN_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_color(ui_currentLabel, ADJ_POWER_THEME_COLOR1, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_currentLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -222,7 +222,7 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
 
     lv_obj_t *settingCurrentLabel = lv_label_create(ui_settingCurrentButton);
     lv_numberbtn_set_label_and_format(ui_settingCurrentButton,
-                                      settingCurrentLabel, "%.2lf", 0.01);
+                                      settingCurrentLabel, "%.2f", 0.01);
     lv_numberbtn_set_range(ui_settingCurrentButton, 0, ADJ_POWER_CUR_MAX / 1000.0);
     lv_numberbtn_set_value(ui_settingCurrentButton, adjPowerModel.utilConfig.settingCurrent / 1000.0);
     lv_numberbtn_set_align(ui_settingCurrentButton, LV_ALIGN_RIGHT_MID);
@@ -244,7 +244,7 @@ static bool adjPowerPageUI_init(lv_obj_t *father)
     lv_obj_set_size(ui_capacityLabel, 140, 52);
     lv_obj_align_to(ui_capacityLabel, ui_currentLabel,
                     LV_ALIGN_OUT_BOTTOM_MID, 0, 5);
-    lv_label_set_text_fmt(ui_capacityLabel, "%.2lf", adjPowerModel.capacity / 1000000.0);
+    lv_label_set_text_fmt(ui_capacityLabel, "%.2f", adjPowerModel.capacity / 1000000.0);
     lv_obj_set_style_text_align(ui_capacityLabel, LV_TEXT_ALIGN_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_color(ui_capacityLabel, lv_color_hex(0xFF0000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_capacityLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -401,15 +401,15 @@ void ui_updateAdjPowerData(void)
     {
         return;
     }
-    lv_label_set_text_fmt(ui_voltageLabel, "%.2lf", adjPowerModel.voltage / 1000.0);
-    lv_label_set_text_fmt(ui_currentLabel, "%.2lf", adjPowerModel.current / 1000.0);
+    lv_label_set_text_fmt(ui_voltageLabel, "%.2f", adjPowerModel.voltage / 1000.0);
+    lv_label_set_text_fmt(ui_currentLabel, "%.2f", adjPowerModel.current / 1000.0);
     if (adjPowerModel.capacity > 100000000)
     {
-        lv_label_set_text_fmt(ui_capacityLabel, "%.1lf", adjPowerModel.capacity / 1000000.0);
+        lv_label_set_text_fmt(ui_capacityLabel, "%.1f", adjPowerModel.capacity / 1000000.0);
     }
     else
     {
-        lv_label_set_text_fmt(ui_capacityLabel, "%.2lf", adjPowerModel.capacity / 1000000.0);
+        lv_label_set_text_fmt(ui_capacityLabel, "%.2f", adjPowerModel.capacity / 1000000.0);
     }
 }
 

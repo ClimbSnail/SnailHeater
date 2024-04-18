@@ -53,7 +53,7 @@ static void set_angle(void *obj, int32_t v)
     else
     {
         lv_arc_set_value((lv_obj_t *)obj, v);
-        lv_label_set_text_fmt(ui_timer_arc_label, "%d%%", v);
+        lv_label_set_text_fmt(ui_timer_arc_label, "%ld%%", v);
     }
     lv_obj_align(ui_timer_arc_label, LV_ALIGN_CENTER, 0, 0);
 }
@@ -217,7 +217,7 @@ void ui_adjpwr_setting_init(lv_obj_t *father)
     powerQuickSetupVol0 = lv_numberbtn_create(father);
     lv_obj_t *powerQuickSetupVolLabel0 = lv_label_create(powerQuickSetupVol0);
     lv_numberbtn_set_label_and_format(powerQuickSetupVol0,
-                                      powerQuickSetupVolLabel0, "%.1lf", 0.1);
+                                      powerQuickSetupVolLabel0, "%.1f", 0.1);
     lv_numberbtn_set_range(powerQuickSetupVol0, 0.6, ADJ_POWER_VOL_MAX / 1000.0);
     lv_numberbtn_set_value(powerQuickSetupVol0, adjPowerModel.utilConfig.quickSetupVoltage_0 / 1000.0);
     lv_obj_set_size(powerQuickSetupVol0, 50, 20);
@@ -236,7 +236,7 @@ void ui_adjpwr_setting_init(lv_obj_t *father)
     powerQuickSetupVol1 = lv_numberbtn_create(father);
     lv_obj_t *powerQuickSetupVolLabel1 = lv_label_create(powerQuickSetupVol1);
     lv_numberbtn_set_label_and_format(powerQuickSetupVol1,
-                                      powerQuickSetupVolLabel1, "%.1lf", 0.1);
+                                      powerQuickSetupVolLabel1, "%.1f", 0.1);
     lv_numberbtn_set_range(powerQuickSetupVol1, 0.6, ADJ_POWER_VOL_MAX / 1000.0);
     lv_numberbtn_set_value(powerQuickSetupVol1, adjPowerModel.utilConfig.quickSetupVoltage_1 / 1000.0);
     lv_obj_set_size(powerQuickSetupVol1, 50, 20);
@@ -255,7 +255,7 @@ void ui_adjpwr_setting_init(lv_obj_t *father)
     powerQuickSetupVol2 = lv_numberbtn_create(father);
     lv_obj_t *powerQuickSetupVolLabel2 = lv_label_create(powerQuickSetupVol2);
     lv_numberbtn_set_label_and_format(powerQuickSetupVol2,
-                                      powerQuickSetupVolLabel2, "%.1lf", 0.1);
+                                      powerQuickSetupVolLabel2, "%.1f", 0.1);
     lv_numberbtn_set_range(powerQuickSetupVol2, 0.6, ADJ_POWER_VOL_MAX / 1000.0);
     lv_numberbtn_set_value(powerQuickSetupVol2, adjPowerModel.utilConfig.quickSetupVoltage_2 / 1000.0);
     lv_obj_set_size(powerQuickSetupVol2, 50, 20);

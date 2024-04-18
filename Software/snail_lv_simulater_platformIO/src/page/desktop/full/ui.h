@@ -25,6 +25,10 @@ extern "C"
 
 #define DATA_REFRESH_MS 300 // 数据刷新的时间
 
+#define SET_CHART_OPA(chartTemp)                            \
+    lv_obj_set_style_text_opa(chartTemp, 50, LV_PART_MAIN); \
+    lv_obj_set_style_opa(chartTemp, 50, LV_PART_MAIN);
+
     typedef enum
     {
         PAGE_INDEX_SOLDER = 0,
@@ -48,6 +52,7 @@ extern "C"
 
 #define EACH_PAGE_SIZE_X SH_SCREEN_WIDTH
 #define EACH_PAGE_SIZE_Y 216
+
     LV_FONT_DECLARE(FontDeyi_16);
     LV_FONT_DECLARE(FontDeyi_24);
     LV_FONT_DECLARE(FontDeyi_36);
@@ -61,9 +66,9 @@ extern "C"
     LV_FONT_DECLARE(FontJost_24);
     LV_FONT_DECLARE(FontJost_36);
     LV_FONT_DECLARE(FontJost);
+
     LV_IMG_DECLARE(qq_group);
     LV_IMG_DECLARE(img_fan_speed);
-
     LV_IMG_DECLARE(img_soldering_gray);
     LV_IMG_DECLARE(T12_CORE_INDEXED_4);
     LV_IMG_DECLARE(T20_CORE_INDEXED_4);
@@ -103,6 +108,8 @@ extern "C"
     LV_IMG_DECLARE(img_top_bar_black);
     LV_FONT_DECLARE(lv_font_montserrat_18);
     LV_FONT_DECLARE(lv_font_montserrat_48);
+
+    LV_IMG_DECLARE(bridge_320x240);
 
     void show_arc_menu();
     void hide_arc_menu();

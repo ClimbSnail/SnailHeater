@@ -8,7 +8,7 @@ import serial.tools.list_ports
 # from esptoolpy import espefuse
 from esptoolpy import esptool
 
-VERSION = "Ver1.0"
+TOOL_VERSION = "Ver1.0"
 
 # 打包脚本
 # pyinstaller --icon ./snail_heater_256.ico -w -F SnailHeater_Tool.py

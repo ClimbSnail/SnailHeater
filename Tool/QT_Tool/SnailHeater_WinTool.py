@@ -15,7 +15,7 @@ import os
 import time
 import threading
 import re
-import yaml
+import yaml # pip install pyyaml
 import requests
 import traceback
 import struct
@@ -34,17 +34,23 @@ from PyQt5.QtGui import QGuiApplication
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import Qt
 
+import esptool_v41.esptool
 import massagehead as mh
+import spiffsgen
+# import lvgl_image_converter.lv_img_conv as image_conv
+import lvgl_image_converter as image_conv
+# from lvgl_image_converter import lv_img_conv as image_conv
 
 # esptool v3.3可以刷入bootloader.bin时动态修改"--flash_size"
-# if os.path.exists("./esptool_v41"):
-#     sys.path.append("./esptool_v41")
-# else:
-#     sys.path.append("./")
+if os.path.exists("./esptool_v41"):
+    sys.path.append("./esptool_v41")
+else:
+    sys.path.append("./")
 # import esptool # sys.path.append("./esptool_v41") or pip install esptool==4.1 
 from esptool_v41 import esptool
 # from esptool_v33 import esptool
 # from esptool_v33 import espefuse
+# import esptool
 
 from download import Ui_SanilHeaterTool
 import common
@@ -58,20 +64,30 @@ if SH_SN == None and os.path.exists("SnailHeater_SN.py"):
 COLOR_RED = '<span style=\" color: #ff0000;\">%s</span>'
 
 cur_dir = os.getcwd()  # 当前目录
+# 生成的文件目录
+gen_path = os.path.join(cur_dir, "Generate")
+# 背景图片
+backgroud_base = os.path.join(gen_path, "Backgroud")
+# 默认背景
+default_backgroud_280 = os.path.join(cur_dir, "base_data/Backgroud_280x240.bin")
+default_backgroud_320 = os.path.join(cur_dir, "base_data/Backgroud_320x240.bin")
+default_backgroud = default_backgroud_280
 # 默认壁纸
-default_wallpaper_280 = os.path.join(cur_dir, "./base_data/Wallpaper_280x240.lsw")
-default_wallpaper_320 = os.path.join(cur_dir, "./base_data/Wallpaper_320x240.lsw")
-default_wallpaper_clean = os.path.join(cur_dir, "./base_data/WallpaperClean.lsw")
+default_wallpaper_280 = os.path.join(cur_dir, "base_data/Wallpaper_280x240.lsw")
+default_wallpaper_320 = os.path.join(cur_dir, "base_data/Wallpaper_320x240.lsw")
+default_wallpaper_clean = os.path.join(cur_dir, "base_data/WallpaperClean.lsw")
 default_wallpaper = default_wallpaper_280
 # coredump目录
-coredump_dir = os.path.join(cur_dir, "Coredump")
+coredump_dir = os.path.join(gen_path, "Coredump")
 # 文件缓存目录
-wallpaper_cache_dir = os.path.join(cur_dir, "Wallpaper", "Cache")
+wallpaper_cache_dir = os.path.join(gen_path, "Cache", "Wallpaper")
 # 文件生存目录
-wallpaper_path = os.path.join(cur_dir, "Wallpaper")
+wallpaper_path = os.path.join(gen_path, "Wallpaper")
 # 壁纸文件
 wallpaper_name = os.path.join(wallpaper_path, "Wallpaper.lsw")
 WALLPAPER_ADDR_IN_FLASH = '0x00200000'
+
+BACKGROUD_ADDR_IN_FLASH = '0x180000'
 TYPE_JPG = 0
 TYPE_MJPEG = 1
 IMAGE_FORMAT = ["jpg", "JPG", "jpeg", "JPEG", "png", "PNG"]
@@ -139,7 +155,7 @@ def get_version():
         else:
             return "[推荐升级最新版本 " + new_version + "]"
     except Exception as err:
-        print(err)
+        print(str(traceback.format_exc()))
         return "[无法获取到最新版本]"
 
 
@@ -176,27 +192,31 @@ class DownloadController(object):
         self.form.ComComboBox.clicked.connect(self.scan_com)  # 信号与槽函数的绑定
         self.form.FirmwareComboBox.clicked.connect(self.scan_firmware)
         self.form.QueryPushButton.clicked.connect(self.query_button_click)
-        self.form.chooseWPButton.clicked.connect(self.chooseFile)
+        self.form.chooseWPButton.clicked.connect(self.chooseWpFile)
+        self.form.chooseFileButton.clicked.connect(self.chooseBgFile)
         self.form.ActivatePushButton.clicked.connect(self.act_button_click)
-        # self.form.ActivatePushButton.clicked.connect(self.read_coredump)
+        # self.form.QueryPushButton_2.clicked.connect(self.read_coredump)
 
         # self.form.UpdatePushButton.clicked.connect(self.update_button_click)
         self.form.UpdatePushButton.clicked.connect(self.UpdatePushButton_show_message)
         # self.form.WriteWallpaperButton.clicked.connect(self.writeWallpaper)
         self.form.WriteWallpaperButton.clicked.connect(self.WriteWallpaperButton_show_message)
-        # self.form.reflushWallpaperButton.clicked.connect(self.cleanWallpaper)
         self.form.reflushWallpaperButton.clicked.connect(self.reflushWallpaperButton_show_message)
+        self.form.WriteWallpaperButton_2.clicked.connect(self.WriteBgButton_show_message)
         self.form.CanclePushButton.clicked.connect(self.cancle_button_click)
 
         # 设置提示信息
         self.form.Infolabel.setText(_translate("SanilHeaterTool", "使用教程："))
         self.form.QueryPushButton.setToolTip("获取机器码(SN)")
+        self.form.QueryPushButton_2.setToolTip("暂未开通")
         self.form.ActivatePushButton.setToolTip("填入SN，点此激活")
         self.form.UpdateModeMethodRadioButton.setToolTip("保留用户的设置信息，只在固件上做更新")
         self.form.ClearModeMethodRadioButton.setToolTip("将会清空芯片内所有可清空的信息，想要完全纯净的刷固件可选此项")
         # self.form.autoScaleBox.setToolTip("自适应长宽。若未勾选则以指定长宽比截取中心区域")
         self.form.chooseWPButton.setToolTip("选择素材文件的路径（可选多项）")
+        self.form.chooseFileButton.setToolTip("选择图片文件的路径")
         self.form.WriteWallpaperButton.setToolTip("将选择好的素材转换并刷写到焊台上")
+        self.form.WriteWallpaperButton_2.setToolTip("将选择好的素材转换并刷写到焊台上")
         self.form.PictureModeRadioButton_0.setToolTip("保持指定的分辨率比例，在中心区域最大面积裁剪")
         self.form.PictureModeRadioButton_1.setToolTip("全图范围内适配最佳比例缩放，使每个区域都会保存")
 
@@ -216,7 +236,7 @@ class DownloadController(object):
         self.form.resolutionComboBox.addItems(["280x240 (一、二车)", "320x240 (三车)"])
         self.form.qualityComboBox.addItems([str(num) for num in range(1, 20)])
         self.form.qualityComboBox.setCurrentText("5");
-        self.form.fpsEdit.setText("12")
+        self.form.fpsEdit.setText("20")
         self.form.startTimeEdit.setText("0")
         self.form.endTimeEdit.setText("0")
         self.form.VerInfolabel.setStyleSheet('color: red')
@@ -313,7 +333,7 @@ class DownloadController(object):
             coredumpFile = os.path.join(coredump_dir, "SH_%s_%s.coredump" % (nowTime, machine_code))
             print(coredumpFile)
 
-            cmd = ['SnailHeater_TOOL.py', '--port', select_com,
+            cmd = ['SnailHeater_WinTool.py', '--port', select_com,
                    '--baud', baud_rate,
                    'read_flash', '0x1D0000',
                    '0x10000', coredumpFile
@@ -446,6 +466,8 @@ class DownloadController(object):
         :return: None
         """
         global default_wallpaper
+        global default_backgroud
+        
         try:
             self.print_log("准备更新固件...")
             self.form.UpdateModeMethodRadioButton.setEnabled(False)
@@ -478,8 +500,10 @@ class DownloadController(object):
 
             if "③" in firmware_path:
                 default_wallpaper = default_wallpaper_320
+                default_backgroud = default_backgroud_320
             elif "①" in firmware_path or "②" in firmware_path:
                 default_wallpaper = default_wallpaper_280
+                default_backgroud = default_backgroud_280
             else:
                 default_wallpaper = default_wallpaper_clean
 
@@ -494,7 +518,8 @@ class DownloadController(object):
             file_list = ["./base_data/boot_app0.bin",
                          "./base_data/bootloader_4MB.bin",
                          "./base_data/partitions_4MB.bin",
-                         #  "./base_data/tinyuf2.bin",
+                          "./base_data/tinyuf2.bin",
+                          default_backgroud,
                          firmware_path,
                          default_wallpaper]
             for filepath in file_list:
@@ -530,9 +555,11 @@ class DownloadController(object):
 
             if mode == "清空式":
                 self.print_log("正在清空主机数据...")
-                # esptool.py erase_region 0x20000 0x4000
+                # esptool.py erase_region 0x00000 0x400000
                 # esptool.py erase_flash
-                cmd = ['--port', select_com, 'erase_flash']
+                # cmd = ['--port', select_com, 'erase_flash']
+                cmd = ['--port', select_com, 'erase_region',
+                      '0x00000', '0x400000']
                 try:
                     esptool.main(cmd)
                     self.print_log("完成清空！")
@@ -547,7 +574,7 @@ class DownloadController(object):
                 return False
 
             #  --port COM7 --baud 921600 write_flash -fm dio -fs 4MB 0x1000 bootloader_dio_40m.bin 0x00008000 partitions.bin 0x0000e000 boot_app0.bin 0x00010000
-            cmd = ['SnailHeater_TOOL.py', '--port', select_com,
+            cmd = ['SnailHeater_WinTool.py', '--port', select_com,
                    '--baud', baud_rate,
                    '--after', 'hard_reset',
                    'write_flash',
@@ -556,8 +583,8 @@ class DownloadController(object):
                    '0x00001000', "./base_data/bootloader_%s.bin" % (flash_size_text),
                    '0x00008000', "./base_data/partitions_%s.bin" % (flash_size_text),
                    '0x0000e000', "./base_data/boot_app0.bin",
-                   # '0x002d0000', "./base_data/tinyuf2.bin",
                    '0x00010000', firmware_path,
+                   BACKGROUD_ADDR_IN_FLASH, default_backgroud,
                    WALLPAPER_ADDR_IN_FLASH, default_wallpaper
                    ]
             print(cmd)
@@ -634,10 +661,11 @@ class DownloadController(object):
             # self.print_log(COLOR_RED % printed_data)
 
             line_data = printed_data.split("\n")
+            print("line_data", line_data, "\n\n")
             for line in line_data:
                 if "Detected flash size: " in line:
                     flash_size_text = line.split(": ")[1]
-
+            print('flash_size_text = ', flash_size_text)
             flash_size = int(flash_size_text[:-2]) * 1024 * 1024
 
         except Exception as err:
@@ -798,6 +826,7 @@ class DownloadController(object):
                     sn = re.findall(r"AT_SETTING_GET VALUE_TYPE_SN = \S*", STRGLO)[0] \
                         .split(" ")[-1]
                 except Exception as err:
+                    print(str(traceback.format_exc()))
                     sn = ""
                 print(sn)
 
@@ -809,7 +838,7 @@ class DownloadController(object):
         self.release_serial()
         return sn
 
-    def chooseFile(self):
+    def chooseWpFile(self):
         '''
         打开资源管理器 选择文件
         '''
@@ -822,6 +851,156 @@ class DownloadController(object):
             path_text = path_text + fileName + ";"
         self.form.choosePathEdit.setText(path_text)
 
+    def chooseBgFile(self):
+        '''
+        打开资源管理器 选择文件
+        '''
+        fileNames, fileType = QFileDialog.getOpenFileNames(None, '可选择多个素材文件', os.getcwd(),
+                                                           '图片文件(*.jpg *.png *.jpeg);;所有文件(*)')
+        self.print_log((COLOR_RED % "已选择以下素材：\n") + str(fileNames))
+
+        path_text = ""
+        for fileName in fileNames:
+            path_text = path_text + fileName + ";"
+        self.form.choosePathEdit_2.setText(path_text)
+
+    def writeBackgroud(self):
+        """
+        写入背景图片
+        """
+        param = self.get_output_param(self.form.choosePathEdit_2.text().strip())
+        if param == False:
+            self.print_log((COLOR_RED % "请检查参数设置"))
+            return False
+
+        std_img_path = None
+        param_v = dict()
+        for ind in range(len(param["src_path"])):
+            if param["format"][ind] in IMAGE_FORMAT:
+                param_v["src_path"] = param["src_path"][ind]
+                param_v["width"] = param["width"]
+                param_v["height"] = param["height"]
+                name = os.path.basename(param["src_path"][ind]).split(".")[0]
+                std_img_path = os.path.join(gen_path, name + ".jpg")
+
+                break
+
+        if "src_path" not in param_v.keys():
+            self.print_log(COLOR_RED % "参数出错：只有选中的第一张照片才会生效")
+            return False
+
+        # 缩放图片
+        src_im: Image.Image = Image.open(param_v["src_path"])
+
+        mode = "保持比例裁剪" if self.form.PictureModeRadioButton_0.isChecked() else "全尺寸缩放"
+        if mode == "保持比例裁剪":
+            # 裁剪
+            new_width = src_im.size[1] * (int(param_v["width"]) / int(param_v["height"]))
+            rect = ((src_im.size[0] - new_width) / 2, 0, new_width, src_im.size[1])
+            src_im = src_im.crop(rect)
+        suffix = os.path.basename(param_v["src_path"]).split(".")[1]
+        if suffix == "png" or suffix == "PNG":
+            # 由于PNG是RGBA四个通道 而jpg只有RGB三个通道
+            src_im = src_im.convert('RGB')
+        # 缩放
+        new_im = src_im.resize((int(param_v["width"]), int(param_v["height"])), Image.BICUBIC)
+        new_im.save(std_img_path)  # , format='JPEG', quality=95
+
+        # 转化LVGL图片
+        output_dir = os.path.join(gen_path, "Backgroud")
+        cmd = ['lv_img_conv.py', std_img_path,
+               '-f', 'true_color',
+               #    '-f', 'true_color_alpha',
+               '-cf', 'RGB565SWAP',
+               '-ff', 'BIN',
+               '-o', output_dir
+               ]
+        conv = image_conv.lv_img_conv.Main(image_conv.lv_img_conv.parse_args(cmd[1:]))
+        conv.convert()
+        lvgl_filepath = os.path.join(output_dir, os.path.basename(std_img_path).split(".")[0] + ".bin")
+
+        # 生成 SPIFFS 文件系统镜像
+        # lvgl_filepath = os.path.join(gen_path, "backgroud.bin")
+        # image_size = 0x50000
+        # try:
+        #     os.makedirs(backgroud_base)
+        # except Exception as e:
+        #     self.form.WriteWallpaperButton.setEnabled(True)
+        #     pass
+
+        # if not os.path.exists(backgroud_base):
+        #     raise RuntimeError('given base directory %s does not exist' % backgroud_base)
+
+        # with open(lvgl_filepath, 'wb') as image_file:
+        #     # image_size = int(image_size, 0)
+        #     page_size = 256
+        #     block_size = 4096
+        #     meta_len = 4
+        #     obj_name_len = 48
+        #     big_endian = False
+        #     use_magic = True
+        #     use_magic_len = True
+        #     follow_symlinks = False
+
+        #     # Based on typedefs under spiffs_config.h
+        #     SPIFFS_OBJ_ID_LEN = 2  # spiffs_obj_id
+        #     SPIFFS_SPAN_IX_LEN = 2  # spiffs_span_ix
+        #     SPIFFS_PAGE_IX_LEN = 2  # spiffs_page_ix
+        #     SPIFFS_BLOCK_IX_LEN = 2  # spiffs_block_ix
+
+        #     spiffs_build_default = spiffsgen.SpiffsBuildConfig(page_size, SPIFFS_PAGE_IX_LEN,
+        #                                             block_size, SPIFFS_BLOCK_IX_LEN, meta_len,
+        #                                             obj_name_len, SPIFFS_OBJ_ID_LEN, SPIFFS_SPAN_IX_LEN,
+        #                                             True, True, 'big' if big_endian else 'little',
+        #                                             use_magic, use_magic_len)
+
+        #     spiffs = spiffsgen.SpiffsFS(image_size, spiffs_build_default)
+
+        #     for root, dirs, files in os.walk(backgroud_base, followlinks=follow_symlinks):
+        #         for f in files:
+        #             full_path = os.path.join(root, f)
+        #             spiffs.create_file('/' + os.path.relpath(full_path, backgroud_base).replace('\\', '/'), full_path)
+
+        #     image = spiffs.to_binary()
+        #     image_file.write(image)
+
+        # lvgl_filepath = os.path.join(gen_path, "Backgroud", "bridge_320x240.bin")
+
+        print("lvgl_filepath = ", lvgl_filepath)
+        
+        # 50为预留值
+        bg_all_size = 327680
+        rate = int(os.path.getsize(lvgl_filepath) / bg_all_size * 100)
+        self.print_log((COLOR_RED % "背景图可用的全容量为 ") + str(int(bg_all_size / 1024)) + " KB")
+        self.print_log((COLOR_RED % "本次背景图占用全容量的 ") + str(rate) + "%")
+        if os.path.getsize(lvgl_filepath) > bg_all_size:
+            self.print_log(COLOR_RED % "异常终止：数据过大，请更换图片。")
+            self.form.WriteWallpaperButton_2.setEnabled(True)
+            return False
+
+        # 烧录背景图
+        select_com = self.getSafeCom()
+        if select_com == None:
+            return False
+        try:
+            cmd = ['SnailHeater_WinTool.py', '--port', select_com,
+                   '--baud', baud_rate,
+                   '--after', 'hard_reset',
+                   'write_flash',
+                   BACKGROUD_ADDR_IN_FLASH, lvgl_filepath
+                   ]
+            time = int(os.path.getsize(lvgl_filepath)) * 10 / int(baud_rate) + 2
+            self.print_log("正在烧入背景数据到主机，请等待（%ds）......" % time)
+            esptool.main(cmd[1:])
+            # self.hard_reset()  # 复位芯片
+            self.print_log("成功烧入背景数据到主机")
+        except Exception as err:
+            self.print_log(COLOR_RED % "错误：通讯异常。")
+            self.form.WriteWallpaperButton_2.setEnabled(True)
+            print(err)
+        
+        self.form.WriteWallpaperButton_2.setEnabled(True)
+
     def writeWallpaper(self):
         '''
         刷写壁纸
@@ -833,15 +1012,21 @@ class DownloadController(object):
         self.form.WriteWallpaperButton.setEnabled(False)
         try:
             os.makedirs(wallpaper_cache_dir)
-        except Exception as e:
+        except Exception as err:
             self.form.WriteWallpaperButton.setEnabled(True)
-            pass
+            print(err)
+            print(str(traceback.format_exc()))
+
+        try:
+            os.makedirs(wallpaper_path)
+        except Exception as err:
+            print(str(traceback.format_exc()))
 
         flash_size, _ = self.get_flash_size(select_com)
         wallpaper_all_size = flash_size - 2097202
 
         try:
-            param = self.get_output_param()
+            param = self.get_output_param(self.form.choosePathEdit.text().strip())
             if param == False:
                 self.print_log((COLOR_RED % "请检查参数设置"))
                 self.form.WriteWallpaperButton.setEnabled(True)
@@ -868,10 +1053,11 @@ class DownloadController(object):
                 return False
 
         except Exception as err:
+            print(str(traceback.format_exc()))
             return False
 
         try:
-            cmd = ['SnailHeater_TOOL.py', '--port', select_com,
+            cmd = ['SnailHeater_WinTool.py', '--port', select_com,
                    '--baud', baud_rate,
                    '--after', 'hard_reset',
                    'write_flash',
@@ -894,7 +1080,7 @@ class DownloadController(object):
         生成壁纸的bin文件
         """
         self.print_log("正在生成壁纸文件......")
-        param = self.get_output_param()
+        param = self.get_output_param(self.form.choosePathEdit.text().strip())
         if param == False:
             self.print_log((COLOR_RED % "请检查参数设置"))
             return None
@@ -927,10 +1113,9 @@ class DownloadController(object):
         self.print_log("数据长度->" + str(dataLen))
         self.print_log("即将刷入%s张壁纸文件" % str(total))
         try:
-            print(wallpaper_name)
             os.remove(wallpaper_name)
         except Exception as err:
-            pass
+            print(str(traceback.format_exc()))
 
         with open(wallpaper_name, "wb") as fbin:
             binaryData = b'' + struct.pack('=' + "1B", *[total])
@@ -958,7 +1143,7 @@ class DownloadController(object):
         格式转化
         """
         self.print_log((COLOR_RED % "正在转换（注:若视频比较大，界面会卡顿一段时间）"))
-        param = self.get_output_param()
+        param = self.get_output_param(self.form.choosePathEdit.text().strip())
         if param == False:
             self.print_log((COLOR_RED % "请检查参数设置"))
             return False
@@ -990,12 +1175,12 @@ class DownloadController(object):
             try:
                 os.remove(wallpaper_cache_path)
             except Exception as err:
-                pass
+                print(str(traceback.format_exc()))
 
             try:
                 os.remove(param["dst_path"][ind])
             except Exception as err:
-                pass
+                print(str(traceback.format_exc()))
 
             if param["format"][ind] == "mjpeg":
                 if param["end_time"] != '0':
@@ -1042,20 +1227,20 @@ class DownloadController(object):
                     self.print_log((COLOR_RED % "注：") + "要求原视频的宽高比大于屏幕的宽高比")
                     return False
             except Exception as err:
-                pass
+                print(str(traceback.format_exc()))
                 return False
 
         self.print_log("转换完成")
 
         return True
 
-    def get_output_param(self):
+    def get_output_param(self, fileNameText_t):
         """
         得到输出参数
         """
         resolutionW, resolutionH = self.form.resolutionComboBox.currentText().split(" ")[0].split("x")
 
-        fileNameText = self.form.choosePathEdit.text().strip()
+        fileNameText = fileNameText_t
         if fileNameText == "":
             self.print_log(COLOR_RED % "未选择素材文件")
             return False
@@ -1122,7 +1307,7 @@ class DownloadController(object):
         self.print_log("正在清空壁纸...")
         # esptool.py erase_region 0x20000 0x4000
         # esptool.py erase_flash
-        cmd = ['SnailHeater_TOOL.py', '--port', select_com,
+        cmd = ['SnailHeater_WinTool.py', '--port', select_com,
                'erase_region', WALLPAPER_ADDR_IN_FLASH, '0x200000']
         try:
             esptool.main(cmd[1:])
@@ -1130,7 +1315,7 @@ class DownloadController(object):
             self.print_log(COLOR_RED % "错误：通讯异常。")
             pass
 
-        cmd = ['SnailHeater_TOOL.py', '--port', select_com,
+        cmd = ['SnailHeater_WinTool.py', '--port', select_com,
                '--baud', baud_rate,
                '--after', 'hard_reset',
                'write_flash',
@@ -1184,13 +1369,13 @@ class DownloadController(object):
         """
         # # 最后的Yes表示弹框的按钮显示为Yes，默认按钮显示为OK,不填QMessageBox.Yes即为默认
         # reply = QMessageBox.warning(self.win_main, "重要提示",
-        #                                COLOR_RED % "刷机一定要拔掉220V电源线！",
+        #                                COLOR_RED % "开始前一定要拔掉220V电源线！",
         #                                QMessageBox.Yes | QMessageBox.Cancel,
         #                                QMessageBox.Cancel)
 
         # 创建自定义消息框
         self.mbox = QMessageBox(QMessageBox.Warning, "重要提示",
-                                COLOR_RED % "刷机一定要拔掉220V电源线！")
+                                COLOR_RED % "开始前一定要拔掉220V电源线！")
         # 添加自定义按钮
         do = self.mbox.addButton('确定', QMessageBox.YesRole)
         cancle = self.mbox.addButton('取消', QMessageBox.NoRole)
@@ -1207,7 +1392,7 @@ class DownloadController(object):
 
         # 创建自定义消息框
         self.mbox = QMessageBox(QMessageBox.Warning, "重要提示",
-                                COLOR_RED % "管理壁纸前一定要拔掉220V电源线！")
+                                COLOR_RED % "开始前一定要拔掉220V电源线！")
         # 添加自定义按钮
         do = self.mbox.addButton('确定', QMessageBox.YesRole)
         cancle = self.mbox.addButton('取消', QMessageBox.NoRole)
@@ -1224,13 +1409,30 @@ class DownloadController(object):
 
         # 创建自定义消息框
         self.mbox = QMessageBox(QMessageBox.Warning, "重要提示",
-                                COLOR_RED % "管理壁纸前一定要拔掉220V电源线！")
+                                COLOR_RED % "开始前一定要拔掉220V电源线！")
         # 添加自定义按钮
         do = self.mbox.addButton('确定', QMessageBox.YesRole)
         cancle = self.mbox.addButton('取消', QMessageBox.NoRole)
         # 设置消息框中内容前面的图标
         self.mbox.setIcon(2)
         do.clicked.connect(self.cleanWallpaper)
+        self.mbox.show()
+
+    def WriteBgButton_show_message(self):
+        """
+        警告拔掉AC220V消息框
+        :return: None
+        """
+
+        # 创建自定义消息框
+        self.mbox = QMessageBox(QMessageBox.Warning, "重要提示",
+                                COLOR_RED % "开始前一定要拔掉220V电源线！")
+        # 添加自定义按钮
+        do = self.mbox.addButton('确定', QMessageBox.YesRole)
+        cancle = self.mbox.addButton('取消', QMessageBox.NoRole)
+        # 设置消息框中内容前面的图标
+        self.mbox.setIcon(2)
+        do.clicked.connect(self.writeBackgroud)
         self.mbox.show()
 
 

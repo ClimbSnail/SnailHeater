@@ -4,6 +4,7 @@ Scripts/
 Include/
 esptool_v33/
 esptool_v41/
+py_env/
 build/
 dist/
 .idea/

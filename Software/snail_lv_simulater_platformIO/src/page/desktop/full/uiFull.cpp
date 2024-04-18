@@ -6,6 +6,10 @@
 
 uint8_t currPageIndex = PAGE_INDEX_SOLDER;
 
+// extern const unsigned char backgroud_start[] asm("_binary_bridge_320x240_bin_start");
+// extern const unsigned char backgroud_end[]   asm("_binary_bridge_320x240_bin_end");
+// size_t index_html_gz_len = backgroud_end - backgroud_start;
+
 // 存放一些布尔参数值，会写入nvs
 /*左起
 1、白底黑底
@@ -107,12 +111,12 @@ static MENU_STATUS_ENUM menu_status = MENU_HIDE;
 static lv_anim_t menu_anim;
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////
-#if LV_COLOR_DEPTH != 16
-#error "LV_COLOR_DEPTH should be 16bit to match SquareLine Studio's settings"
-#endif
-#if LV_COLOR_16_SWAP != 0
-#error "#error LV_COLOR_16_SWAP should be 0 to match SquareLine Studio's settings"
-#endif
+// #if LV_COLOR_DEPTH != 16
+// #error "LV_COLOR_DEPTH should be 16bit to match SquareLine Studio's settings"
+// #endif
+// #if LV_COLOR_16_SWAP != 0
+// #error "#error LV_COLOR_16_SWAP should be 0 to match SquareLine Studio's settings"
+// #endif
 
 static void sysInfoTimer_timeout(lv_timer_t *timer);
 
@@ -447,7 +451,7 @@ void update_top_info()
         if (ENABLE_STATE_CLOSE == adjPowerModel.workState)
             lv_label_set_text_fmt(ui_topLabel3, "OFF");
         else
-            lv_label_set_text_fmt(ui_topLabel3, "%.1lf", adjPowerModel.voltage / 1000.0);
+            lv_label_set_text_fmt(ui_topLabel3, "%.1f", adjPowerModel.voltage / 1000.0);
         lv_obj_set_style_text_color(ui_topLabel3, ADJ_POWER_THEME_COLOR1, 0);
         break;
     case PAGE_INDEX_AIR_HOT:
@@ -458,7 +462,7 @@ void update_top_info()
         if (ENABLE_STATE_CLOSE == adjPowerModel.workState)
             lv_label_set_text_fmt(ui_topLabel3, "OFF");
         else
-            lv_label_set_text_fmt(ui_topLabel3, "%.1lf", adjPowerModel.voltage / 1000.0);
+            lv_label_set_text_fmt(ui_topLabel3, "%.1f", adjPowerModel.voltage / 1000.0);
         lv_obj_set_style_text_color(ui_topLabel3, ADJ_POWER_THEME_COLOR1, 0);
         break;
     case PAGE_INDEX_HEAT_PLAT:
@@ -469,7 +473,7 @@ void update_top_info()
         if (ENABLE_STATE_CLOSE == adjPowerModel.workState)
             lv_label_set_text_fmt(ui_topLabel3, "OFF");
         else
-            lv_label_set_text_fmt(ui_topLabel3, "%.1lf", adjPowerModel.voltage / 1000.0);
+            lv_label_set_text_fmt(ui_topLabel3, "%.1f", adjPowerModel.voltage / 1000.0);
         lv_obj_set_style_text_color(ui_topLabel3, ADJ_POWER_THEME_COLOR1, 0);
         break;
     case PAGE_INDEX_ADJ_POWER:
@@ -523,13 +527,12 @@ static void ui_back_btn_pressed(lv_event_t *e)
 void top_layer_init(lv_obj_t *parent)
 {
     // 只在第一次调用
-
     ui_PanelTop = lv_obj_create(desktop_screen);
     lv_obj_remove_style_all(ui_PanelTop);
     lv_obj_clear_flag(ui_PanelTop, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_size(ui_PanelTop, SH_SCREEN_WIDTH, 24);
     lv_obj_align(ui_PanelTop, LV_ALIGN_TOP_LEFT, 0, 0);
-    lv_obj_set_style_bg_opa(ui_PanelTop, 0, 0);
+    lv_obj_set_style_bg_opa(ui_PanelTop, 0, LV_PART_MAIN);
 
     //  顶部状态栏
     ui_topLogoLabel = lv_label_create(ui_PanelTop);
@@ -541,14 +544,24 @@ void top_layer_init(lv_obj_t *parent)
     lv_obj_set_style_text_align(ui_topLogoLabel, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_style_bg_opa(ui_topLogoLabel, 0, 0);
 
-    ui_PanelTopBgImg = lv_img_create(ui_PanelTop);
-    lv_img_set_src(ui_PanelTopBgImg, IS_WHITE_THEME ? &img_top_bar_white : &img_top_bar_black);
-    lv_obj_center(ui_PanelTopBgImg);
+    // ui_PanelTopBgImg = lv_img_create(ui_PanelTop);
+    // lv_img_set_src(ui_PanelTopBgImg, IS_WHITE_THEME ? &img_top_bar_white : &img_top_bar_black);
+    // lv_obj_center(ui_PanelTopBgImg);
+    // lv_obj_set_style_bg_opa(ui_PanelTopBgImg, 0, LV_PART_MAIN);
+
+    ui_PanelTopBgImg = lv_obj_create(ui_PanelTop);
+    lv_obj_set_size(ui_PanelTopBgImg, 150, 40);
+    lv_obj_set_style_radius(ui_PanelTopBgImg, 10, 0);
+    lv_obj_set_style_border_width(ui_PanelTopBgImg, 0, LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_PanelTopBgImg, PANEL_TOP_COLOR, LV_PART_MAIN);
+    lv_obj_set_scrollbar_mode(ui_PanelTopBgImg, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_align(ui_PanelTopBgImg, LV_ALIGN_TOP_MID, 0, -20);
+    lv_obj_set_style_bg_opa(ui_PanelTopBgImg, LV_OPA_50, LV_PART_MAIN);
 
     uint8_t x_pos = -48;
     ui_topLabel1 = lv_label_create(ui_PanelTopBgImg);
     lv_obj_set_size(ui_topLabel1, 47, 24);
-    lv_obj_align(ui_topLabel1, LV_ALIGN_TOP_MID, -48, 0);
+    lv_obj_align(ui_topLabel1, LV_ALIGN_CENTER, -48, 10);
     lv_obj_set_style_pad_top(ui_topLabel1, 4, 0);
     lv_obj_set_style_text_align(ui_topLabel1, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_style_text_opa(ui_topLabel1, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -556,17 +569,16 @@ void top_layer_init(lv_obj_t *parent)
 
     ui_topLabel2 = lv_label_create(ui_PanelTopBgImg);
     lv_obj_set_size(ui_topLabel2, 47, 24);
-    lv_obj_align(ui_topLabel2, LV_ALIGN_TOP_MID, 0, 0);
+    lv_obj_align(ui_topLabel2, LV_ALIGN_CENTER, 0, 10);
     lv_obj_set_style_pad_top(ui_topLabel2, 4, 0);
     lv_obj_set_style_text_align(ui_topLabel2, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_style_text_opa(ui_topLabel2, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_topLabel2, &FontJost_18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     x_pos += 48;
-
     ui_topLabel3 = lv_label_create(ui_PanelTopBgImg);
     lv_obj_set_size(ui_topLabel3, 47, 24);
-    lv_obj_align(ui_topLabel3, LV_ALIGN_TOP_MID, 48, 0);
+    lv_obj_align(ui_topLabel3, LV_ALIGN_CENTER, 48, 10);
     lv_obj_set_style_pad_top(ui_topLabel3, 4, 0);
     lv_obj_set_style_text_align(ui_topLabel3, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_style_text_opa(ui_topLabel3, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -850,6 +862,11 @@ static void autoChangePage_timeout(lv_timer_t *timer)
 void main_screen_init(lv_indev_t *indev)
 {
     bool isWhiteTheme = IS_WHITE_THEME;
+    if (NULL != desktop_screen)
+    {
+        lv_obj_del(desktop_screen);
+        desktop_screen = NULL;
+    }
     desktop_screen = lv_obj_create(NULL);
     lv_obj_clear_flag(desktop_screen, LV_OBJ_FLAG_SCROLLABLE);
 
@@ -903,6 +920,15 @@ void main_screen_init(lv_indev_t *indev)
     lv_style_init(&label_text_style);
     lv_style_set_text_font(&label_text_style, &FontDeyi_16);
     lv_style_set_text_color(&label_text_style, isWhiteTheme ? WHITE_THEME_LABEL_TEXT_COLOR : BLACK_THEME_LABEL_TEXT_COLOR);
+
+    if (ENABLE_STATE::ENABLE_STATE_OPEN == sysInfoModel.utilConfig.enableBackgroud)
+    {
+        static lv_obj_t *ui_MainBackgroup = lv_img_create(desktop_screen);
+        lv_img_set_src(ui_MainBackgroup, "G:/backgroud/bridge_320x240.bin");
+        // lv_img_set_src(ui_MainBackgroup, &bridge_320x240);
+        // lv_img_set_src(ui_MainBackgroup, backgroud_start);
+        lv_obj_align(ui_MainBackgroup, LV_ALIGN_CENTER, 0, 0);
+    }
 
     ui_PanelMain = lv_obj_create(desktop_screen);
     lv_obj_remove_style_all(ui_PanelMain);
@@ -961,15 +987,14 @@ void ui_init(lv_indev_t *indev)
     lv_disp_set_theme(dispp, theme);
     */
     main_screen_init(knobs_indev);
-    // lv_disp_load_scr(desktop_screen);
 }
 
 void ui_reload()
 {
     if (NULL != desktop_screen)
     {
-        lv_scr_load(desktop_screen);
-        // lv_disp_load_scr(desktop_screen);
+        lv_obj_invalidate(desktop_screen);
+        // lv_scr_load(desktop_screen);
     }
 
     // ui_release();

@@ -43,6 +43,8 @@ sn_tool:
 sn_search_server:
   # 读取的已激活过的机器激活码路径
   active_recode_path: "../../active_recode.txt"
+  # 读取的SH_TOOL所支持的固件版本
+  tool_supports_info_path: ./tool_supports_info.txt
   # server启动绑定的服务器ip
   server_ip: "0.0.0.0"
   # server启动绑定的服务器端口

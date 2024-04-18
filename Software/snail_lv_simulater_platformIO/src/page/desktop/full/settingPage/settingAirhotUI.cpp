@@ -352,7 +352,7 @@ void ui_airhot_setting_init(lv_obj_t *father)
     ui_airhotParamKi = lv_numberbtn_create(father);
     lv_obj_t *airhotParamKiLabel = lv_label_create(ui_airhotParamKi);
     lv_numberbtn_set_label_and_format(ui_airhotParamKi,
-                                      airhotParamKiLabel, "I->%.1lf", 0.1);
+                                      airhotParamKiLabel, "I->%.1f", 0.1);
     lv_numberbtn_set_range(ui_airhotParamKi, 0, 200);
     lv_numberbtn_set_value(ui_airhotParamKi, airhotModel.editCoreConfig.ki);
     // lv_obj_remove_style_all(ui_airhotParamKi);

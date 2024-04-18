@@ -51,4 +51,8 @@
 #define BTN_BACK_TEXT_COLOR lv_color_hex(0xa5a5a5)
 
 #define ALL_GREY_COLOR lv_color_hex(0x999798)
+
+// #define PANEL_TOP_COLOR lv_color_hex(0xB5B3B4)
+#define PANEL_TOP_COLOR lv_color_hex(0xffffff)
+
 #endif
