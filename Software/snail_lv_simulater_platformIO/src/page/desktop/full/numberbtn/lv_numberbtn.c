@@ -64,7 +64,6 @@ static void lv_numberbtn_constructor(const lv_obj_class_t *class_p, lv_obj_t *ob
     LV_UNUSED(class_p);
     LV_TRACE_OBJ_CREATE("begin");
 
-    lv_res_t res;
     lv_numberbtn_t *numBnt = (lv_numberbtn_t *)obj;
 
     /*Initialize the allocated 'ext'*/
@@ -183,8 +182,8 @@ static void lv_numberbtn_event(const lv_obj_class_t *class_p, lv_event_t *e)
         lv_indev_get_point(indev, &p);
 
         /*Make point relative to the arc's center*/
-        lv_point_t center;
-        lv_coord_t r;
+        // lv_point_t center;
+        // lv_coord_t r;
         // get_center(obj, &center, &r);
 
         // p.x -= center.x;
@@ -369,27 +368,6 @@ void lv_numberbtn_set_range(lv_obj_t *obj, double min, double max)
     // 重新检查范围
     numBnt->value = LV_CLAMP(numBnt->min_value, numBnt->value, numBnt->max_value);
 }
-
-// void lv_numberbtn_set_value(lv_obj_t *obj, int16_t value)
-// {
-//     LV_ASSERT_OBJ(obj, MY_CLASS);
-
-//     lv_obj_update_layout(obj);
-//     lv_numberbtn_t *numBnt = (lv_numberbtn_t *)obj;
-//     if (value == numBnt->value)
-//         return;
-//     numBnt->value = LV_CLAMP(numBnt->min_value, value, numBnt->max_value);
-//     if (true == numBnt->is_set_text)
-//     {
-//         lv_label_set_text_fmt(numBnt->text_obj, numBnt->format, numBnt->value);
-//         // lv_obj_align_to(numBnt->text_obj, obj, numBnt->align, 0, 0);
-//         lv_obj_align(numBnt->text_obj, numBnt->align, 0, 0);
-
-//         lv_res_t res = lv_event_send(obj, LV_EVENT_VALUE_CHANGED, NULL);
-//         if (res != LV_RES_OK)
-//             return;
-//     }
-// }
 
 void lv_numberbtn_set_value(lv_obj_t *obj, double value)
 {

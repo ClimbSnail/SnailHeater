@@ -25,9 +25,17 @@ extern "C"
 
 #define DATA_REFRESH_MS 300 // 数据刷新的时间
 
-#define SET_CHART_OPA(chartTemp)                            \
-    lv_obj_set_style_text_opa(chartTemp, 50, LV_PART_MAIN); \
-    lv_obj_set_style_opa(chartTemp, 50, LV_PART_MAIN);
+#define SET_CHART_OPA(chartTemp)                                                    \
+    if (ENABLE_STATE::ENABLE_STATE_OPEN == sysInfoModel.utilConfig.enableBackgroud) \
+    {                                                                               \
+        lv_obj_set_style_text_opa(chartTemp, LV_OPA_0, LV_PART_MAIN);               \
+        lv_obj_set_style_opa(chartTemp, LV_OPA_0, LV_PART_MAIN);                    \
+    }                                                                               \
+    else                                                                            \
+    {                                                                               \
+        lv_obj_set_style_text_opa(chartTemp, LV_OPA_100, LV_PART_MAIN);             \
+        lv_obj_set_style_opa(chartTemp, LV_OPA_100, LV_PART_MAIN);                  \
+    }
 
     typedef enum
     {

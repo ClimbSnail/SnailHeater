@@ -22,7 +22,6 @@ static lv_obj_t *ui_paramKp;
 static lv_obj_t *ui_paramKi;
 static lv_obj_t *ui_paramKd;
 
-static lv_obj_t *curvelineDropdown = NULL;
 static lv_obj_t *curvelineSwitchBtn;
 static lv_obj_t *curvelineSetBtn;
 static lv_obj_t *curvelineNameLabel;
@@ -354,23 +353,6 @@ static void ui_set_pid_pressed(lv_event_t *e)
     }
 }
 
-static void setCurveline(lv_obj_t *obj, const char *text)
-{
-    char name[16];
-    int maxSize = lv_dropdown_get_option_cnt(obj);
-    int cnt;
-    for (cnt = 0; cnt < maxSize; cnt++)
-    {
-        lv_dropdown_set_selected(obj, cnt);
-        lv_dropdown_get_selected_str(obj, name, 16);
-        int ret = strcmp(text, name);
-        if (ret == 0)
-        {
-            break;
-        }
-    }
-}
-
 static bool hpPageUI_init(lv_obj_t *father)
 {
     hpPageUI_release();
@@ -561,7 +543,8 @@ static bool hpPageUI_init(lv_obj_t *father)
     lv_obj_remove_style_all(chartTemp);
     lv_obj_set_style_bg_color(chartTemp, IS_WHITE_THEME ? WHITE_THEME_CHART_COLOR1 : BLACK_THEME_CHART_COLOR1, LV_PART_MAIN);
     lv_obj_set_style_bg_opa(chartTemp, LV_OPA_COVER, LV_PART_MAIN);
-    SET_CHART_OPA(chartTemp);
+    // 加热台曲线不做透明处理
+    // SET_CHART_OPA(chartTemp);
     lv_obj_set_size(chartTemp, SH_SCREEN_WIDTH, CURVE_HIGH);
     lv_obj_align(chartTemp, LV_ALIGN_BOTTOM_MID, 0, 0);
     lv_chart_set_type(chartTemp, LV_CHART_TYPE_LINE);

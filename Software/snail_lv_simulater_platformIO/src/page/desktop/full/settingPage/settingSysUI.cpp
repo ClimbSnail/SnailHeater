@@ -134,19 +134,6 @@ static void ui_sys_setting_pressed(lv_event_t *e)
     }
 }
 
-// 按键事件
-static void ui_knobs_dir_pressed(lv_event_t *e)
-{
-    lv_event_code_t event_code = lv_event_get_code(e);
-    lv_obj_t *target = lv_event_get_target(e);
-
-    if (event_code == LV_EVENT_VALUE_CHANGED)
-    {
-        bool isAntiDir = lv_obj_has_state(target, LV_STATE_CHECKED);
-        sysInfoModel.utilConfig.knobDir = (KNOBS_DIR)isAntiDir;
-    }
-}
-
 static void ui_white_theme_pressed(lv_event_t *e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);

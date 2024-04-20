@@ -44,7 +44,6 @@ static lv_obj_t *ui_solderRealTemp[DISPLAY_TEMP_MAX];
 static lv_obj_t *ui_coreManageExitBtn = NULL; // 退出
 static lv_obj_t *ui_coreManageSaveBtn = NULL; // 保存修改
 static lv_group_t *coreManage_btn_group = NULL;
-static lv_group_t *msgbox_group = NULL;
 
 static void solderCoreTimer_timeout(lv_timer_t *timer);
 static void solderMassageBoxTimer_timeout(lv_timer_t *timer);
