@@ -12,6 +12,7 @@ static lv_obj_t *ui_beepVolumeBtn;
 static lv_obj_t *ui_sysToneSwitch;
 static lv_obj_t *ui_knobsToneSwitch;
 static lv_obj_t *ui_knobsDirSwitch;
+static lv_obj_t *ui_invertColorSwitch;
 static lv_obj_t *ui_backgroudSwitch;
 static lv_obj_t *ui_wallpaperSwitch;
 static lv_obj_t *ui_wallpaperDelayBtn;
@@ -122,6 +123,10 @@ static void ui_sys_setting_pressed(lv_event_t *e)
         else if (target == ui_knobsDirSwitch)
         {
             sysInfoModel.utilConfig.knobDir = (KNOBS_DIR)flag;
+        }
+        else if (target == ui_invertColorSwitch)
+        {
+            sysInfoModel.utilConfig.invertColor = (bool)flag;
         }
         else if (target == ui_backgroudSwitch)
         {
@@ -310,9 +315,34 @@ void ui_sys_setting_init(lv_obj_t *father)
     lv_obj_set_style_outline_opa(ui_knobsDirSwitch, 255, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
     lv_obj_set_style_outline_pad(ui_knobsDirSwitch, 4, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
 
+    // 屏幕反色
+    lv_obj_t *ui_invertColorLabel = lv_label_create(father);
+    lv_obj_align_to(ui_invertColorLabel, ui_knobsDirLabel,
+                    LV_ALIGN_OUT_BOTTOM_LEFT, 0, 15);
+    lv_label_set_text(ui_invertColorLabel, SETTING_TEXT_INVERT_COLOR);
+    lv_obj_add_style(ui_invertColorLabel, &label_text_style, 0);
+
+    ui_invertColorSwitch = lv_switch_create(father);
+    lv_obj_add_flag(ui_invertColorSwitch, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+    lv_obj_set_size(ui_invertColorSwitch, 40, 20);
+    lv_obj_align_to(ui_invertColorSwitch, ui_invertColorLabel,
+                    LV_ALIGN_OUT_LEFT_MID, 140, 0);
+    if (sysInfoModel.utilConfig.invertColor)
+    {
+        lv_obj_add_state(ui_invertColorSwitch, LV_STATE_CHECKED); // 反向
+    }
+    else
+    {
+        lv_obj_clear_state(ui_invertColorSwitch, LV_STATE_CHECKED);
+    }
+    // 注意，这里触发的是3个状态 CHECKED 、LV_STATE_FOCUS 、 和 LV_STATE_FOCUS_KEY，必须设置成KEY才有效
+    lv_obj_set_style_outline_color(ui_invertColorSwitch, SETTING_THEME_COLOR1, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
+    lv_obj_set_style_outline_opa(ui_invertColorSwitch, 255, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
+    lv_obj_set_style_outline_pad(ui_invertColorSwitch, 4, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
+
     // 黑白主题
     lv_obj_t *ui_whiteThemeLabel = lv_label_create(father);
-    lv_obj_align_to(ui_whiteThemeLabel, ui_knobsDirLabel,
+    lv_obj_align_to(ui_whiteThemeLabel, ui_invertColorLabel,
                     LV_ALIGN_OUT_BOTTOM_LEFT, 0, 15);
     lv_label_set_text(ui_whiteThemeLabel, SETTING_TEXT_WHITE_THEME);
     lv_obj_add_style(ui_whiteThemeLabel, &label_text_style, 0);
@@ -562,7 +592,7 @@ void ui_sys_setting_init(lv_obj_t *father)
     lv_obj_t *ui_subBackBtnLabel = lv_label_create(ui_subBackBtn);
     lv_obj_center(ui_subBackBtnLabel);
     lv_obj_add_style(ui_subBackBtnLabel, &label_text_style, 0);
-    lv_label_set_text(ui_subBackBtnLabel, "返回");
+    lv_label_set_text(ui_subBackBtnLabel, SETTING_TEXT_BACK);
 }
 
 void userdata_verification_cb(lv_obj_t *obj, bool isLegal)
@@ -627,6 +657,7 @@ void ui_sys_setting_init_group(lv_obj_t *father)
     lv_obj_add_event_cb(ui_sysToneSwitch, ui_sys_setting_pressed, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_event_cb(ui_knobsToneSwitch, ui_sys_setting_pressed, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_event_cb(ui_knobsDirSwitch, ui_sys_setting_pressed, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_add_event_cb(ui_invertColorSwitch, ui_sys_setting_pressed, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_event_cb(ui_whiteThemeSwitch, ui_white_theme_pressed, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_event_cb(ui_backgroudSwitch, ui_sys_setting_pressed, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_event_cb(ui_wallpaperSwitch, ui_sys_setting_pressed, LV_EVENT_VALUE_CHANGED, NULL);
@@ -650,6 +681,7 @@ void ui_sys_setting_init_group(lv_obj_t *father)
     lv_group_add_obj(sub_btn_group, ui_sysToneSwitch);
     lv_group_add_obj(sub_btn_group, ui_knobsToneSwitch);
     lv_group_add_obj(sub_btn_group, ui_knobsDirSwitch);
+    lv_group_add_obj(sub_btn_group, ui_invertColorSwitch);
     lv_group_add_obj(sub_btn_group, ui_whiteThemeSwitch);
     lv_group_add_obj(sub_btn_group, ui_backgroudSwitch);
     lv_group_add_obj(sub_btn_group, ui_wallpaperSwitch);

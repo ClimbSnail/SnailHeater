@@ -4,7 +4,7 @@
 #include "sh_driver/knobs.h"
 
 #ifdef SIMULATOR
-#include "ctrl_common.hpp"
+#include "ctrl_common.h"
 #else
 #include "sys/snail_manager.h"
 #include "controller/solder/solder.h"
@@ -153,7 +153,7 @@ struct SysInfoModel
     SysUtilConfig utilConfig;
     INFO_MANAGE_ACTION manageConfigAction; // 配置文件的管理动作
 
-    volatile bool lockScreenFlag;     // 是否锁屏
+    bool lockScreenFlag;     // 是否锁屏
     bool hasInfo;            // 是否有系统消息
     bool resetFlag;          // 重置标志位
     int16_t sysInfoDispTime; // 系统消息显示的时长 ms

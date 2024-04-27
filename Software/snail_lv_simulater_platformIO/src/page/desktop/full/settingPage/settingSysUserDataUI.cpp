@@ -252,7 +252,7 @@ static void ui_bnt_obj_pressed(lv_event_t *e)
         else if (target == ui_resetHPCurveBnt)
         {
             heatplatformModel.manageCurveAction =
-                INFO_MANAGE_ACTION::INFO_MANAGE_ACTION_CONFIG_UTIL_RESET;
+                INFO_MANAGE_ACTION::INFO_MANAGE_ACTION_CONFIG_CURVE_RESET;
             sysInfoModel.resetFlag = true;
         }
         else if (target == ui_resetPowerUtilBnt)
@@ -278,7 +278,7 @@ static void ui_bnt_obj_pressed(lv_event_t *e)
             heatplatformModel.manageCoreAction =
                 INFO_MANAGE_ACTION::INFO_MANAGE_ACTION_CONFIG_CORE_RESET;
             heatplatformModel.manageCurveAction =
-                INFO_MANAGE_ACTION::INFO_MANAGE_ACTION_CONFIG_UTIL_RESET;
+                INFO_MANAGE_ACTION::INFO_MANAGE_ACTION_CONFIG_CURVE_RESET;
             adjPowerModel.manageConfigAction =
                 INFO_MANAGE_ACTION::INFO_MANAGE_ACTION_CONFIG_UTIL_RESET;
 
@@ -621,7 +621,7 @@ void ui_userdata_init(lv_obj_t *father)
     lv_obj_t *ui_subBackBtnLabel = lv_label_create(ui_subBackBtn);
     lv_obj_center(ui_subBackBtnLabel);
     lv_obj_add_style(ui_subBackBtnLabel, &label_text_style, 0);
-    lv_label_set_text(ui_subBackBtnLabel, "返回");
+    lv_label_set_text(ui_subBackBtnLabel, SETTING_TEXT_BACK);
 
     ui_userdata_group(NULL);
 }

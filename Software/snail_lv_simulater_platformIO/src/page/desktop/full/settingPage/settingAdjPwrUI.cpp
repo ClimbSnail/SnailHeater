@@ -63,7 +63,7 @@ static void calib_msgbox_event_cb(lv_event_t *e)
     lv_obj_t *obj = lv_event_get_current_target(e);
     LV_LOG_USER("Button %s clicked", lv_msgbox_get_active_btn_text(obj));
 
-    if (!strcmp(lv_msgbox_get_active_btn_text(obj), "返回"))
+    if (!strcmp(lv_msgbox_get_active_btn_text(obj), SETTING_TEXT_BACK))
     {
         lv_indev_set_group(knobs_indev, sub_btn_group);
         lv_group_remove_obj(lv_msgbox_get_btns(ui_calibMsgBox));
@@ -118,7 +118,7 @@ static void ui_bnt_obj_pressed(lv_event_t *e)
     {
         if (target == ui_pwrCurZeroBtn)
         {
-            static const char *btns[] = {"返回", "开始校准"};
+            static const char *btns[] = {SETTING_TEXT_BACK, "开始校准", ""};
 
             ui_calibMsgBox = lv_msgbox_create(ui_father,
                                               SETTING_TEXT_ADJPWR_MSGBOX_INFO_TITLE,
@@ -284,7 +284,7 @@ void ui_adjpwr_setting_init(lv_obj_t *father)
     lv_obj_t *ui_subBackBtnLabel = lv_label_create(ui_subBackBtn);
     lv_obj_center(ui_subBackBtnLabel);
     lv_obj_add_style(ui_subBackBtnLabel, &label_text_style, 0);
-    lv_label_set_text(ui_subBackBtnLabel, "返回");
+    lv_label_set_text(ui_subBackBtnLabel, SETTING_TEXT_BACK);
 }
 
 static void ui_powerQuickSetupVol_pressed(lv_event_t *e)

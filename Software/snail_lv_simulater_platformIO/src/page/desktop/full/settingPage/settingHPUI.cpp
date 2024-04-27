@@ -485,7 +485,7 @@ void ui_hp_setting_init(lv_obj_t *father)
     lv_obj_t *ui_subBackBtnLabel = lv_label_create(ui_subBackBtn);
     lv_obj_center(ui_subBackBtnLabel);
     lv_obj_add_style(ui_subBackBtnLabel, &label_text_style, 0);
-    lv_label_set_text(ui_subBackBtnLabel, "返回");
+    lv_label_set_text(ui_subBackBtnLabel, SETTING_TEXT_BACK);
 }
 
 void ui_hp_setting_init_group(lv_obj_t *father)

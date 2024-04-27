@@ -9,7 +9,7 @@ static lv_obj_t *ui_father = NULL;
 
 static lv_obj_t *ui_solderGridSwitch;
 static lv_obj_t *ui_solderAutoTypeSwitch;
-static lv_obj_t *ui_autoTypeSwitchMsgBox = NULL;
+static lv_obj_t *ui_msgBox = NULL;
 static lv_obj_t *ui_solderNameLabel;
 static lv_obj_t *ui_solderNameDropdown;
 static lv_obj_t *ui_solderManageBnt;
@@ -23,8 +23,7 @@ static lv_obj_t *ui_shortCircuitSwitch;
 
 static lv_obj_t *ui_core_manage_page;
 static lv_obj_t *ui_search_arc = NULL;
-static lv_timer_t *ui_searchTimer = NULL;     // 读取烙铁芯的定时器
-static lv_timer_t *ui_massageBoxTimer = NULL; // 消息框界面
+static lv_timer_t *ui_searchTimer = NULL; // 读取烙铁芯的定时器
 static lv_obj_t *ui_solderNumDropdown;
 static lv_obj_t *ui_solderWakeLabel;
 static lv_obj_t *ui_solderWakeDropdown;
@@ -45,8 +44,9 @@ static lv_obj_t *ui_coreManageExitBtn = NULL; // 退出
 static lv_obj_t *ui_coreManageSaveBtn = NULL; // 保存修改
 static lv_group_t *coreManage_btn_group = NULL;
 
+static lv_group_t *msg_btn_group = NULL;
+
 static void solderCoreTimer_timeout(lv_timer_t *timer);
-static void solderMassageBoxTimer_timeout(lv_timer_t *timer);
 
 static void set_angle(void *obj, int32_t v)
 {
@@ -74,18 +74,42 @@ static void auto_type_msgbox_event_cb(lv_event_t *e)
     lv_obj_t *obj = lv_event_get_current_target(e);
     LV_LOG_USER("Button %s clicked", lv_msgbox_get_active_btn_text(obj));
 
-    if (strcmp(lv_msgbox_get_active_btn_text(obj), SETTING_TEXT_SOLDER_MSGBOX_ENTER))
+    if (!strcmp(lv_msgbox_get_active_btn_text(obj), SETTING_TEXT_ENTER))
     {
         solderModel.utilConfig.autoTypeSwitch = ENABLE_STATE_OPEN;
 
         lv_obj_set_style_text_opa(ui_solderNameLabel, 150, LV_PART_MAIN);
-        lv_obj_clear_flag(ui_solderNameDropdown, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_solderNameDropdown, LV_OBJ_FLAG_HIDDEN);
         // 使手动类型不可操作
         lv_group_remove_obj(ui_solderNameDropdown);
     }
     else
     {
-        // lv_obj_clear_state(ui_solderAutoTypeSwitch, LV_STATE_CHECKED);
+        lv_obj_clear_state(ui_solderAutoTypeSwitch, LV_STATE_CHECKED);
+    }
+
+    lv_indev_set_group(knobs_indev, sub_btn_group);
+
+    if (NULL != ui_msgBox)
+    {
+        lv_group_remove_obj(lv_msgbox_get_btns(ui_msgBox));
+        lv_obj_del(ui_msgBox);
+        ui_msgBox = NULL;
+    }
+}
+
+static void short_circuit_msgbox_event_cb(lv_event_t *e)
+{
+    lv_obj_t *obj = lv_event_get_current_target(e);
+    LV_LOG_USER("Button %s clicked", lv_msgbox_get_active_btn_text(obj));
+
+    lv_indev_set_group(knobs_indev, sub_btn_group);
+    lv_group_remove_obj(lv_msgbox_get_btns(ui_msgBox));
+
+    if (NULL != ui_msgBox)
+    {
+        lv_obj_del(ui_msgBox);
+        ui_msgBox = NULL;
     }
 }
 
@@ -98,29 +122,26 @@ static void ui_solder_auto_type_pressed(lv_event_t *e)
     {
         if (lv_obj_has_state(target, LV_STATE_CHECKED))
         {
-            if (NULL != ui_autoTypeSwitchMsgBox)
+            if (NULL != ui_msgBox)
             {
-                return;
+                lv_obj_del(ui_msgBox);
+                ui_msgBox = NULL;
             }
 
-            static const char *btns[] = {""};
+            static const char *btns2[] = {SETTING_TEXT_BACK, SETTING_TEXT_ENTER, ""};
 
-            ui_autoTypeSwitchMsgBox = lv_msgbox_create(ui_father,
-                                                       SETTING_TEXT_SOLDER_MSGBOX_INFO_TITLE,
-                                                       SETTING_TEXT_SOLDER_MSGBOX_INFO, btns, true);
-            lv_obj_add_style(ui_autoTypeSwitchMsgBox, &label_text_style, 0);
-            lv_obj_add_event_cb(ui_autoTypeSwitchMsgBox, auto_type_msgbox_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
-            lv_obj_center(ui_autoTypeSwitchMsgBox);
+            ui_msgBox = lv_msgbox_create(ui_father,
+                                         SETTING_TEXT_SOLDER_MSGBOX_INFO_TITLE,
+                                         SETTING_TEXT_SOLDER_MSGBOX_INFO, btns2, false);
+            lv_obj_add_style(ui_msgBox, &label_text_style, 0);
+            lv_obj_add_event_cb(ui_msgBox, auto_type_msgbox_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+            lv_obj_center(ui_msgBox);
 
-            solderModel.utilConfig.autoTypeSwitch = ENABLE_STATE_OPEN;
+            lv_obj_t *btnmatrix = lv_msgbox_get_btns(ui_msgBox);
+            lv_group_add_obj(msg_btn_group, btnmatrix);
 
-            lv_obj_set_style_text_opa(ui_solderNameLabel, 150, LV_PART_MAIN);
-            lv_obj_add_flag(ui_solderNameDropdown, LV_OBJ_FLAG_HIDDEN);
-            // 使手动类型不可操作
-            lv_group_remove_obj(ui_solderNameDropdown);
-
-            ui_massageBoxTimer = lv_timer_create(solderMassageBoxTimer_timeout, 8000, NULL);
-            lv_timer_set_repeat_count(ui_massageBoxTimer, 1);
+            lv_indev_set_group(knobs_indev, msg_btn_group);
+            lv_group_focus_obj(btnmatrix);
         }
         else
         {
@@ -274,12 +295,6 @@ static void solderCoreTimer_timeout(lv_timer_t *timer)
         ui_search_arc = NULL;
     }
 
-    if (NULL != ui_autoTypeSwitchMsgBox)
-    {
-        lv_obj_del(ui_autoTypeSwitchMsgBox);
-        ui_autoTypeSwitchMsgBox = NULL;
-    }
-
     if (INFO_MANAGE_ACTION_SOLDER_READ_OK == solderModel.manageCoreAction)
     {
         solderModel.manageCoreAction = INFO_MANAGE_ACTION_SOLDER_IDLE;
@@ -330,23 +345,6 @@ static void solderCoreTimer_timeout(lv_timer_t *timer)
         }
         lv_group_add_obj(coreManage_btn_group, ui_coreManageSaveBtn);
         lv_indev_set_group(knobs_indev, coreManage_btn_group);
-    }
-}
-
-static void solderMassageBoxTimer_timeout(lv_timer_t *timer)
-{
-    LV_UNUSED(timer);
-
-    if (NULL != ui_search_arc)
-    {
-        lv_obj_del(ui_search_arc);
-        ui_search_arc = NULL;
-    }
-
-    if (NULL != ui_autoTypeSwitchMsgBox)
-    {
-        lv_obj_del(ui_autoTypeSwitchMsgBox);
-        ui_autoTypeSwitchMsgBox = NULL;
     }
 }
 
@@ -1039,26 +1037,33 @@ static void ui_fastPIDSwitch_pressed(lv_event_t *e)
             {
                 solderModel.utilConfig.shortCircuit = ENABLE_STATE_OPEN;
 
-                if (NULL != ui_autoTypeSwitchMsgBox)
+                if (NULL != ui_msgBox)
                 {
-                    return;
+                    lv_obj_del(ui_msgBox);
+                    ui_msgBox = NULL;
                 }
-                static const char *btns[] = {""};
 
-                ui_autoTypeSwitchMsgBox = lv_msgbox_create(ui_father,
-                                                           SETTING_TEXT_SOLDER_SHORT_CUR_INFO_TITLE,
-                                                           SETTING_TEXT_SOLDER_SHORT_CUR_INFO, btns, true);
-                lv_obj_add_style(ui_autoTypeSwitchMsgBox, &label_text_style, 0);
-                lv_obj_add_event_cb(ui_autoTypeSwitchMsgBox, auto_type_msgbox_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
-                // lv_obj_center(ui_autoTypeSwitchMsgBox);
-                lv_obj_align_to(ui_autoTypeSwitchMsgBox, ui_shortCircuitSwitch,
-                                LV_ALIGN_CENTER, -30, -30);
+                static const char *btns1[] = {SETTING_TEXT_ENTER, ""};
 
-                ui_massageBoxTimer = lv_timer_create(solderMassageBoxTimer_timeout, 8000, NULL);
-                lv_timer_set_repeat_count(ui_massageBoxTimer, 1);
+                ui_msgBox = lv_msgbox_create(ui_father,
+                                             SETTING_TEXT_SOLDER_SHORT_CUR_INFO_TITLE,
+                                             SETTING_TEXT_SOLDER_SHORT_CUR_INFO, btns1, false);
+
+                lv_obj_add_style(ui_msgBox, &label_text_style, 0);
+                lv_obj_add_event_cb(ui_msgBox, short_circuit_msgbox_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+                lv_obj_align_to(ui_msgBox, ui_shortCircuitSwitch,
+                                LV_ALIGN_CENTER, -25, -30);
+
+                lv_obj_t *btnmatrix = lv_msgbox_get_btns(ui_msgBox);
+                lv_group_add_obj(msg_btn_group, btnmatrix);
+
+                lv_indev_set_group(knobs_indev, msg_btn_group);
+                lv_group_focus_obj(btnmatrix);
             }
             else
+            {
                 solderModel.utilConfig.shortCircuit = ENABLE_STATE_CLOSE;
+            }
         }
     }
 }
@@ -1336,7 +1341,7 @@ void ui_solder_setting_init(lv_obj_t *father)
     lv_obj_t *ui_subBackBtnLabel = lv_label_create(ui_subBackBtn);
     lv_obj_center(ui_subBackBtnLabel);
     lv_obj_add_style(ui_subBackBtnLabel, &label_text_style, 0);
-    lv_label_set_text(ui_subBackBtnLabel, "返回");
+    lv_label_set_text(ui_subBackBtnLabel, SETTING_TEXT_BACK);
 }
 
 void ui_solder_setting_init_group(lv_obj_t *father)
@@ -1359,6 +1364,7 @@ void ui_solder_setting_init_group(lv_obj_t *father)
         sub_btn_group = NULL;
     }
     sub_btn_group = lv_group_create();
+    msg_btn_group = lv_group_create();
     lv_group_add_obj(sub_btn_group, ui_subBackBtn);
     lv_group_add_obj(sub_btn_group, ui_solderGridSwitch);
 #if SH_HARDWARE_VER >= SH_ESP32S2_WROOM_V25
@@ -1393,6 +1399,12 @@ void ui_solder_setting_release(void *param)
     {
         lv_group_del(sub_btn_group);
         sub_btn_group = NULL;
+    }
+
+    if (NULL != msg_btn_group)
+    {
+        lv_group_del(msg_btn_group);
+        msg_btn_group = NULL;
     }
 
     ui_search_arc = NULL;
