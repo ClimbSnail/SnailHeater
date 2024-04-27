@@ -20,6 +20,7 @@ static lv_obj_t *solderQuickSetupTemp2;
 static lv_obj_t *ui_easySleepTempBtn;
 static lv_obj_t *fastPIDSwitch;
 static lv_obj_t *ui_shortCircuitSwitch;
+static lv_obj_t *shortCircuitLabel;
 
 static lv_obj_t *ui_core_manage_page;
 static lv_obj_t *ui_search_arc = NULL;
@@ -74,7 +75,7 @@ static void auto_type_msgbox_event_cb(lv_event_t *e)
     lv_obj_t *obj = lv_event_get_current_target(e);
     LV_LOG_USER("Button %s clicked", lv_msgbox_get_active_btn_text(obj));
 
-    if (!strcmp(lv_msgbox_get_active_btn_text(obj), SETTING_TEXT_ENTER))
+    if (!strcmp(lv_msgbox_get_active_btn_text(obj), SETTING_TEXT_CONFIRM))
     {
         solderModel.utilConfig.autoTypeSwitch = ENABLE_STATE_OPEN;
 
@@ -128,7 +129,7 @@ static void ui_solder_auto_type_pressed(lv_event_t *e)
                 ui_msgBox = NULL;
             }
 
-            static const char *btns2[] = {SETTING_TEXT_BACK, SETTING_TEXT_ENTER, ""};
+            static const char *btns2[] = {SETTING_TEXT_BACK, SETTING_TEXT_CONFIRM, ""};
 
             ui_msgBox = lv_msgbox_create(ui_father,
                                          SETTING_TEXT_SOLDER_MSGBOX_INFO_TITLE,
@@ -1043,7 +1044,7 @@ static void ui_fastPIDSwitch_pressed(lv_event_t *e)
                     ui_msgBox = NULL;
                 }
 
-                static const char *btns1[] = {SETTING_TEXT_ENTER, ""};
+                static const char *btns1[] = {SETTING_TEXT_CONFIRM, ""};
 
                 ui_msgBox = lv_msgbox_create(ui_father,
                                              SETTING_TEXT_SOLDER_SHORT_CUR_INFO_TITLE,
@@ -1304,7 +1305,7 @@ void ui_solder_setting_init(lv_obj_t *father)
     lv_obj_set_style_outline_pad(fastPIDSwitch, 4, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
 
     // 短路保护
-    lv_obj_t *shortCircuitLabel = lv_label_create(father);
+    shortCircuitLabel = lv_label_create(father);
     lv_obj_align(shortCircuitLabel, LV_ALIGN_TOP_LEFT, 10, 10);
     lv_obj_align_to(shortCircuitLabel, fastPIDLabel,
                     LV_ALIGN_OUT_BOTTOM_LEFT, 0, 20);
@@ -1383,6 +1384,9 @@ void ui_solder_setting_init_group(lv_obj_t *father)
     lv_group_add_obj(sub_btn_group, fastPIDSwitch);
 #if SH_HARDWARE_VER >= SH_ESP32S2_WROOM_V26
     lv_group_add_obj(sub_btn_group, ui_shortCircuitSwitch);
+#else
+    lv_obj_set_style_text_opa(shortCircuitLabel, 150, LV_PART_MAIN);
+    lv_obj_add_flag(ui_shortCircuitSwitch, LV_OBJ_FLAG_HIDDEN);
 #endif
     lv_indev_set_group(knobs_indev, sub_btn_group);
 }

@@ -48,7 +48,7 @@
 #define SETTING_TEXT_SOLDER_DRIVE_FREQ "发热频率 Hz"
 #define SETTING_TEXT_SOLDER_POWER_LIMIT "功率限制 %"
 #define SETTING_TEXT_SOLDER_SHORT_CIRCUIT "短路保护"
-#define SETTING_TEXT_ENTER "确定"
+#define SETTING_TEXT_CONFIRM "确定"
 #define SETTING_TEXT_SOLDER_MSGBOX_INFO_TITLE "<自动识别烙铁芯功能>"
 #define SETTING_TEXT_SOLDER_MSGBOX_INFO "必须使用蜗牛台批量的烙铁手柄 或者 按手柄教程安装了合适的识别电阻。"
 #define SETTING_TEXT_ADJPWR_MSGBOX_INFO_TITLE "<电源自动校准>"
