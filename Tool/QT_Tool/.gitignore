@@ -12,3 +12,4 @@ __pycache__/
 *.bin
 SnailHeater_WinTool.spec
 base_data/
+Generate/

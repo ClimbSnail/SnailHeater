@@ -34,20 +34,20 @@ from PyQt5.QtGui import QGuiApplication
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import Qt
 
-import esptool_v41.esptool
 import massagehead as mh
 import spiffsgen
 # import lvgl_image_converter.lv_img_conv as image_conv
 import lvgl_image_converter as image_conv
 # from lvgl_image_converter import lv_img_conv as image_conv
 
+# import esptool_v41.esptool
 # esptool v3.3可以刷入bootloader.bin时动态修改"--flash_size"
-if os.path.exists("./esptool_v41"):
-    sys.path.append("./esptool_v41")
-else:
-    sys.path.append("./")
-# import esptool # sys.path.append("./esptool_v41") or pip install esptool==4.1 
-from esptool_v41 import esptool
+# if os.path.exists("./esptool_v41"):
+#     sys.path.append("./esptool_v41")
+# else:
+#     sys.path.append("./")
+import esptool # sys.path.append("./esptool_v41") or pip install esptool==4.1 
+# from esptool_v41 import esptool
 # from esptool_v33 import esptool
 # from esptool_v33 import espefuse
 # import esptool
@@ -86,6 +86,7 @@ wallpaper_path = os.path.join(gen_path, "Wallpaper")
 # 壁纸文件
 wallpaper_name = os.path.join(wallpaper_path, "Wallpaper.lsw")
 WALLPAPER_ADDR_IN_FLASH = '0x00200000'
+waLLPAPER_JPG_MAX_SIZE = 17500
 
 BACKGROUD_ADDR_IN_FLASH = '0x180000'
 TYPE_JPG = 0
@@ -605,6 +606,8 @@ class DownloadController(object):
         except Exception as err:
             self.print_log(COLOR_RED % "错误：通讯异常。")
             print(err)
+            self.reset_ui_button()
+            return None
             # self.print_log(COLOR_RED % "未释放资源，请15s后再试。如无法触发下载，拔插type-c接口再试。")
 
         # global SH_SN
@@ -621,6 +624,7 @@ class DownloadController(object):
         #     self.act_button_click()
 
         # self.hard_reset()  # 复位芯片
+
         time.sleep(4)  # 等待文件系统初始化完成
         self.auto_active()
 
@@ -670,7 +674,9 @@ class DownloadController(object):
 
         except Exception as err:
             print(str(traceback.format_exc()))
+            self.print_log(COLOR_RED % str(traceback.format_exc()))
             self.print_log(COLOR_RED % "错误：无法获取存空间大小！")
+            # return 67108864, "64MB"
             return 0, "0MB"
 
         return flash_size, flash_size_text
@@ -1014,7 +1020,6 @@ class DownloadController(object):
             os.makedirs(wallpaper_cache_dir)
         except Exception as err:
             self.form.WriteWallpaperButton.setEnabled(True)
-            print(err)
             print(str(traceback.format_exc()))
 
         try:
@@ -1023,7 +1028,9 @@ class DownloadController(object):
             print(str(traceback.format_exc()))
 
         flash_size, _ = self.get_flash_size(select_com)
-        wallpaper_all_size = flash_size - 2097202
+        wallpaper_all_size = flash_size - (1024*1024*2 + 50)
+        # 目前只能支持16M写入空间，故做如下设置
+        wallpaper_all_size = wallpaper_all_size if wallpaper_all_size <= 14680064 else 14680064
 
         try:
             param = self.get_output_param(self.form.choosePathEdit.text().strip())
@@ -1045,6 +1052,7 @@ class DownloadController(object):
 
             # 50为预留值
             rate = int(os.path.getsize(wallpaper_name) / wallpaper_all_size * 100)
+            self.print_log((COLOR_RED % "本机储存容量为 ") + str(int(flash_size / 1024 / 1024)) + " MB")
             self.print_log((COLOR_RED % "壁纸可用的全容量为 ") + str(int(wallpaper_all_size / 1024)) + " KB")
             self.print_log((COLOR_RED % "本次壁纸占用全容量的 ") + str(rate) + "%")
             if os.path.getsize(wallpaper_name) > wallpaper_all_size:
@@ -1057,20 +1065,28 @@ class DownloadController(object):
             return False
 
         try:
-            cmd = ['SnailHeater_WinTool.py', '--port', select_com,
+            cmd = ['SnailHeater_WinTool.py', 
+                    # '--no-stub',
+                    #  '--compress',
+                   '--port', select_com,
                    '--baud', baud_rate,
                    '--after', 'hard_reset',
                    'write_flash',
-                   WALLPAPER_ADDR_IN_FLASH, wallpaper_name
+                   WALLPAPER_ADDR_IN_FLASH, wallpaper_name,
+                    #   '0x00FFF000', wallpaper_name
                    ]
-            time = int(os.path.getsize(wallpaper_name)) / 2097152 * 30
-            self.print_log("正在烧入壁纸数据到主机，请等待（%ds）......" % time)
+            time_start = time.time()
+            # 8984757 B 花费142.33s
+            use_time = 2 + int(os.path.getsize(wallpaper_name)) / (1024*1024*2) * 32.75
+            self.print_log("正在烧入壁纸数据到主机，请等待（%ds）......" % use_time)
             esptool.main(cmd[1:])
             # self.hard_reset()  # 复位芯片
+            print("写入共花费了 ", (time.time() - time_start)*1000, int(os.path.getsize(wallpaper_name)))
             self.print_log("成功烧入壁纸数据到主机")
         except Exception as e:
             self.print_log(COLOR_RED % "错误：通讯异常。")
-            pass
+            print(str(traceback.format_exc()))
+            
         self.form.WriteWallpaperButton.setEnabled(True)
 
         return True
@@ -1220,6 +1236,12 @@ class DownloadController(object):
                 # 缩放
                 new_im = src_im.resize((int(param["width"]), int(param["height"])), Image.BICUBIC)
                 new_im.save(param["dst_path"][ind])  # , format='JPEG', quality=95
+                if os.path.getsize(param["dst_path"][ind]) >= waLLPAPER_JPG_MAX_SIZE:
+                    # 超过固件的jpg 数据buffer的长度，再次压缩换得更小得图片
+                    for qua in range(95, 5, -5):
+                        new_im.save(param["dst_path"][ind], quality=qua)  # , format='JPEG', quality=95
+                        if os.path.getsize(param["dst_path"][ind]) < waLLPAPER_JPG_MAX_SIZE:
+                            break;
 
             try:
                 if os.path.getsize(param["dst_path"][ind]) == 0:
