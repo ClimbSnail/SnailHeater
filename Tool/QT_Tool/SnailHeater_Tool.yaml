@@ -25,6 +25,8 @@ windows_tool:
       
   # 预留的读取激活码的本地缓存文件 用于不在联网状态下使用（本字段需要配合固件联调）
   temp_sn_recode_path: temporary_sn_recode.txt
+  # 激活码以及注册者信息查询的api 需要激活码管理员有服务器 http://127.0.0.1:5001/snailheater/sn_registrant/v1/search/
+  search_sn_registrant_url: http://climbsnail.cn:5001/snailheater/sn/v1/search/sn_registrant/
   # 激活码查询的api 需要激活码管理员有服务器 http://127.0.0.1:5001/snailheater/sn/v1/search/
   search_sn_url: http://climbsnail.cn:5001/snailheater/sn/v1/search/
   # 获取最新固件版本的api http://127.0.0.1:5001/snailheater/sn/v1/version/firmware

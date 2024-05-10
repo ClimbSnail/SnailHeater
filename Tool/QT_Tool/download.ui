@@ -223,6 +223,31 @@
      <enum>Qt::AutoText</enum>
     </property>
    </widget>
+   <widget class="QLabel" name="sourceInfolabel">
+    <property name="geometry">
+     <rect>
+      <x>54</x>
+      <y>0</y>
+      <width>217</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微软雅黑</family>
+      <pointsize>10</pointsize>
+     </font>
+    </property>
+    <property name="mouseTracking">
+     <bool>true</bool>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::NoFrame</enum>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
   </widget>
   <widget class="QGroupBox" name="LogInfoGroupBox">
    <property name="geometry">
