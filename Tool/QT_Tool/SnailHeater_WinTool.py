@@ -370,6 +370,8 @@ class DownloadController(object):
         self.form.reflushWallpaperButton.clicked.connect(self.reflushWallpaperButton_show_message)
         self.form.WriteWallpaperButton_2.clicked.connect(self.WriteBgButton_show_message)
         self.form.CanclePushButton.clicked.connect(self.cancle_button_click)
+        self.form.uiReadColorBnt.clicked.connect(self.query_color_button_click)
+        self.form.uiWriteColorBnt.clicked.connect(self.write_color_button_click)
 
         # 设置提示信息
         self.form.Infolabel.setText(_translate("SanilHeaterTool", "使用教程："))
@@ -394,6 +396,10 @@ class DownloadController(object):
         self.form.fpsEdit.setToolTip("性能一定，帧率越大越卡顿")
         self.form.startTimeEdit.setToolTip("需要截取时间范围才需要设置")
         self.form.endTimeEdit.setToolTip("需要截取时间范围才需要设置")
+        self.form.uiForwardROColorlabel.setToolTip("RGB颜色格式为(0x)7AFE89")
+        self.form.uiForwardClickedColorlabel.setToolTip("RGB颜色格式为(0x)7AFE89")
+        self.form.uiForwardROColorLineEdit.setToolTip("RGB颜色格式为(0x)7AFE89")
+        self.form.uiForwardClickedColorLineEdit.setToolTip("RGB颜色格式为(0x)7AFE89")
 
         self.form.QQInfolabel.setText(_translate("SanilHeaterTool", qq_info[0]))
         self.form.QQInfolabel_2.setText(_translate("SanilHeaterTool", qq_info[1]))
@@ -563,6 +569,64 @@ class DownloadController(object):
                 
         self.release_serial()
 
+    def write_color_button_click(self):
+        self.print_log("正在写入UI前台颜色...")
+
+        if len(self.form.uiForwardROColorLineEdit.text().strip()) != 6 or \
+            len(self.form.uiForwardClickedColorLineEdit.text().strip()) != 6:
+            
+            self.print_log(COLOR_RED % "RGB格式错误")
+            return None
+
+        select_com = self.getSafeCom()
+        if select_com == None:
+            self.print_log(COLOR_RED % "写入UI前台颜色异常...")
+            return None
+
+        self.ser = serial.Serial(select_com, info_baud_rate, timeout=10)
+
+        act_ret = False
+
+        # 判断是否打开成功
+        if self.ser.is_open:
+            # self.machine_code_thread = threading.Thread(target=self.read_data,
+            #                                         args=(self.ser,))
+            # self.machine_code_thread.start()
+
+            # 循环接收数据，此为死循环，可用线程实现
+            send_data = mh.SettingMsg()
+            send_data.action_type = mh.AT.AT_SETTING_SET
+            # send_data.prefs_name = bytes(info["namespace"], encoding='utf8')
+            key = ""
+            send_data.key = bytes(key, encoding='utf8')
+            send_data.type = mh.VT.VALUE_TYPE_FORWARD_COLOR.to_bytes(1, byteorder='little', signed=True)
+            print(send_data.type)
+
+            value = self.form.uiForwardROColorLineEdit.text().strip().upper() + " " + \
+                self.form.uiForwardClickedColorLineEdit.text().strip().upper()
+            print(value)
+            send_data.value = bytes(value, encoding='utf8')
+            print(send_data.encode('!'))
+            self.ser.write(send_data.encode('!'))
+
+            time.sleep(1)
+            if self.ser.in_waiting:
+                try:
+                    STRGLO = self.ser.read(self.ser.in_waiting)
+                    print("\nSTRGLO = ", STRGLO)
+                    match_info = re.findall(r"Color Success", STRGLO.decode("utf8"))
+                    if match_info != []:
+                        act_ret = True
+                except Exception as err:
+                    print(str(traceback.format_exc()))
+
+            if act_ret == True:
+                self.print_log("写入UI前台颜色成功")
+            else:
+                self.print_log(COLOR_RED % "写入UI前台颜色失败")
+                
+        self.release_serial()
+
     def auto_active(self):
         """
         自动激活
@@ -628,6 +692,69 @@ class DownloadController(object):
             self.print_log("获取异常异常")
 
         return True
+
+    def query_color_button_click(self):
+        """
+        获取颜色信息
+        :return: None
+        """
+        self.print_log("获取UI前台颜色...")
+        select_com = self.getSafeCom()
+        if select_com == None:
+            return None
+
+        color = ""
+        try:
+            self.ser = serial.Serial(select_com, info_baud_rate, timeout=10)
+        except Exception as err:
+            self.print_log((COLOR_RED % "串口打开失败"))
+            return color
+
+        # 判断是否打开成功
+        if self.ser.is_open:
+            # self.sn_thread = threading.Thread(target=self.read_data,
+            #                                         args=(self.ser,))
+            # self.sn_thread.start()
+
+            # 循环接收数据，此为死循环，可用线程实现
+            send_data = mh.SettingMsg()
+            send_data.action_type = mh.AT.AT_SETTING_GET
+            # send_data.prefs_name = bytes(info["namespace"], encoding='utf8')
+            key = ""
+            send_data.key = bytes(key, encoding='utf8')
+            send_data.type = mh.VT.VALUE_TYPE_FORWARD_COLOR.to_bytes(1, byteorder='little', signed=True)
+            print(send_data.type)
+            value = ""
+            send_data.value = bytes(value, encoding='utf8')
+            print(send_data.encode('!'))
+            self.ser.write(send_data.encode('!'))
+
+            time.sleep(1)
+            if self.ser.in_waiting:
+                try:
+                    STRGLO = self.ser.read(self.ser.in_waiting).decode("utf8")
+                    print(STRGLO)
+                    color = re.findall(r"AT_SETTING_GET VALUE_TYPE_FORWARD_COLOR = \S* \S*", STRGLO)[0] \
+                        .split(" ")[-2:]
+                except Exception as err:
+                    print(str(traceback.format_exc()))
+                    color = ""
+                print("收到的数据：", color)
+
+            if color == "":
+                self.print_log((COLOR_RED % "获取UI前台颜色失败"))
+            else:
+                self.print_log("获取UI前台颜色成功")
+                uiForwardROColorText = hex(int(color[0]))[2:].upper()
+                uiForwardROColorText = '0'* (6 - len(uiForwardROColorText)) + uiForwardROColorText
+                self.form.uiForwardROColorLineEdit.setText(uiForwardROColorText)
+
+                uiForwardClickedColorText = hex(int(color[1]))[2:].upper()
+                uiForwardClickedColorText = '0'* (6 - len(uiForwardClickedColorText)) + uiForwardClickedColorText
+                self.form.uiForwardClickedColorLineEdit.setText(uiForwardClickedColorText)
+
+        self.release_serial()
+        return color
 
     def reset_ui_button(self):
 

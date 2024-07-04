@@ -880,6 +880,136 @@
       <bool>true</bool>
      </property>
     </widget>
+    <widget class="QGroupBox" name="PictureModeGroupBox_2">
+     <property name="geometry">
+      <rect>
+       <x>146</x>
+       <y>46</y>
+       <width>351</width>
+       <height>89</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>微软雅黑</family>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="title">
+      <string>UI前台字体颜色</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+     <widget class="QPushButton" name="uiReadColorBnt">
+      <property name="geometry">
+       <rect>
+        <x>245</x>
+        <y>16</y>
+        <width>97</width>
+        <height>35</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>微软雅黑</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>读取颜色</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="uiForwardClickedColorlabel">
+      <property name="geometry">
+       <rect>
+        <x>27</x>
+        <y>56</y>
+        <width>147</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>微软雅黑</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>可点按钮（RGB）0x</string>
+      </property>
+      <property name="textFormat">
+       <enum>Qt::AutoText</enum>
+      </property>
+     </widget>
+     <widget class="QLabel" name="uiForwardROColorlabel">
+      <property name="geometry">
+       <rect>
+        <x>27</x>
+        <y>20</y>
+        <width>149</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>微软雅黑</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>标识文本（RGB）0x</string>
+      </property>
+      <property name="textFormat">
+       <enum>Qt::AutoText</enum>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="uiForwardROColorLineEdit">
+      <property name="geometry">
+       <rect>
+        <x>174</x>
+        <y>22</y>
+        <width>65</width>
+        <height>27</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="uiForwardClickedColorLineEdit">
+      <property name="geometry">
+       <rect>
+        <x>174</x>
+        <y>56</y>
+        <width>65</width>
+        <height>27</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="uiWriteColorBnt">
+      <property name="geometry">
+       <rect>
+        <x>245</x>
+        <y>54</y>
+        <width>97</width>
+        <height>35</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>微软雅黑</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>写入颜色</string>
+      </property>
+     </widget>
+    </widget>
    </widget>
   </widget>
   <widget class="QGroupBox" name="PictureModeGroupBox">
