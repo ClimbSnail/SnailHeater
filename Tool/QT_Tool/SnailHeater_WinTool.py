@@ -1,8 +1,15 @@
 # encoding: utf-8
+# python 3.8.6
+
+# pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
 
 # pip install pyserial -i https://mirrors.aliyun.com/pypi/simple/
-# pip install pyqt5  -i https://mirrors.aliyun.com/pypi/simple/
+# pip install pyqt5==5.15.10  -i https://mirrors.aliyun.com/pypi/simple/
 # pip install pyqt5-tools -i https://mirrors.aliyun.com/pypi/simple/
+# pip install pyyaml -i https://mirrors.aliyun.com/pypi/simple/
+# pip install Pillow -i https://mirrors.aliyun.com/pypi/simple/
+# pip install pyinstaller==5.5.0 -i https://mirrors.aliyun.com/pypi/simple/
+# pip install esptool==4.7.0 -i https://mirrors.aliyun.com/pypi/simple/
 # pyinstaller --icon ./images/SnailHeater_256.ico -w -F SnailHeater_WinTool.py
 
 # 环境搭建学习文旦 https://github.com/Jacob-xyb/PyQt_Notes/blob/master/PyQt5.md
@@ -13,7 +20,7 @@
 import sys
 import os
 import time
-import threading
+# import threading
 import re
 import yaml  # pip install pyyaml
 import requests
@@ -35,27 +42,17 @@ from PyQt5.QtCore import pyqtSignal, QThread
 from PyQt5.QtCore import Qt
 
 import massagehead as mh
-import spiffsgen
+# import spiffsgen
 # import lvgl_image_converter.lv_img_conv as image_conv
 import lvgl_image_converter as image_conv
 # from lvgl_image_converter import lv_img_conv as image_conv
 
-# import esptool_v41.esptool
-# esptool v3.3可以刷入bootloader.bin时动态修改"--flash_size"
-# if os.path.exists("./esptool_v41"):
-#     sys.path.append("./esptool_v41")
-# else:
-#     sys.path.append("./")
 import esptool  # sys.path.append("./esptool_v41") or pip install esptool==4.1
 # 需要修改esptool源码loader.py中得一个文件路径
 # STUBS_DIR = os.path.join(os.path.dirname(__file__), "targets", "stub_flasher")
 # 修改为如下
 # STUBS_DIR = os.path.join(os.getcwd(), "stub_flasher")
 
-# from esptool_v41 import esptool
-# from esptool_v33 import esptool
-# from esptool_v33 import espefuse
-# import esptool
 
 from download import Ui_SanilHeaterTool
 import common
@@ -166,7 +163,6 @@ def get_version():
         return "[无法获取到最新版本]"
 
 
-
 def get_flash_size(select_com):
     """
     :param select_com:串口号
@@ -208,7 +204,8 @@ def get_flash_size(select_com):
         return 0, "0MB"
 
     return flash_size, flash_size_text
-    
+
+
 class FirmwareDownloader(QThread):
     print_signal = pyqtSignal(str)
     ret_finish = pyqtSignal(bool)
@@ -221,7 +218,7 @@ class FirmwareDownloader(QThread):
 
     def run(self):
         # 在这里编写需要在子线程中执行的代码
-        
+
         """
         下载操作主体
         :param mode:下载模式
@@ -245,7 +242,6 @@ class FirmwareDownloader(QThread):
                 except Exception as e:
                     self.print_log(COLOR_RED % ERR_UART_TEXT)
 
-            
             self.print_log("正在获取存空间大小...")
             flash_size, flash_size_text = get_flash_size(self.select_com)
 
@@ -322,7 +318,7 @@ class FirmwareDownloader(QThread):
     def __del__(self):
         self.quit()
         self.wait()
-        
+
 
 class DownloadController(object):
 
@@ -566,15 +562,14 @@ class DownloadController(object):
                 self.print_log("激活成功")
             else:
                 self.print_log("激活失败")
-                
+
         self.release_serial()
 
     def write_color_button_click(self):
         self.print_log("正在写入UI前台颜色...")
 
         if len(self.form.uiForwardROColorLineEdit.text().strip()) != 6 or \
-            len(self.form.uiForwardClickedColorLineEdit.text().strip()) != 6:
-            
+                len(self.form.uiForwardClickedColorLineEdit.text().strip()) != 6:
             self.print_log(COLOR_RED % "RGB格式错误")
             return None
 
@@ -603,7 +598,7 @@ class DownloadController(object):
             print(send_data.type)
 
             value = self.form.uiForwardROColorLineEdit.text().strip().upper() + " " + \
-                self.form.uiForwardClickedColorLineEdit.text().strip().upper()
+                    self.form.uiForwardClickedColorLineEdit.text().strip().upper()
             print(value)
             send_data.value = bytes(value, encoding='utf8')
             print(send_data.encode('!'))
@@ -624,7 +619,7 @@ class DownloadController(object):
                 self.print_log("写入UI前台颜色成功")
             else:
                 self.print_log(COLOR_RED % "写入UI前台颜色失败")
-                
+
         self.release_serial()
 
     def auto_active(self):
@@ -735,7 +730,7 @@ class DownloadController(object):
                     STRGLO = self.ser.read(self.ser.in_waiting).decode("utf8")
                     print(STRGLO)
                     color = re.findall(r"AT_SETTING_GET VALUE_TYPE_FORWARD_COLOR = \S* \S*", STRGLO)[0] \
-                        .split(" ")[-2:]
+                                .split(" ")[-2:]
                 except Exception as err:
                     print(str(traceback.format_exc()))
                     color = ""
@@ -746,11 +741,11 @@ class DownloadController(object):
             else:
                 self.print_log("获取UI前台颜色成功")
                 uiForwardROColorText = hex(int(color[0]))[2:].upper()
-                uiForwardROColorText = '0'* (6 - len(uiForwardROColorText)) + uiForwardROColorText
+                uiForwardROColorText = '0' * (6 - len(uiForwardROColorText)) + uiForwardROColorText
                 self.form.uiForwardROColorLineEdit.setText(uiForwardROColorText)
 
                 uiForwardClickedColorText = hex(int(color[1]))[2:].upper()
-                uiForwardClickedColorText = '0'* (6 - len(uiForwardClickedColorText)) + uiForwardClickedColorText
+                uiForwardClickedColorText = '0' * (6 - len(uiForwardClickedColorText)) + uiForwardClickedColorText
                 self.form.uiForwardClickedColorLineEdit.setText(uiForwardClickedColorText)
 
         self.release_serial()
@@ -888,7 +883,6 @@ class DownloadController(object):
                 except Exception as e:
                     self.print_log(COLOR_RED % ERR_UART_TEXT)
 
-            
             self.print_log("正在获取存空间大小...")
             flash_size, flash_size_text = get_flash_size(select_com)
 
@@ -989,7 +983,7 @@ class DownloadController(object):
 
                 self.download_thread.terminate()
                 self.download_thread.wait()
-                
+
                 self.release_serial()
             except Exception as err:
                 print(str(traceback.format_exc()))
@@ -1195,9 +1189,20 @@ class DownloadController(object):
 
         mode = "保持比例裁剪" if self.form.PictureModeRadioButton_0.isChecked() else "全尺寸缩放"
         if mode == "保持比例裁剪":
+            rect = None
+            new_width = None
+            new_height = None
             # 裁剪
-            new_width = src_im.size[1] * (int(param_v["width"]) / int(param_v["height"]))
-            rect = ((src_im.size[0] - new_width) / 2, 0, new_width, src_im.size[1])
+            if src_im.size[1] / int(param["height"]) > src_im.size[0] / int(param["width"]):
+                new_width = src_im.size[0]
+                new_height = new_width * (int(param["height"]) / int(param["width"]))
+                rect = (0, (src_im.size[1] - new_height) / 2, new_width, new_height)
+            else:
+                new_height = src_im.size[1]
+                new_width = new_height * (int(param["width"]) / int(param["height"]))
+                rect = ((src_im.size[0] - new_width) / 2, 0, new_width, new_height)
+            self.print_log((COLOR_RED % "宽x高 -> ") + str(src_im.size[0]) + "x" + str(src_im.size[1]))
+            self.print_log((COLOR_RED % "新的 宽x高 -> ") + str(new_width) + "x" + str(new_height))
             src_im = src_im.crop(rect)
         suffix = os.path.basename(param_v["src_path"]).split(".")[1]
         if suffix == "png" or suffix == "PNG":
@@ -1322,7 +1327,6 @@ class DownloadController(object):
         except Exception as err:
             print(str(traceback.format_exc()))
 
-        
         self.print_log("正在获取存空间大小...")
         flash_size, _ = get_flash_size(select_com)
         wallpaper_all_size = flash_size - (1024 * 1024 * 2 + 50)
@@ -1520,12 +1524,22 @@ class DownloadController(object):
                 src_im: Image.Image = Image.open(wallpaper_cache_path)
 
                 mode = "保持比例裁剪" if self.form.PictureModeRadioButton_0.isChecked() else "全尺寸缩放"
+                self.print_log(COLOR_RED % mode)
                 if mode == "保持比例裁剪":
+                    rect = None
+                    new_width = None
+                    new_height = None
                     # 裁剪
-                    new_width = src_im.size[1] * (int(param["width"]) / int(param["height"]))
-                    # self.print_log((COLOR_RED % "宽高") + str(src_im.size[0]) + " " + str(src_im.size[1]))
-                    # self.print_log((COLOR_RED % "新的宽") + str(new_width) + " " + str(src_im.size[1]))
-                    rect = ((src_im.size[0] - new_width) / 2, 0, new_width, src_im.size[1])
+                    if src_im.size[1] / int(param["height"]) > src_im.size[0] / int(param["width"]):
+                        new_width = src_im.size[0]
+                        new_height = new_width * (int(param["height"]) / int(param["width"]))
+                        rect = (0, (src_im.size[1] - new_height) / 2, new_width, new_height)
+                    else:
+                        new_height = src_im.size[1]
+                        new_width = new_height * (int(param["width"]) / int(param["height"]))
+                        rect = ((src_im.size[0] - new_width) / 2, 0, new_width, new_height)
+                    self.print_log((COLOR_RED % "宽x高 -> ") + str(src_im.size[0]) + "x" + str(src_im.size[1]))
+                    self.print_log((COLOR_RED % "新的 宽x高 -> ") + str(new_width) + "x" + str(new_height))
                     src_im = src_im.crop(rect)
                 if suffix == "png" or suffix == "PNG":
                     # 由于PNG是RGBA四个通道 而jpg只有RGB三个通道

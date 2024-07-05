@@ -1,7 +1,9 @@
 Pillow~=9.5.0
 pyserial~=3.5
-pyyaml
-requests
-pyqt5
-pyqt5-stubs
-pyqt5-tools
+pyyaml==6.0
+requests==2.26.0
+pyqt5==5.15.9
+pyqt5-tools==5.15.9.3.3
+pyinstaller==5.5.0
+esptool==4.7.0
+setuptools==49.2.1
