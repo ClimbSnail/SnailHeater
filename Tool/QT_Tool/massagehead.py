@@ -96,10 +96,17 @@ class ValueType:
 
     # 机器码
     VALUE_TYPE_MC = 4
+    
     # 序列号码
     VALUE_TYPE_SN = 5
 
-    VALUE_TYPE_MAXSIZE = 6
+    # 前台界面颜色
+    VALUE_TYPE_FORWARD_COLOR = 6
+
+    # 蜗牛台软件版本号
+    VALUE_TYPE_SH_SOFTWARE_VER = 7 
+
+    VALUE_TYPE_MAXSIZE = 8
 
     def __setattr__(self, name, value):
         raise self.ConstError(f"Can't rebind const {name}")

@@ -209,6 +209,7 @@ def get_flash_size(select_com):
 class FirmwareDownloader(QThread):
     print_signal = pyqtSignal(str)
     ret_finish = pyqtSignal(bool)
+    get_machine_software_ver = pyqtSignal(bool)
 
     def __init__(self, mode, select_com, firmware_path):
         super().__init__()
@@ -228,6 +229,7 @@ class FirmwareDownloader(QThread):
         """
         global default_wallpaper
         try:
+            # self.get_machine_software_ver.emit(True)
 
             if self.mode == "清空式":
                 self.print_log("正在清空主机数据...")
@@ -436,6 +438,7 @@ class DownloadController(object):
         if com_list == []:
             com_list = ["未识别到"]
         self.form.ComComboBox.addItems(com_list)
+        
 
     def scan_firmware(self):
         """
@@ -829,21 +832,16 @@ class DownloadController(object):
             # 进度条进程要在下载进程之前启动（为了在下载失败时可以立即查杀进度条进程）
             self.progress_bar_timer.start(int(all_time / 100 * 1000))
 
-            # self.download_thread = threading.Thread(target=self.down_action,
-            #                                         args=(mode, select_com, firmware_path))
-            # self.download_thread.setDaemon(True)  # 设置守护线程目的尽量防止意外中断掉主线程程序
-            # self.download_thread.start()
-
             if self.download_thread != None:
                 del self.download_thread
 
             self.download_thread = FirmwareDownloader(mode, select_com, firmware_path)
             self.download_thread.print_signal.connect(self.print_log)
             self.download_thread.ret_finish.connect(self.down_action_finish)
+            self.download_thread.get_machine_software_ver.connect(self.get_machine_software_ver)
             self.download_thread.start()
             self.progress_bar_time_cnt = 1  # 间接启动进度条更新                
 
-            # self.down_action(mode, select_com, firmware_path)
 
         except Exception as err:
             print(str(traceback.format_exc()))
@@ -855,116 +853,6 @@ class DownloadController(object):
 
         self.reset_ui_button()
 
-    def down_action(self, mode, select_com, firmware_path):
-        """
-        下载操作主体
-        :param mode:下载模式
-        :param select_com:串口号
-        :param firmware_path:固件文件路径
-        :return:None
-        """
-        global default_wallpaper
-        try:
-            if self.ser != None:
-                return
-
-            self.progress_bar_time_cnt = 1  # 间接启动进度条更新
-
-            if mode == "清空式":
-                self.print_log("正在清空主机数据...")
-                # esptool.py erase_region 0x00000 0x400000
-                # esptool.py erase_flash
-                # cmd = ['--port', select_com, 'erase_flash']
-                cmd = ['--port', select_com, 'erase_region',
-                       '0x00000', '0x400000']
-                try:
-                    esptool.main(cmd)
-                    self.print_log("完成清空！")
-                except Exception as e:
-                    self.print_log(COLOR_RED % ERR_UART_TEXT)
-
-            self.print_log("正在获取存空间大小...")
-            flash_size, flash_size_text = get_flash_size(select_com)
-
-            if flash_size == 0:
-                self.print_log(COLOR_RED % "错误：储存空间为0，刷机终止。")
-                self.reset_ui_button()
-                return False
-
-            cmd = []
-            curSWVersion = re.findall(r'SH_SW_v\d{1,2}\.\d{1,2}\.\d{1,2}', firmware_path)[0][6:].strip()
-            print("curSWVersion", curSWVersion)
-            if getVerValue(curSWVersion) > getVerValue("v2.1.17"):
-                #  --port COM7 --baud 921600 write_flash -fm dio -fs 4MB 0x1000 bootloader_dio_40m.bin 0x00008000 partitions.bin 0x0000e000 boot_app0.bin 0x00010000
-                cmd = ['SnailHeater_WinTool.py', '--port', select_com,
-                       '--baud', baud_rate,
-                       '--after', 'hard_reset',
-                       'write_flash',
-                       '--flash_size', flash_size_text,
-                       #    '0x00001000', "./base_data/bootloader.bin",
-                       '0x00001000', "./base_data/bootloader_%s.bin" % (flash_size_text),
-                       '0x00008000', "./base_data/partitions_%s.bin" % (flash_size_text),
-                       '0x0000e000', "./base_data/boot_app0.bin",
-                       '0x00010000', firmware_path,
-                       BACKGROUD_ADDR_IN_FLASH, default_backgroud,
-                       WALLPAPER_ADDR_IN_FLASH, default_wallpaper
-                       ]
-            elif getVerValue(curSWVersion) > getVerValue("v1.9.8"):
-                flash_size_text = flash_size_text if flash_size_text in ["4MB", "8MB", "16MB"] else "16MB"
-                #  --port COM7 --baud 921600 write_flash -fm dio -fs 4MB 0x1000 bootloader_dio_40m.bin 0x00008000 partitions.bin 0x0000e000 boot_app0.bin 0x00010000
-                cmd = ['SnailHeater_WinTool.py', '--port', select_com,
-                       '--baud', baud_rate,
-                       '--after', 'hard_reset',
-                       'write_flash',
-                       '--flash_size', flash_size_text,
-                       #    '0x00001000', "./base_data/bootloader.bin",
-                       '0x00001000', "./old_base_data_2117/bootloader_%s.bin" % (flash_size_text),
-                       '0x00008000', "./old_base_data_2117/partitions_%s.bin" % (flash_size_text),
-                       '0x0000e000', "./old_base_data_2117/boot_app0.bin",
-                       '0x00010000', firmware_path,
-                       WALLPAPER_ADDR_IN_FLASH, default_wallpaper.replace("base_data", "old_base_data_2117")
-                       ]
-            print(cmd)
-
-            self.print_log("开始刷写固件...")
-            try:
-                esptool.main(cmd[1:])
-            except Exception as e:
-                print(str(traceback.format_exc()))
-                self.print_log(COLOR_RED % ERR_UART_TEXT)
-                return False
-
-            self.print_log(COLOR_RED % "刷机结束！")
-            self.print_log("刷机流程完毕，请保持typec通电等待焊台屏幕将会亮起后才能断电。")
-            self.print_log((COLOR_RED % "注：") + "更新式刷机一般刷机完成后2s就能亮屏，清空式刷机则需等待10s左右。")
-            self.print_log("如25s后始终未能自动亮屏，请手动拔插一次typec接口再次等待10s。\n")
-
-        except Exception as err:
-            self.print_log(COLOR_RED % ERR_UART_TEXT)
-            print(err)
-            self.reset_ui_button()
-            return None
-            # self.print_log(COLOR_RED % "未释放资源，请15s后再试。如无法触发下载，拔插type-c接口再试。")
-
-        # global SH_SN
-        # if SH_SN != None:
-        #     # 自动激活
-        #     time.sleep(22)
-        #     self.print_log("获取机器码（用户识别码）...")
-        #     machine_code = self.get_machine_code()
-        #     self.form.UICLineEdit.setText(machine_code)
-
-        #     ecdata = SH_SN.getSnForMachineCode(machine_code)
-        #     self.print_log("\n生成的序列号为: " + ecdata)
-        #     self.form.SNLineEdit.setText(ecdata)
-        #     self.act_button_click()
-
-        # self.hard_reset()  # 复位芯片
-
-        time.sleep(4)  # 等待文件系统初始化完成
-        self.auto_active()
-
-        self.reset_ui_button()
 
     def cancle_button_click(self):
         """
@@ -977,7 +865,6 @@ class DownloadController(object):
         if self.download_thread != None:
             # 杀线程
             try:
-                # # common.kill_thread(self.download_thread, self.down_action)
                 # common._async_raise(self.download_thread)
                 # self.download_thread = None
 
@@ -1132,6 +1019,61 @@ class DownloadController(object):
 
         self.release_serial()
         return sn
+    
+
+    def get_machine_software_ver(self, param):
+        '''
+        查询固件的版本
+        '''
+        select_com = self.getSafeCom()
+        if select_com == None:
+            return None
+
+        sw_ver = ""
+        try:
+            self.ser = serial.Serial(select_com, info_baud_rate, timeout=10)
+        except Exception as err:
+            self.print_log((COLOR_RED % "串口打开失败"))
+            return sw_ver
+
+        # 判断是否打开成功
+        if self.ser.is_open:
+            # self.sn_thread = threading.Thread(target=self.read_data,
+            #                                         args=(self.ser,))
+            # self.sn_thread.start()
+
+            # 循环接收数据，此为死循环，可用线程实现
+            send_data = mh.SettingMsg()
+            send_data.action_type = mh.AT.AT_SETTING_GET
+            # send_data.prefs_name = bytes(info["namespace"], encoding='utf8')
+            key = ""
+            send_data.key = bytes(key, encoding='utf8')
+            send_data.type = mh.VT.VALUE_TYPE_SH_SOFTWARE_VER.to_bytes(1, byteorder='little', signed=True)
+            print(send_data.type)
+            value = ""
+            send_data.value = bytes(value, encoding='utf8')
+            print(send_data.encode('!'))
+            self.ser.write(send_data.encode('!'))
+
+            time.sleep(1)
+            if self.ser.in_waiting:
+                try:
+                    STRGLO = self.ser.read(self.ser.in_waiting).decode("utf8")
+                    print(STRGLO)
+                    sw_ver = re.findall(r"AT_SETTING_GET VALUE_TYPE_SH_SOFTWARE_VER = \S*", STRGLO)[0] \
+                        .split(" ")[-1]
+                except Exception as err:
+                    print(str(traceback.format_exc()))
+                    sw_ver = ""
+                print(sw_ver)
+
+            if sw_ver == "":
+                self.print_log((COLOR_RED % "查询固件版本失败"))
+            else:
+                self.print_log("目前焊台软件版本为：" + sw_ver)
+
+        self.release_serial()
+        return sw_ver
 
     def chooseWpFile(self):
         '''
