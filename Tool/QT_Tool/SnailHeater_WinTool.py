@@ -10,12 +10,13 @@
 # pip install Pillow -i https://mirrors.aliyun.com/pypi/simple/
 # pip install pyinstaller==5.5.0 -i https://mirrors.aliyun.com/pypi/simple/
 # pip install esptool==4.7.0 -i https://mirrors.aliyun.com/pypi/simple/
-# pyinstaller --icon ./images/SnailHeater_256.ico -w -F SnailHeater_WinTool.py
 
 # 环境搭建学习文旦 https://github.com/Jacob-xyb/PyQt_Notes/blob/master/PyQt5.md
 # QT官网：https://doc.qt.io/qt-5/index.html
 # QT教程  https://b23.tv/9R6dbDA
 # QT项目学习课件 https://doc.itprojects.cn/0001.zhishi/python.0008.pyqt5rumen/index.html
+
+# pyinstaller --icon ./images/SnailHeater_256.ico -w -F SnailHeater_WinTool.py
 
 import sys
 import os
