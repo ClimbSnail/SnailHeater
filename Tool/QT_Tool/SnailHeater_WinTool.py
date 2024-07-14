@@ -1160,7 +1160,7 @@ class DownloadController(object):
                     new_width = new_height * (int(param["width"]) / int(param["height"]))
                     rect = ((src_im.size[0] - new_width) / 2, 0, new_width, new_height)
                 self.print_log((COLOR_RED % "宽x高 -> ") + str(src_im.size[0]) + "x" + str(src_im.size[1]))
-                self.print_log((COLOR_RED % "新的 宽x高 -> ") + str(new_width) + "x" + str(new_height))
+                self.print_log((COLOR_RED % "新的 宽x高 -> ") + str(int(new_width)) + "x" + str(int(new_height)))
                 src_im = src_im.crop(rect)
             suffix = os.path.basename(param_v["src_path"]).split(".")[1]
             if suffix == "png" or suffix == "PNG":
