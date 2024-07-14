@@ -72,6 +72,8 @@ cur_dir = os.getcwd()  # 当前目录
 gen_path = os.path.join(cur_dir, "Generate")
 # 背景图片
 backgroud_base = os.path.join(gen_path, "Backgroud")
+# 背景缓存目录
+backgroud_cache_dir = os.path.join(gen_path, "Cache", "Backgroud")
 # 默认背景
 default_backgroud_280 = os.path.join(cur_dir, "base_data/Backgroud_280x240.bin")
 default_backgroud_320 = os.path.join(cur_dir, "base_data/Backgroud_320x240.bin")
@@ -1093,8 +1095,8 @@ class DownloadController(object):
         '''
         打开资源管理器 选择文件
         '''
-        fileNames, fileType = QFileDialog.getOpenFileNames(None, '可选择多个素材文件', os.getcwd(),
-                                                           '图片文件(*.jpg *.png *.jpeg);;所有文件(*)')
+        fileNames, fileType = QFileDialog.getOpenFileNames(None, '可选择一个素材文件', os.getcwd(),
+                                                           '图片文件(*.jpg *.png *.jpeg *.bin);;所有文件(*)')
         self.print_log((COLOR_RED % "已选择以下素材：\n") + str(fileNames))
 
         path_text = ""
@@ -1106,6 +1108,16 @@ class DownloadController(object):
         """
         写入背景图片
         """
+        try:
+            os.makedirs(backgroud_base)
+        except Exception as e:
+            pass
+
+        try:
+            os.makedirs(backgroud_cache_dir)
+        except Exception as e:
+            pass        
+
         param = self.get_output_param(self.form.choosePathEdit_2.text().strip())
         if param == False:
             self.print_log((COLOR_RED % "请检查参数设置"))
@@ -1114,12 +1126,13 @@ class DownloadController(object):
         std_img_path = None
         param_v = dict()
         for ind in range(len(param["src_path"])):
-            if param["format"][ind] in IMAGE_FORMAT:
+            if param["format"][ind] in IMAGE_FORMAT or param["format"][ind] in ["bin", "BIN"]:
+                param_v["format"] = param["format"][ind]
                 param_v["src_path"] = param["src_path"][ind]
                 param_v["width"] = param["width"]
                 param_v["height"] = param["height"]
                 name = os.path.basename(param["src_path"][ind]).split(".")[0]
-                std_img_path = os.path.join(gen_path, name + ".jpg")
+                std_img_path = os.path.join(backgroud_cache_dir, name + ".jpg")
 
                 break
 
@@ -1127,47 +1140,52 @@ class DownloadController(object):
             self.print_log(COLOR_RED % "参数出错：只有选中的第一张照片才会生效")
             return False
 
-        # 缩放图片
-        src_im: Image.Image = Image.open(param_v["src_path"])
 
-        mode = "保持比例裁剪" if self.form.PictureModeRadioButton_0.isChecked() else "全尺寸缩放"
-        if mode == "保持比例裁剪":
-            rect = None
-            new_width = None
-            new_height = None
-            # 裁剪
-            if src_im.size[1] / int(param["height"]) > src_im.size[0] / int(param["width"]):
-                new_width = src_im.size[0]
-                new_height = new_width * (int(param["height"]) / int(param["width"]))
-                rect = (0, (src_im.size[1] - new_height) / 2, new_width, new_height)
-            else:
-                new_height = src_im.size[1]
-                new_width = new_height * (int(param["width"]) / int(param["height"]))
-                rect = ((src_im.size[0] - new_width) / 2, 0, new_width, new_height)
-            self.print_log((COLOR_RED % "宽x高 -> ") + str(src_im.size[0]) + "x" + str(src_im.size[1]))
-            self.print_log((COLOR_RED % "新的 宽x高 -> ") + str(new_width) + "x" + str(new_height))
-            src_im = src_im.crop(rect)
-        suffix = os.path.basename(param_v["src_path"]).split(".")[1]
-        if suffix == "png" or suffix == "PNG":
-            # 由于PNG是RGBA四个通道 而jpg只有RGB三个通道
-            src_im = src_im.convert('RGB')
-        # 缩放
-        new_im = src_im.resize((int(param_v["width"]), int(param_v["height"])), Image.BICUBIC)
-        new_im.save(std_img_path)  # , format='JPEG', quality=95
+        if param_v["format"] in IMAGE_FORMAT:
+            # 缩放图片
+            src_im: Image.Image = Image.open(param_v["src_path"])
 
-        # 转化LVGL图片
-        output_dir = os.path.join(gen_path, "Backgroud")
-        cmd = ['lv_img_conv.py', std_img_path,
-               '-f', 'true_color',
-               #    '-f', 'true_color_alpha',
-               '-cf', 'RGB565SWAP',
-               '-ff', 'BIN',
-               '-o', output_dir
-               ]
-        conv = image_conv.lv_img_conv.Main(image_conv.lv_img_conv.parse_args(cmd[1:]))
-        conv.convert()
-        lvgl_filepath = os.path.join(output_dir, os.path.basename(std_img_path).split(".")[0] + ".bin")
+            mode = "保持比例裁剪" if self.form.PictureModeRadioButton_0.isChecked() else "全尺寸缩放"
+            if mode == "保持比例裁剪":
+                rect = None
+                new_width = None
+                new_height = None
+                # 裁剪
+                if src_im.size[1] / int(param["height"]) > src_im.size[0] / int(param["width"]):
+                    new_width = src_im.size[0]
+                    new_height = new_width * (int(param["height"]) / int(param["width"]))
+                    rect = (0, (src_im.size[1] - new_height) / 2, new_width, new_height)
+                else:
+                    new_height = src_im.size[1]
+                    new_width = new_height * (int(param["width"]) / int(param["height"]))
+                    rect = ((src_im.size[0] - new_width) / 2, 0, new_width, new_height)
+                self.print_log((COLOR_RED % "宽x高 -> ") + str(src_im.size[0]) + "x" + str(src_im.size[1]))
+                self.print_log((COLOR_RED % "新的 宽x高 -> ") + str(new_width) + "x" + str(new_height))
+                src_im = src_im.crop(rect)
+            suffix = os.path.basename(param_v["src_path"]).split(".")[1]
+            if suffix == "png" or suffix == "PNG":
+                # 由于PNG是RGBA四个通道 而jpg只有RGB三个通道
+                src_im = src_im.convert('RGB')
+            # 缩放
+            new_im = src_im.resize((int(param_v["width"]), int(param_v["height"])), Image.BICUBIC)
+            new_im.save(std_img_path)  # , format='JPEG', quality=95
 
+            # 转化LVGL图片
+            output_dir = os.path.join(gen_path, "Backgroud")
+            cmd = ['lv_img_conv.py', std_img_path,
+                '-f', 'true_color',
+                    #   '-f', 'true_color_alpha',
+                    #   '-f', 'true_color_chroma',
+                '-cf', 'RGB565SWAP',
+                '-ff', 'BIN',
+                '-o', output_dir
+                ]
+            conv = image_conv.lv_img_conv.Main(image_conv.lv_img_conv.parse_args(cmd[1:]))
+            conv.convert()
+            lvgl_filepath = os.path.join(output_dir, os.path.basename(std_img_path).split(".")[0] + ".bin")
+        else:
+            self.print_log(COLOR_RED % "此文件为图片Bin文件，无需图片转化，可直接写入")
+            lvgl_filepath = param_v["src_path"]
         # 生成 SPIFFS 文件系统镜像
         # lvgl_filepath = os.path.join(gen_path, "backgroud.bin")
         # image_size = 0x50000
@@ -1542,6 +1560,11 @@ class DownloadController(object):
                 outFileNames.append(
                     os.path.join(wallpaper_cache_dir, wallpaper_name))
                 formats.append("lsw")
+                qualitys.append("10")
+            elif name_suffix[1] == "bin":
+                outFileNames.append(
+                    os.path.join(wallpaper_cache_dir, wallpaper_name))
+                formats.append("bin")
                 qualitys.append("10")
 
         print(fileNames)
