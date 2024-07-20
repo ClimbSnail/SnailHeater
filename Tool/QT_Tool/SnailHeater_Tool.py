@@ -18,7 +18,7 @@ import re
 import traceback
 import massagehead as mh
 
-TOOL_VERSION = "v2.7.2T"
+TOOL_VERSION = "v2.7.3T"
 
 cur_dir = os.getcwd()  # 当前目录
 # 生成的文件目录
@@ -321,7 +321,7 @@ if __name__ == '__main__':
         com_list = [com_obj[0]+ " -> " +com_obj[1].split("(")[0].strip() for com_obj in com_obj_list]
         print("您本机的串口设备有：", com_list, end='\n')
         if len(com_list) == 1:
-            select_com = com_list[0]
+            select_com = com_list[0].split(" ")[0].strip().upper()
         else:
             select_com = input("输入 COM口（例如 COM7）: ").strip().upper()
 
