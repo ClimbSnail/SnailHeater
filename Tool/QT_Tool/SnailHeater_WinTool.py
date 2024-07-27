@@ -1438,7 +1438,8 @@ class DownloadController(object):
         # fps 帧率过滤器
         # scale 缩放过滤器
         # crop 裁剪过滤器
-        cmd_to_mjpeg = 'ffmpeg -i "%s" -vf "fps=%s,scale=-1:%s:flags=lanczos,crop=%s:in_h:(in_w-%s)/2:0" -q:v %s "%s"'
+        cmd_to_mjpeg = 'ffmpeg -y -i "%s" -vf "fps=%s,scale=-1:%s:flags=lanczos,crop=%s:in_h:(in_w-%s)/2:0" -q:v %s "%s"'
+        cmd_to_mjpeg_t = 'ffmpeg -y -i "%s" -vf "fps=%s,scale=%s:-1:flags=lanczos,crop=in_w:%s:0:(in_h-%s)/2" -q:v %s "%s"'
 
         for ind in range(len(param["src_path"])):
 
@@ -1480,6 +1481,16 @@ class DownloadController(object):
                                        param["dst_path"][ind])
                 print(out_cmd)
                 os.system(out_cmd)
+                if os.path.getsize(param["dst_path"][ind]) == 0:
+                    self.print_log((COLOR_RED % "注：") + "原视频的宽高比大于屏幕的宽高比，正在尝试最大化裁剪")
+                    # 最终输出的文件
+                    trans_cmd = cmd_to_mjpeg_t
+                    # 最后的转换命令
+                    out_cmd = trans_cmd % (wallpaper_cache_path, param["fps"], param["width"],
+                                        param["height"], param["height"], param["quality"][ind],
+                                        param["dst_path"][ind])
+                    print(out_cmd)
+                    os.system(out_cmd)
             elif param["format"][ind] in IMAGE_FORMAT:
                 wallpaper_cache_path = param["src_path"][ind]
                 src_im: Image.Image = Image.open(wallpaper_cache_path)
@@ -1518,7 +1529,6 @@ class DownloadController(object):
             try:
                 if os.path.getsize(param["dst_path"][ind]) == 0:
                     self.print_log((COLOR_RED % "生成文件失败：") + param["src_path"][ind])
-                    self.print_log((COLOR_RED % "注：") + "要求原视频的宽高比大于屏幕的宽高比")
                     return False
             except Exception as err:
                 print(str(traceback.format_exc()))
