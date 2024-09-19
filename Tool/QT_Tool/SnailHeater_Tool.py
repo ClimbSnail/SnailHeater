@@ -18,7 +18,7 @@ import re
 import traceback
 import massagehead as mh
 
-TOOL_VERSION = "v2.7.3T"
+TOOL_VERSION = "v2.7.5 Lite"
 
 cur_dir = os.getcwd()  # 当前目录
 # 生成的文件目录
@@ -210,7 +210,7 @@ def get_machine_code(com):
             try:
                 STRGLO = ser.read(ser.in_waiting).decode("utf8")
                 print(STRGLO)
-                machine_code = re.findall(r"AT_SETTING_GET VALUE_TYPE_MC = \d*", STRGLO)[0] \
+                machine_code = re.findall(r"VALUE_TYPE[_MC]* = \d*", STRGLO)[0] \
                     .split(" ")[-1]
             except Exception as err:
                 machine_code = "查询失败"

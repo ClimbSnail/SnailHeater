@@ -735,7 +735,7 @@ class DownloadController(object):
                 try:
                     STRGLO = self.ser.read(self.ser.in_waiting).decode("utf8")
                     print(STRGLO)
-                    color = re.findall(r"AT_SETTING_GET VALUE_TYPE_FORWARD_COLOR = \S* \S*", STRGLO)[0] \
+                    color = re.findall(r"VALUE_TYPE_FORWARD_COLOR = \S* \S*", STRGLO)[0] \
                                 .split(" ")[-2:]
                 except Exception as err:
                     print(str(traceback.format_exc()))
@@ -955,7 +955,7 @@ class DownloadController(object):
                 try:
                     STRGLO = self.ser.read(self.ser.in_waiting).decode("utf8")
                     print(STRGLO)
-                    machine_code = re.findall(r"AT_SETTING_GET VALUE_TYPE_MC = \d*", STRGLO)[0] \
+                    machine_code = re.findall(r"VALUE_TYPE[_MC]* = \d*", STRGLO)[0] \
                         .split(" ")[-1]
                 except Exception as err:
                     machine_code = "查询失败"
@@ -1008,7 +1008,7 @@ class DownloadController(object):
                 try:
                     STRGLO = self.ser.read(self.ser.in_waiting).decode("utf8")
                     print(STRGLO)
-                    sn = re.findall(r"AT_SETTING_GET VALUE_TYPE_SN = \S*", STRGLO)[0] \
+                    sn = re.findall(r"VALUE_TYPE[_SN]* = \S*", STRGLO)[0] \
                         .split(" ")[-1]
                 except Exception as err:
                     print(str(traceback.format_exc()))
@@ -1063,7 +1063,7 @@ class DownloadController(object):
                 try:
                     STRGLO = self.ser.read(self.ser.in_waiting).decode("utf8")
                     print(STRGLO)
-                    sw_ver = re.findall(r"AT_SETTING_GET VALUE_TYPE_SH_SOFTWARE_VER = \S*", STRGLO)[0] \
+                    sw_ver = re.findall(r"VALUE_TYPE_SH_SOFTWARE_VER = \S*", STRGLO)[0] \
                         .split(" ")[-1]
                 except Exception as err:
                     print(str(traceback.format_exc()))
