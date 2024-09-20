@@ -18,7 +18,7 @@ import re
 import traceback
 import massagehead as mh
 
-TOOL_VERSION = "v2.7.5 Lite"
+TOOL_VERSION = "v2.7.6 Lite"
 
 cur_dir = os.getcwd()  # 当前目录
 # 生成的文件目录
@@ -112,7 +112,7 @@ def act_button_click(com):
             try:
                 STRGLO = ser.read(ser.in_waiting)
                 print("\nSTRGLO = ", STRGLO)
-                match_info = re.findall(r"Activate Success", STRGLO.decode("utf8"))
+                match_info = re.findall(r"Success", STRGLO.decode("utf8"))
                 if match_info != []:
                     act_ret = True
             except Exception as err:

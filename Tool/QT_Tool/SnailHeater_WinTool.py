@@ -558,7 +558,7 @@ class DownloadController(object):
                 try:
                     STRGLO = self.ser.read(self.ser.in_waiting)
                     print("\nSTRGLO = ", STRGLO)
-                    match_info = re.findall(r"Activate Success", STRGLO.decode("utf8"))
+                    match_info = re.findall(r"Success", STRGLO.decode("utf8"))
                     if match_info != []:
                         act_ret = True
                 except Exception as err:
@@ -928,6 +928,7 @@ class DownloadController(object):
         try:
             self.ser = serial.Serial(select_com, info_baud_rate, timeout=10)
         except Exception as err:
+            print(str(traceback.format_exc()))
             self.print_log((COLOR_RED % "串口打开失败"))
             return machine_code
 
@@ -954,7 +955,7 @@ class DownloadController(object):
             if self.ser.in_waiting:
                 try:
                     STRGLO = self.ser.read(self.ser.in_waiting).decode("utf8")
-                    print(STRGLO)
+                    print("\nSTRGLO -> ", STRGLO)
                     machine_code = re.findall(r"VALUE_TYPE[_MC]* = \d*", STRGLO)[0] \
                         .split(" ")[-1]
                 except Exception as err:
