@@ -3,6 +3,7 @@
 
 # pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
 
+# pip install requests -i https://mirrors.aliyun.com/pypi/simple/
 # pip install pyserial -i https://mirrors.aliyun.com/pypi/simple/
 # pip install pyqt5==5.15.10  -i https://mirrors.aliyun.com/pypi/simple/
 # pip install pyqt5-tools -i https://mirrors.aliyun.com/pypi/simple/
@@ -91,14 +92,16 @@ wallpaper_cache_dir = os.path.join(gen_path, "Cache", "Wallpaper")
 wallpaper_path = os.path.join(gen_path, "Wallpaper")
 # 壁纸文件
 wallpaper_name = os.path.join(wallpaper_path, "Wallpaper.lsw")
-WALLPAPER_ADDR_IN_FLASH = '0x00200000'
 waLLPAPER_JPG_MAX_SIZE = 17500
 
-BACKGROUD_ADDR_IN_FLASH = '0x180000'
 TYPE_JPG = 0
 TYPE_MJPEG = 1
 IMAGE_FORMAT = ["jpg", "JPG", "jpeg", "JPEG", "png", "PNG"]
 MOVIE_FORMAT = ["mp4", "MP4", "avi", "AVI", "mov", "MOV"]
+
+CHIP_ID_KNOWN = ""
+CHIP_ID_S2 = "S2"
+CHIP_ID_S3 = "S3"
 
 # 读取配置信息
 cfg_fp = open("SnailHeater_Tool.yaml", "r", encoding="utf-8")
@@ -131,6 +134,20 @@ info_baud_rate = win_cfg["info_baud_rate"] \
 cfg_fp.close()
 
 support = None
+
+def get_wallpaper_addr_in_flash(chip_id):
+    # 背景图
+    if chip_id == CHIP_ID_S2:
+        return '0x00200000'
+    elif chip_id == CHIP_ID_S3:
+        return '0x00450000'
+
+def get_backgroup_addr_in_flash(chip_id):
+    # 壁纸文件
+    if chip_id == CHIP_ID_S2:
+        return '0x180000'
+    elif chip_id == CHIP_ID_S3:
+        return '0x400000'
 
 
 def getVerValue(ver):
@@ -171,7 +188,6 @@ def get_flash_size(select_com):
     :param select_com:串口号
     :return:size, size_text
     """
-    global default_wallpaper
     flash_size = 0
     flash_size_text = ""
     try:
@@ -207,6 +223,49 @@ def get_flash_size(select_com):
         return 0, "0MB"
 
     return flash_size, flash_size_text
+
+
+def get_chip_id(select_com):
+    """
+    :param select_com:串口号
+    :return:size, size_text
+    """
+    chip_id = CHIP_ID_KNOWN
+    try:
+        printed_data = ""
+
+        # 创建一个字符串缓冲区
+        output_buffer = io.StringIO()
+
+        # 将sys.stdout重定向到缓冲区
+        original_stdout = sys.stdout
+        sys.stdout = output_buffer
+
+        # 调用函数
+        cmd = ['--port', select_com, 'chip_id']
+        esptool.main(cmd)
+
+        # 恢复sys.stdout
+        sys.stdout = original_stdout
+
+        # 获取打印的数据
+        printed_data = output_buffer.getvalue()
+
+        line_data = printed_data.split("\n")
+        print("line_data", line_data, "\n\n")
+        for line in line_data:
+            if "Detecting chip type... ESP" in line:
+                chip_id_text = line.split("... ")[1]
+                if "ESP32-S2" in chip_id_text:
+                    chip_id = CHIP_ID_S2
+                elif "ESP32-S3" in chip_id_text:
+                    chip_id = CHIP_ID_S3
+
+    except Exception as err:
+        print(str(traceback.format_exc()))
+        return CHIP_ID_KNOWN
+
+    return chip_id
 
 
 class FirmwareDownloader(QThread):
@@ -249,6 +308,8 @@ class FirmwareDownloader(QThread):
 
             self.print_log("正在获取存空间大小...")
             flash_size, flash_size_text = get_flash_size(self.select_com)
+            chip_id = get_chip_id(self.select_com)
+            print("chip_id = ", chip_id)
 
             if flash_size == 0:
                 self.print_log(COLOR_RED % "错误：储存空间为0，刷机终止。")
@@ -261,35 +322,51 @@ class FirmwareDownloader(QThread):
             curSWVersion = re.findall(r'SH_SW_v\d{1,2}\.\d{1,2}\.\d{1,2}', self.firmware_path)[0][6:].strip()
             print("curSWVersion", curSWVersion)
             if getVerValue(curSWVersion) > getVerValue("v2.1.17"):
-                #  --port COM7 --baud 921600 write_flash -fm dio -fs 4MB 0x1000 bootloader_dio_40m.bin 0x00008000 partitions.bin 0x0000e000 boot_app0.bin 0x00010000
-                cmd = ['SnailHeater_WinTool.py', '--port', self.select_com,
-                       '--baud', baud_rate,
-                       '--after', 'hard_reset',
-                       'write_flash',
-                       '--flash_size', flash_size_text,
-                       #    '0x00001000', "./base_data/bootloader.bin",
-                       '0x00001000', "./base_data/bootloader_%s.bin" % (flash_size_text),
-                       '0x00008000', "./base_data/partitions_%s.bin" % (flash_size_text),
-                       '0x0000e000', "./base_data/boot_app0.bin",
-                       '0x00010000', self.firmware_path,
-                       BACKGROUD_ADDR_IN_FLASH, default_backgroud,
-                       WALLPAPER_ADDR_IN_FLASH, default_wallpaper
-                       ]
+                #  --port COM7 --baud 921600 write_flash -fm dio -fs 4MB 0x1000 S2_bootloader_dio_40m.bin 0x00008000 S2_partitions.bin 0x0000e000 S2_boot_app0.bin 0x00010000
+                if chip_id == CHIP_ID_S2:
+                    flash_size_text = flash_size_text if flash_size_text in ["4MB", "8MB", "16MB", "32MB", "64MB"] else "4MB"
+                    cmd = ['SnailHeater_WinTool.py', '--port', self.select_com,
+                        '--baud', baud_rate,
+                        '--after', 'hard_reset',
+                        'write_flash',
+                        '--flash_size', flash_size_text,
+                        '0x00001000', "./base_data/%s_bootloader_%s.bin" % (chip_id, flash_size_text),
+                        '0x00008000', "./base_data/%s_partitions_%s.bin" % (chip_id, flash_size_text),
+                        '0x0000e000', "./base_data/%s_boot_app0.bin"% (chip_id) ,
+                        '0x00010000', self.firmware_path,
+                        get_backgroup_addr_in_flash(chip_id), default_backgroud,
+                        get_wallpaper_addr_in_flash(chip_id), default_wallpaper
+                        ]
+                elif chip_id == CHIP_ID_S3:
+                    flash_size_text = flash_size_text if flash_size_text in ["4MB", "8MB", "16MB", "32MB"] else "32MB"
+                    cmd = ['SnailHeater_WinTool.py', '--port', self.select_com,
+                        '--baud', baud_rate,
+                        '--after', 'hard_reset',
+                        'write_flash',
+                        '--flash_size', flash_size_text,
+                        '0x00000000', "./base_data/%s_bootloader_%s.bin" % (chip_id, flash_size_text),
+                        '0x00008000', "./base_data/%s_partitions_%s.bin" % (chip_id, flash_size_text),
+                        # '0x0000e000', "./base_data/%s_boot_app0.bin"% (chip_id) ,
+                        '0x00010000', self.firmware_path,
+                        get_backgroup_addr_in_flash(chip_id), default_backgroud,
+                        get_wallpaper_addr_in_flash(chip_id), default_wallpaper
+                        ]
             elif getVerValue(curSWVersion) > getVerValue("v1.9.8"):
+                # S2版本支持的最大Flash容量为16M
+                
+                #  --port COM7 --baud 921600 write_flash -fm dio -fs 4MB 0x1000 S2_bootloader_dio_40m.bin 0x00008000 S2_partitions.bin 0x0000e000 S2_boot_app0.bin 0x00010000
                 flash_size_text = flash_size_text if flash_size_text in ["4MB", "8MB", "16MB"] else "16MB"
-                #  --port COM7 --baud 921600 write_flash -fm dio -fs 4MB 0x1000 bootloader_dio_40m.bin 0x00008000 partitions.bin 0x0000e000 boot_app0.bin 0x00010000
                 cmd = ['SnailHeater_WinTool.py', '--port', self.select_com,
-                       '--baud', baud_rate,
-                       '--after', 'hard_reset',
-                       'write_flash',
-                       '--flash_size', flash_size_text,
-                       #    '0x00001000', "./base_data/bootloader.bin",
-                       '0x00001000', "./old_base_data_2117/bootloader_%s.bin" % (flash_size_text),
-                       '0x00008000', "./old_base_data_2117/partitions_%s.bin" % (flash_size_text),
-                       '0x0000e000', "./old_base_data_2117/boot_app0.bin",
-                       '0x00010000', self.firmware_path,
-                       WALLPAPER_ADDR_IN_FLASH, default_wallpaper.replace("base_data", "old_base_data_2117")
-                       ]
+                    '--baud', baud_rate,
+                    '--after', 'hard_reset',
+                    'write_flash',
+                    '--flash_size', flash_size_text,
+                    '0x00001000', "./old_base_data_2117/%s_bootloader_%s.bin" % (chip_id, flash_size_text),
+                    '0x00008000', "./old_base_data_2117/%s_partitions_%s.bin" % (chip_id, flash_size_text),
+                    '0x0000e000', "./old_base_data_2117/%s_boot_app0.bin"% (chip_id),
+                    '0x00010000', self.firmware_path,
+                    get_wallpaper_addr_in_flash(chip_id), default_wallpaper.replace("base_data", "old_base_data_2117")
+                    ]
             print(cmd)
 
             self.print_log("开始刷写固件...")
@@ -305,7 +382,7 @@ class FirmwareDownloader(QThread):
             self.print_log(COLOR_RED % "刷机结束！")
             self.print_log("刷机流程完毕，请保持typec通电等待焊台屏幕将会亮起后才能断电。")
             self.print_log((COLOR_RED % "注：") + "更新式刷机一般刷机完成后2s就能亮屏，清空式刷机则需等待10s左右。")
-            self.print_log("如25s后始终未能自动亮屏，请手动拔插一次typec接口再次等待10s。\n")
+            self.print_log("如25s后始终未能自动亮屏，请手动按一次复位键或者拔插一次typec接口再次等待10s。\n")
 
         except Exception as err:
             self.print_log(COLOR_RED % ERR_UART_TEXT)
@@ -820,10 +897,12 @@ class DownloadController(object):
                 all_time += 24
             else:
                 all_time += 5
-            file_list = ["./base_data/boot_app0.bin",
-                         "./base_data/bootloader_4MB.bin",
-                         "./base_data/partitions_4MB.bin",
-                         "./base_data/tinyuf2.bin",
+            # 此文件列表的 boot_app0 bootloader partitions 文件均不是特指，
+            # 但与实际要写入的文件大小无异,只为了方便计算文件大小
+            file_list = ["./base_data/S2_boot_app0.bin",
+                         "./base_data/S2_bootloader_4MB.bin",
+                         "./base_data/S2_partitions_4MB.bin",
+                        #  "./base_data/S2_tinyuf2.bin",
                          default_backgroud,
                          firmware_path,
                          default_wallpaper]
@@ -1250,12 +1329,15 @@ class DownloadController(object):
         select_com = self.getSafeCom()
         if select_com == None:
             return False
+        
+        chip_id = get_chip_id(select_com)
+
         try:
             cmd = ['SnailHeater_WinTool.py', '--port', select_com,
                    '--baud', baud_rate,
                    '--after', 'hard_reset',
                    'write_flash',
-                   BACKGROUD_ADDR_IN_FLASH, lvgl_filepath
+                   get_backgroup_addr_in_flash(chip_id), lvgl_filepath
                    ]
             time = int(os.path.getsize(lvgl_filepath)) * 10 / int(baud_rate) + 2
             self.print_log("正在烧入背景数据到主机，请等待（%ds）......" % time)
@@ -1290,10 +1372,14 @@ class DownloadController(object):
             print(str(traceback.format_exc()))
 
         self.print_log("正在获取存空间大小...")
-        flash_size, _ = get_flash_size(select_com)
-        wallpaper_all_size = flash_size - (1024 * 1024 * 2 + 50)
-        # 目前只能支持16M写入空间，故做如下设置
-        wallpaper_all_size = wallpaper_all_size if wallpaper_all_size <= 14680064 else 14680064
+        flash_size_real, _ = get_flash_size(select_com)
+        chip_id = get_chip_id(select_com)
+        flash_size_max = 1024 * 1024 * 16   # S2版本支持的最大Flash容量为16M
+        if chip_id == CHIP_ID_S3:
+            flash_size_max = 1024 * 1024 * 32
+        # 处理大容量的情况
+        flash_size_use = flash_size_real if flash_size_real <= flash_size_max else flash_size_max
+        wallpaper_all_size = flash_size_use - (int(get_wallpaper_addr_in_flash(chip_id), 16) + 50)
 
         try:
             param = self.get_output_param(self.form.choosePathEdit.text().strip())
@@ -1315,7 +1401,7 @@ class DownloadController(object):
 
             # 50为预留值
             rate = int(os.path.getsize(wallpaper_name) / wallpaper_all_size * 100)
-            self.print_log((COLOR_RED % "本机储存容量为 ") + str(int(flash_size / 1024 / 1024)) + " MB")
+            self.print_log((COLOR_RED % "本机储存容量为 ") + str(int(flash_size_real / 1024 / 1024)) + " MB")
             self.print_log((COLOR_RED % "壁纸可用的全容量为 ") + str(int(wallpaper_all_size / 1024)) + " KB")
             self.print_log((COLOR_RED % "本次壁纸占用全容量的 ") + str(rate) + "%")
             if os.path.getsize(wallpaper_name) > wallpaper_all_size:
@@ -1335,7 +1421,7 @@ class DownloadController(object):
                    '--baud', baud_rate,
                    '--after', 'hard_reset',
                    'write_flash',
-                   WALLPAPER_ADDR_IN_FLASH, wallpaper_name,
+                   get_wallpaper_addr_in_flash(chip_id), wallpaper_name,
                    #   '0x00FFF000', wallpaper_name
                    ]
             time_start = time.time()
@@ -1613,23 +1699,25 @@ class DownloadController(object):
         select_com = self.getSafeCom()
         if select_com == None:
             return None
+        
+        chip_id = get_chip_id(select_com)
 
         self.print_log("正在清空壁纸...")
         # esptool.py erase_region 0x20000 0x4000
         # esptool.py erase_flash
-        cmd = ['SnailHeater_WinTool.py', '--port', select_com,
-               'erase_region', WALLPAPER_ADDR_IN_FLASH, '0x200000']
-        try:
-            esptool.main(cmd[1:])
-        except Exception as e:
-            self.print_log(COLOR_RED % ERR_UART_TEXT)
-            pass
+        # cmd = ['SnailHeater_WinTool.py', '--port', select_com,
+        #        'erase_region', get_wallpaper_addr_in_flash(chip_id), '0x200000']
+        # try:
+        #     esptool.main(cmd[1:])
+        # except Exception as e:
+        #     self.print_log(COLOR_RED % ERR_UART_TEXT)
+        #     pass
 
         cmd = ['SnailHeater_WinTool.py', '--port', select_com,
                '--baud', baud_rate,
                '--after', 'hard_reset',
                'write_flash',
-               WALLPAPER_ADDR_IN_FLASH, default_wallpaper_clean
+               get_wallpaper_addr_in_flash(chip_id), default_wallpaper_clean
                ]
         try:
             esptool.main(cmd[1:])
