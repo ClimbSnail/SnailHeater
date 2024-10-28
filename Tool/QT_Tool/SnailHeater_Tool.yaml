@@ -20,6 +20,8 @@ windows_tool:
   
   # 下载的波特率
   baud_rate: "921600"
+  # 通讯的波特率
+  info_baud_rate: "921600"
   # 固件的目录
   firmware_dir: "../"
 
