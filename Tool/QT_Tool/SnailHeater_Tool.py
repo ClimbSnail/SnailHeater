@@ -18,7 +18,7 @@ import re
 import traceback
 import massagehead as mh
 
-TOOL_VERSION = "v2.7.6 Lite"
+TOOL_VERSION = "v2.7.8 Lite"
 
 cur_dir = os.getcwd()  # 当前目录
 # 生成的文件目录
@@ -42,10 +42,11 @@ wallpaper_cache_dir = os.path.join(gen_path, "Cache", "Wallpaper")
 wallpaper_path = os.path.join(gen_path, "Wallpaper")
 # 壁纸文件
 wallpaper_name = os.path.join(wallpaper_path, "Wallpaper.lsw")
-WALLPAPER_ADDR_IN_FLASH = '0x00200000'
 waLLPAPER_JPG_MAX_SIZE = 17500
 
-BACKGROUD_ADDR_IN_FLASH = '0x180000'
+CHIP_ID_KNOWN = ""
+CHIP_ID_S2 = "S2"
+CHIP_ID_S3 = "S3"
 
 # 读取配置信息
 cfg_fp = open("SnailHeater_Tool.yaml", "r", encoding="utf-8")
@@ -74,8 +75,27 @@ baud_rate = win_cfg["baud_rate"] \
     if "baud_rate" in win_cfg.keys() else ""
 info_baud_rate = win_cfg["info_baud_rate"] \
     if "info_baud_rate" in win_cfg.keys() else ""
+firmware_dir = win_cfg["firmware_dir"] \
+    if "firmware_dir" in win_cfg.keys() else None
 
 cfg_fp.close()
+
+
+def get_wallpaper_addr_in_flash(chip_id):
+    # 背景图
+    if chip_id == CHIP_ID_S2:
+        return '0x00200000'
+    elif chip_id == CHIP_ID_S3:
+        return '0x004D0000'
+
+
+def get_backgroup_addr_in_flash(chip_id):
+    # 壁纸文件
+    if chip_id == CHIP_ID_S2:
+        return '0x180000'
+    elif chip_id == CHIP_ID_S3:
+        return '0x480000'
+
 
 def act_button_click(com):
     global sn
@@ -126,6 +146,7 @@ def act_button_click(com):
     ser.close()  # 关闭串口
     del ser
 
+
 def query_button_click(com):
     """
     获取用户识别码 显示在用户识别码的信息框里
@@ -135,6 +156,10 @@ def query_button_click(com):
     global sn
     print("获取机器码（用户识别码）...")
     machine_code = get_machine_code(com)
+
+    if machine_code == None:
+        print("获取机器码异常，获取中止...")
+        return False
 
     print("\n获取本地激活码（SN）...")
     sn = ""
@@ -174,15 +199,17 @@ def query_button_click(com):
 
     return True
 
+
 def get_machine_code(com):
     '''
     查询机器码
     '''
+    machine_code = None
+
     select_com = com
     if select_com == None:
-        return None
+        return machine_code
 
-    machine_code = "查询失败"
     try:
         ser = serial.Serial(select_com, info_baud_rate, timeout=10)
     except Exception as err:
@@ -213,17 +240,18 @@ def get_machine_code(com):
                 machine_code = re.findall(r"VALUE_TYPE[_MC]* = \d*", STRGLO)[0] \
                     .split(" ")[-1]
             except Exception as err:
-                machine_code = "查询失败"
+                pass
             print(machine_code)
 
-        if machine_code == "查询失败":
-           print("机器码查询失败")
+        if machine_code == None:
+            print("机器码查询失败")
         else:
-           print("机器码查询成功")
+            print("机器码查询成功")
 
     ser.close()  # 关闭串口
     del ser
     return machine_code
+
 
 def hard_reset(com):
     """
@@ -249,6 +277,7 @@ def hard_reset(com):
     ser.close()  # 关闭串口
     del ser
 
+
 def auto_active(com):
     """
     自动激活
@@ -263,6 +292,7 @@ def auto_active(com):
         act_button_click(select_com)
     except Exception as err:
         print(str(traceback.format_exc()))
+
 
 def get_flash_size(select_com):
     """
@@ -306,6 +336,50 @@ def get_flash_size(select_com):
 
     return flash_size, flash_size_text
 
+
+def get_chip_id(select_com):
+    """
+    :param select_com:串口号
+    :return:size, size_text
+    """
+    chip_id = CHIP_ID_KNOWN
+    try:
+        printed_data = ""
+
+        # 创建一个字符串缓冲区
+        output_buffer = io.StringIO()
+
+        # 将sys.stdout重定向到缓冲区
+        original_stdout = sys.stdout
+        sys.stdout = output_buffer
+
+        # 调用函数
+        cmd = ['--port', select_com, 'chip_id']
+        esptool.main(cmd)
+
+        # 恢复sys.stdout
+        sys.stdout = original_stdout
+
+        # 获取打印的数据
+        printed_data = output_buffer.getvalue()
+
+        line_data = printed_data.split("\n")
+        print("line_data", line_data, "\n\n")
+        for line in line_data:
+            if "Detecting chip type... ESP" in line:
+                chip_id_text = line.split("... ")[1]
+                if "ESP32-S2" in chip_id_text:
+                    chip_id = CHIP_ID_S2
+                elif "ESP32-S3" in chip_id_text:
+                    chip_id = CHIP_ID_S3
+
+    except Exception as err:
+        print(str(traceback.format_exc()))
+        return CHIP_ID_KNOWN
+
+    return chip_id
+
+
 if __name__ == '__main__':
 
     # cmd = ['espefuse.py', '-p', 'COM4', 'adc_info']
@@ -318,7 +392,7 @@ if __name__ == '__main__':
         # serial.utilities.
         select_com = None
         # 获取可用COM口名字
-        com_list = [com_obj[0]+ " -> " +com_obj[1].split("(")[0].strip() for com_obj in com_obj_list]
+        com_list = [com_obj[0] + " -> " + com_obj[1].split("(")[0].strip() for com_obj in com_obj_list]
         print("您本机的串口设备有：", com_list, end='\n')
         if len(com_list) == 1:
             select_com = com_list[0].split(" ")[0].strip().upper()
@@ -326,7 +400,7 @@ if __name__ == '__main__':
             select_com = input("输入 COM口（例如 COM7）: ").strip().upper()
 
         # 列出文件夹下所有的目录与文件
-        list_file = os.listdir("./")
+        list_file = os.listdir(firmware_dir)
         firmware_path = ''
         firmware_path_list = []
         for file_name in list_file:
@@ -370,7 +444,7 @@ if __name__ == '__main__':
                 break
             else:
                 print("\n选择有误，请重新选择\n")
-        
+
         # 动态壁纸和背景
         if "③" in firmware_path:
             default_wallpaper = default_wallpaper_320
@@ -383,31 +457,60 @@ if __name__ == '__main__':
 
         if not os.path.exists(default_wallpaper):
             default_wallpaper = default_wallpaper_clean
-        
-        
-        print("正在获取存空间大小...")
-        flash_size, flash_size_text = get_flash_size(select_com)
+
+        chip_id = get_chip_id(select_com)
+        print("chip_id = ", chip_id)
+
+        flash_size = 0
+        flash_size_text = "0MB"
+        if chip_id == CHIP_ID_S2:
+            print("正在获取存空间大小...")
+            flash_size, flash_size_text = get_flash_size(select_com)
+        elif chip_id == CHIP_ID_S3:
+            flash_size = 32 * 1024 * 1024
+            flash_size_text = "32MB"
+            # self.print_log("开始前请按住旋钮中键（不松手）！！！")
+            # self.print_log("正在获取存空间大小...")
+            # flash_size, flash_size_text = get_flash_size(self.select_com)
+            # self.print_log("已获取到存空间大小.")
+            # self.print_log("请松开旋钮中键！！！等待自动下载完毕。")
 
         #  --port COM7 --baud 921600 write_flash -fm dio -fs 4MB 0x1000 bootloader_dio_40m.bin 0x00008000 partitions.bin 0x0000e000 boot_app0.bin 0x00010000 
-        cmd = ['HeatPlatform_tool.py', '--port', select_com,
-               '--baud', '921600',
-                '--after', 'hard_reset',
-                'write_flash',
-                '--flash_size', flash_size_text,
-                #    '0x00001000', "./base_data/bootloader.bin",
-                '0x00001000', "./base_data/bootloader_%s.bin" % (flash_size_text),
-                '0x00008000', "./base_data/partitions_%s.bin" % (flash_size_text),
-                '0x0000e000', "./base_data/boot_app0.bin",
-                '0x00010000', firmware_path,
-                BACKGROUD_ADDR_IN_FLASH, default_backgroud,
-                WALLPAPER_ADDR_IN_FLASH, default_wallpaper
-               ]
+        cmd = []
+        if chip_id == CHIP_ID_S2:
+            flash_size_text = flash_size_text if flash_size_text in ["4MB", "8MB", "16MB", "32MB", "64MB"] else "4MB"
+            cmd = ['SnailHeater_WinTool.py', '--port', select_com,
+                   '--baud', baud_rate,
+                   '--after', 'hard_reset',
+                   'write_flash',
+                   '--flash_size', flash_size_text,
+                   '0x00001000', "./base_data/%s_bootloader_%s.bin" % (chip_id, flash_size_text),
+                   '0x00008000', "./base_data/%s_partitions_%s.bin" % (chip_id, flash_size_text),
+                   '0x0000e000', "./base_data/%s_boot_app0.bin" % (chip_id),
+                   '0x00010000', os.path.join(firmware_dir, firmware_path),
+                   get_backgroup_addr_in_flash(chip_id), default_backgroud,
+                   get_wallpaper_addr_in_flash(chip_id), default_wallpaper
+                   ]
+        elif chip_id == CHIP_ID_S3:
+            flash_size_text = flash_size_text if flash_size_text in ["4MB", "8MB", "16MB", "32MB"] else "32MB"
+            cmd = ['SnailHeater_WinTool.py', '--port', select_com,
+                   '--baud', baud_rate,
+                   '--after', 'hard_reset',
+                   'write_flash',
+                   '--flash_size', flash_size_text,
+                   '0x00000000', "./base_data/%s_bootloader_%s.bin" % (chip_id, flash_size_text),
+                   '0x00008000', "./base_data/%s_partitions_%s.bin" % (chip_id, flash_size_text),
+                   # '0x0000e000', "./base_data/%s_boot_app0.bin"% (chip_id) ,
+                   '0x00010000', os.path.join(firmware_dir, firmware_path),
+                   get_backgroup_addr_in_flash(chip_id), default_backgroud,
+                   get_wallpaper_addr_in_flash(chip_id), default_wallpaper
+                   ]
 
         # sys.argv = cmd
         esptool.main(cmd[1:])
 
         time.sleep(4)  # 等待文件系统初始化完成
-        auto_active(select_com)      # 自动激活
+        auto_active(select_com)  # 自动激活
 
     except Exception as err:
         print(err)

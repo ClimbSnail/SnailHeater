@@ -18,7 +18,7 @@ import re
 import traceback
 import massagehead as mh
 
-TOOL_VERSION = "v1.0.0_beta Lite"
+TOOL_VERSION = "v1.0.2 Lite"
 
 cur_dir = os.getcwd()  # 当前目录
 # 生成的文件目录
@@ -112,6 +112,17 @@ if __name__ == '__main__':
         else:
             refresh_obj_str = "knob"
         print("")
+
+        # 选择刷机速率
+        baud_choose = int(input("选择刷机速率。（输入1 921600， 输入2 460800，输入3 230400）").strip())
+        baud = "921600"
+        if baud_choose == 1:
+            baud = "921600"
+        elif baud_choose == 2:
+            baud = "460800"
+        elif baud_choose == 3:
+            baud = "230400"
+        print("")        
         
         com_obj_list = list(serial.tools.list_ports.comports())
         # serial.utilities.
@@ -149,7 +160,8 @@ if __name__ == '__main__':
 
         #  --port COM7 --baud 921600 write_flash -fm dio -fs 4MB 0x1000 bootloader_dio_40m.bin 0x00008000 partitions.bin 0x0000e000 boot_app0.bin 0x00010000 
         cmd = ['LX_Keyboard_Tool.py', '--port', select_com,
-               '--baud', '921600',
+            #    '--baud', '921600',
+                '--baud', baud,
                 '--after', 'hard_reset',
                 'write_flash',
                 '--flash_size', flash_size_text,
