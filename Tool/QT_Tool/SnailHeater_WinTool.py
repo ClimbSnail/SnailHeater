@@ -148,6 +148,8 @@ def get_wallpaper_addr_in_flash(chip_id):
         return '0x00200000'
     elif chip_id == CHIP_ID_S3:
         return '0x004D0000'
+    else:
+        return '0x00200000'
 
 
 def get_backgroup_addr_in_flash(chip_id):
@@ -156,6 +158,8 @@ def get_backgroup_addr_in_flash(chip_id):
         return '0x180000'
     elif chip_id == CHIP_ID_S3:
         return '0x480000'
+    else:
+        return '0x180000'
 
 
 def getVerValue(ver):
@@ -163,10 +167,12 @@ def getVerValue(ver):
     获取版本的值
     """
     if "UNKNOWN" in ver:
-        return 100000000  # 返回最大值
+        return 100 * 100 * 100  # 返回最大值 int默认不能太大
     value1_list = ver[1:].split(".")
     sum = 0
     for val in value1_list:
+        # 第三位小版本使是S3引入的，故需要特殊处理第三位版本只有2位数的情况
+        # curVal = int(val) * 100 if int(val) < 100 else int(val)
         sum = sum * 100 + int(val)
     return sum
 
@@ -174,6 +180,8 @@ def getVerValue(ver):
 def get_version():
     global support
     try:
+        # This SH_TOOL version supports [ SH_SW v2.1.1~SH_SW UNKNOWN ].
+        # Latest version [ SH_TOOL v2.7.8 ].
         response = requests.get(get_tool_new_ver_url + "/" + common.TOOL_VERSION, timeout=3)  # , verify=False
         new_version_info = re.findall(r'SH_TOOL v\d{1,2}\.\d{1,2}\.\d{1,2}', response.text.split("</p><p>")[1])
         new_version = new_version_info[0].split(" ")[1].strip()
@@ -252,7 +260,8 @@ def get_chip_id(select_com):
         sys.stdout = output_buffer
 
         # 调用函数
-        cmd = ['--port', select_com, 'chip_id']
+        cmd = ['--port', select_com,
+               'chip_id']
         esptool.main(cmd)
 
         # 恢复sys.stdout
@@ -325,13 +334,17 @@ class FirmwareDownloader(QThread):
             if g_curr_chip_id == CHIP_ID_S2:
                 flash_size, flash_size_text = get_flash_size(self.select_com)
             elif g_curr_chip_id == CHIP_ID_S3:
-                flash_size = 32 * 1024 * 1024
-                flash_size_text = "32MB"
-                # self.print_log("开始前请按住旋钮中键（不松手）！！！")
+                # flash_size = 32 * 1024 * 1024
+                # flash_size_text = "32MB"
                 # self.print_log("正在获取存空间大小...")
-                # flash_size, flash_size_text = get_flash_size(self.select_com)
-                # self.print_log("已获取到存空间大小.")
-                # self.print_log("请松开旋钮中键！！！等待自动下载完毕。")
+                flash_size, flash_size_text = get_flash_size(self.select_com)
+                if flash_size < 8 * 1024 * 1024:
+                    self.print_log("识别到不支持的Flash大小：" + (COLOR_RED % flash_size_text))
+                    return None
+
+            # flash_size = 8 * 1024 * 1024
+            # flash_size_text = "8MB"
+            self.print_log("已获取到Flash空间大小为：" + (COLOR_RED % flash_size_text))
 
             if flash_size == 0:
                 self.print_log(COLOR_RED % "错误：储存空间为0，刷机终止。")
@@ -1377,7 +1390,7 @@ class DownloadController(object):
         print("lvgl_filepath = ", lvgl_filepath)
 
         # 50为预留值
-        bg_all_size = 327680
+        bg_all_size = 320 * 1024
         rate = int(os.path.getsize(lvgl_filepath) / bg_all_size * 100)
         self.print_log((COLOR_RED % "背景图可用的全容量为 ") + str(int(bg_all_size / 1024)) + " KB")
         self.print_log((COLOR_RED % "本次背景图占用全容量的 ") + str(rate) + "%")
@@ -1434,24 +1447,20 @@ class DownloadController(object):
 
         chip_id = get_chip_id(select_com)
 
+        # self.print_log("正在获取存空间大小...")
         flash_size_max = 0
         flash_size_real = 0
         if chip_id == CHIP_ID_S2:
             flash_size_max = 1024 * 1024 * 16  # S2版本支持的最大Flash容量为16M
-            self.print_log("正在获取存空间大小...")
             flash_size_real, _ = get_flash_size(select_com)
-            self.print_log("已获取到存空间大小.")
         elif chip_id == CHIP_ID_S3:
             flash_size_max = 1024 * 1024 * 32
-            flash_size_real = 32 * 1024 * 1024
-            _ = "32MB"
-            # self.print_log("开始前请按住旋钮中键（不松手）！！！")
-            # self.print_log("正在获取存空间大小...")
-            # flash_size_real, _ = get_flash_size(select_com)
-            # self.print_log("已获取到存空间大小.")
-            # self.print_log("请松开旋钮中键！！！等待自动下载完毕。")
+            # flash_size_real = 32 * 1024 * 1024
+            flash_size_real, _ = get_flash_size(select_com)
+        # self.print_log("已获取到存空间大小.")
 
         # 处理大容量的情况
+        # 50为预留值
         flash_size_use = flash_size_real if flash_size_real <= flash_size_max else flash_size_max
         wallpaper_all_size = flash_size_use - (int(get_wallpaper_addr_in_flash(chip_id), 16) + 50)
 
@@ -1473,7 +1482,6 @@ class DownloadController(object):
                     self.form.WriteWallpaperButton.setEnabled(True)
                     return False
 
-            # 50为预留值
             rate = int(os.path.getsize(wallpaper_name) / wallpaper_all_size * 100)
             self.print_log((COLOR_RED % "本机储存容量为 ") + str(int(flash_size_real / 1024 / 1024)) + " MB")
             self.print_log((COLOR_RED % "壁纸可用的全容量为 ") + str(int(wallpaper_all_size / 1024)) + " KB")
@@ -1493,6 +1501,7 @@ class DownloadController(object):
                    #  '--compress',
                    '--port', select_com,
                    '--baud', baud_rate,
+                   # '--before', 'no_reset',
                    '--after', 'hard_reset',
                    'write_flash',
                    get_wallpaper_addr_in_flash(chip_id), wallpaper_name,
@@ -1525,12 +1534,16 @@ class DownloadController(object):
             return None
 
         wallpapers = param["dst_path"]
+        verMark = 0x11  # 版本号
         total = 0  # 壁纸总数（1字节）
+        fps = int(param["fps"])  # 帧率
+        # fps = 22
+
         type = []  # 壁纸类型（1字节）jpg图片0 mjpeg视频1
         startAddr = []  # 4字节
         dataLen = []  # 4字节
         isLegal = []  # 处理过程中的标志位
-        dataAddrOffset = 256  # 标记当前的数据可存地址
+        dataAddrOffset = 580  # 标记当前的数据可存地址
         for ind in range(len(wallpapers)):
             suffix = os.path.basename(wallpapers[ind]).split(".")[-1]
             if suffix == "mjpeg":
@@ -1557,7 +1570,7 @@ class DownloadController(object):
             print(str(traceback.format_exc()))
 
         with open(wallpaper_name, "wb") as fbin:
-            binaryData = b'' + struct.pack('=' + "1B", *[total])
+            binaryData = b'' + struct.pack('=' + "1H1B1B", *[verMark, total, fps])
             for ind in range(len(wallpapers)):
                 if isLegal[ind] == False:
                     continue
@@ -1566,7 +1579,7 @@ class DownloadController(object):
                 params = [type[ind], startAddr[ind], dataLen[ind]]
                 binaryData = binaryData + struct.pack(byteOrder + format, *params)
 
-            binaryData = binaryData + b'\x00' * (256 - len(binaryData))
+            binaryData = binaryData + b'\x00' * (580 - len(binaryData))
             for ind in range(len(wallpapers)):
                 if isLegal[ind] == False:
                     continue

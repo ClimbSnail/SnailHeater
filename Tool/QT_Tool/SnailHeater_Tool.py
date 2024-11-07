@@ -18,7 +18,7 @@ import re
 import traceback
 import massagehead as mh
 
-TOOL_VERSION = "v2.7.8 Lite"
+TOOL_VERSION = "v2.8.0 Lite"
 
 cur_dir = os.getcwd()  # 当前目录
 # 生成的文件目录
@@ -461,19 +461,15 @@ if __name__ == '__main__':
         chip_id = get_chip_id(select_com)
         print("chip_id = ", chip_id)
 
+        print("正在获取存空间大小...")
         flash_size = 0
         flash_size_text = "0MB"
         if chip_id == CHIP_ID_S2:
-            print("正在获取存空间大小...")
             flash_size, flash_size_text = get_flash_size(select_com)
         elif chip_id == CHIP_ID_S3:
-            flash_size = 32 * 1024 * 1024
-            flash_size_text = "32MB"
-            # self.print_log("开始前请按住旋钮中键（不松手）！！！")
-            # self.print_log("正在获取存空间大小...")
-            # flash_size, flash_size_text = get_flash_size(self.select_com)
-            # self.print_log("已获取到存空间大小.")
-            # self.print_log("请松开旋钮中键！！！等待自动下载完毕。")
+            flash_size, flash_size_text = get_flash_size(select_com)
+            if flash_size < 8 * 1024 * 1024:
+                print("识别到不支持的Flash大小：" + flash_size_text)
 
         #  --port COM7 --baud 921600 write_flash -fm dio -fs 4MB 0x1000 bootloader_dio_40m.bin 0x00008000 partitions.bin 0x0000e000 boot_app0.bin 0x00010000 
         cmd = []
