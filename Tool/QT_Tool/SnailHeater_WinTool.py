@@ -352,7 +352,11 @@ class FirmwareDownloader(QThread):
                 self.ret_finish.emit(False)
                 self.quit()
                 return None
-
+            exMediaParam = []
+            if self.mode == "清空式":
+                exMediaParam = [
+                    get_backgroup_addr_in_flash(g_curr_chip_id), default_backgroud,
+                    get_wallpaper_addr_in_flash(g_curr_chip_id), default_wallpaper]
             cmd = []
             curSWVersion = re.findall(r'SH_SW_v\d{1,2}\.\d{1,2}\.\d{1,2}', self.firmware_path)[0][6:].strip()
             print("curSWVersion", curSWVersion)
@@ -369,10 +373,8 @@ class FirmwareDownloader(QThread):
                            '0x00001000', "./base_data/%s_bootloader_%s.bin" % (g_curr_chip_id, flash_size_text),
                            '0x00008000', "./base_data/%s_partitions_%s.bin" % (g_curr_chip_id, flash_size_text),
                            '0x0000e000', "./base_data/%s_boot_app0.bin" % (g_curr_chip_id),
-                           '0x00010000', self.firmware_path,
-                           get_backgroup_addr_in_flash(g_curr_chip_id), default_backgroud,
-                           get_wallpaper_addr_in_flash(g_curr_chip_id), default_wallpaper
-                           ]
+                           '0x00010000', self.firmware_path
+                           ] + exMediaParam
                 elif g_curr_chip_id == CHIP_ID_S3:
                     flash_size_text = flash_size_text if flash_size_text in ["4MB", "8MB", "16MB", "32MB"] else "32MB"
                     cmd = ['SnailHeater_WinTool.py', '--port', self.select_com,
@@ -383,10 +385,8 @@ class FirmwareDownloader(QThread):
                            '0x00000000', "./base_data/%s_bootloader_%s.bin" % (g_curr_chip_id, flash_size_text),
                            '0x00008000', "./base_data/%s_partitions_%s.bin" % (g_curr_chip_id, flash_size_text),
                            # '0x0000e000', "./base_data/%s_boot_app0.bin"% (g_curr_chip_id) ,
-                           '0x00010000', self.firmware_path,
-                           get_backgroup_addr_in_flash(g_curr_chip_id), default_backgroud,
-                           get_wallpaper_addr_in_flash(g_curr_chip_id), default_wallpaper
-                           ]
+                           '0x00010000', self.firmware_path
+                           ] + exMediaParam
             elif getVerValue(curSWVersion) > getVerValue("v1.9.8"):
                 # S2版本支持的最大Flash容量为16M
 
@@ -976,9 +976,10 @@ class DownloadController(object):
                          "./base_data/S2_bootloader_4MB.bin",
                          "./base_data/S2_partitions_4MB.bin",
                          #  "./base_data/S2_tinyuf2.bin",
-                         default_backgroud,
-                         os.path.join(firmware_dir, firmware_path),
-                         default_wallpaper]
+                         os.path.join(firmware_dir, firmware_path)]
+            if mode == "清空式":
+                file_list = file_list + [default_backgroud, default_wallpaper]
+            
             for filepath in file_list:
                 all_time = all_time + os.path.getsize(filepath) * 10 / int(baud_rate)
 

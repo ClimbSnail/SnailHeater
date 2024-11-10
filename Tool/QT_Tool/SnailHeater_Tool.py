@@ -18,7 +18,7 @@ import re
 import traceback
 import massagehead as mh
 
-TOOL_VERSION = "v2.8.0 Lite"
+TOOL_VERSION = "v2.8.1 Lite"
 
 cur_dir = os.getcwd()  # 当前目录
 # 生成的文件目录
@@ -471,6 +471,12 @@ if __name__ == '__main__':
             if flash_size < 8 * 1024 * 1024:
                 print("识别到不支持的Flash大小：" + flash_size_text)
 
+        exMediaParam = []
+        if method == 2:
+            # 清空时，需要重新刷入壁纸
+            exMediaParam = [
+                get_backgroup_addr_in_flash(chip_id), default_backgroud,
+                get_wallpaper_addr_in_flash(chip_id), default_wallpaper]
         #  --port COM7 --baud 921600 write_flash -fm dio -fs 4MB 0x1000 bootloader_dio_40m.bin 0x00008000 partitions.bin 0x0000e000 boot_app0.bin 0x00010000 
         cmd = []
         if chip_id == CHIP_ID_S2:
@@ -483,10 +489,8 @@ if __name__ == '__main__':
                    '0x00001000', "./base_data/%s_bootloader_%s.bin" % (chip_id, flash_size_text),
                    '0x00008000', "./base_data/%s_partitions_%s.bin" % (chip_id, flash_size_text),
                    '0x0000e000', "./base_data/%s_boot_app0.bin" % (chip_id),
-                   '0x00010000', os.path.join(firmware_dir, firmware_path),
-                   get_backgroup_addr_in_flash(chip_id), default_backgroud,
-                   get_wallpaper_addr_in_flash(chip_id), default_wallpaper
-                   ]
+                   '0x00010000', os.path.join(firmware_dir, firmware_path)
+                   ] + exMediaParam
         elif chip_id == CHIP_ID_S3:
             flash_size_text = flash_size_text if flash_size_text in ["4MB", "8MB", "16MB", "32MB"] else "32MB"
             cmd = ['SnailHeater_WinTool.py', '--port', select_com,
@@ -497,10 +501,8 @@ if __name__ == '__main__':
                    '0x00000000', "./base_data/%s_bootloader_%s.bin" % (chip_id, flash_size_text),
                    '0x00008000', "./base_data/%s_partitions_%s.bin" % (chip_id, flash_size_text),
                    # '0x0000e000', "./base_data/%s_boot_app0.bin"% (chip_id) ,
-                   '0x00010000', os.path.join(firmware_dir, firmware_path),
-                   get_backgroup_addr_in_flash(chip_id), default_backgroud,
-                   get_wallpaper_addr_in_flash(chip_id), default_wallpaper
-                   ]
+                   '0x00010000', os.path.join(firmware_dir, firmware_path)
+                   ] + exMediaParam
 
         # sys.argv = cmd
         esptool.main(cmd[1:])
