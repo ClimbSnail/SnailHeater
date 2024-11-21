@@ -11,6 +11,11 @@ import serial  # pip install pyserial
 import serial.tools.list_ports
 # from esptoolpy import espefuse
 import esptool
+# 需要修改esptool源码loader.py中得一个文件路径
+# STUBS_DIR = os.path.join(os.path.dirname(__file__), "targets", "stub_flasher")
+# 修改为如下
+# STUBS_DIR = os.path.join(os.getcwd(), "stub_flasher")
+
 import requests
 import yaml  # pip install pyyaml
 import io

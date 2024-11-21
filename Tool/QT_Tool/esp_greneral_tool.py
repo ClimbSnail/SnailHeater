@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # 打包脚本
-# pyinstaller --icon ./images/open_source.ico -F LX_Keyboard_Tool.py
+# pyinstaller --icon ./images/open_source.ico -F esp_greneral_tool.py
 
 # pip install pyserial -i https://mirrors.aliyun.com/pypi/simple/
 import sys
@@ -23,13 +23,52 @@ import re
 import traceback
 import massagehead as mh
 
-TOOL_VERSION = "v1.0.2 Lite"
+TOOL_VERSION = "v1.0.0 Lite"
 
 cur_dir = os.getcwd()  # 当前目录
-# 生成的文件目录
-gen_path = os.path.join(cur_dir, "Generate")
 
-baud_rate = "921600" # 
+# 读取配置信息
+cfg_fp = open("esp_greneral_tool.yaml", "r", encoding="utf-8")
+
+win_cfg = yaml.load(cfg_fp, Loader=yaml.SafeLoader)["windows_tool"]
+
+tool_name = win_cfg["tool_name"] \
+    if "tool_name" in win_cfg.keys() else ""
+tool_start_info = win_cfg["tool_start_info"] \
+    if "tool_start_info" in win_cfg.keys() else ""
+tool_end_info = win_cfg["tool_end_info"] \
+    if "tool_end_info" in win_cfg.keys() else ""
+
+qq_info = win_cfg["qq_info"].split(",") \
+    if "qq_info" in win_cfg.keys() else ["", ""]
+info_url_0 = win_cfg["info_url_0"] \
+    if "info_url_0" in win_cfg.keys() else ""
+info_url_1 = win_cfg["info_url_1"] \
+    if "info_url_1" in win_cfg.keys() else ""
+download_baud_rate = win_cfg["download_baud_rate"] \
+    if "download_baud_rate" in win_cfg.keys() else ""
+info_baud_rate = win_cfg["info_baud_rate"] \
+    if "info_baud_rate" in win_cfg.keys() else ""
+main_appdir_rules = win_cfg["main_appdir_rules"] \
+    if "main_appdir_rules" in win_cfg.keys() else None
+main_app_rules = win_cfg["main_app_rules"] \
+    if "main_app_rules" in win_cfg.keys() else None
+main_app_addr = win_cfg["main_app_addr"] \
+    if "main_app_addr" in win_cfg.keys() else None
+firmware_info_list = win_cfg["firmware_info_list"] \
+    if "firmware_info_list" in win_cfg.keys() else []
+temp_sn_recode_path = win_cfg["temp_sn_recode_path"] \
+    if "temp_sn_recode_path" in win_cfg.keys() else None
+search_sn_registrant_url = win_cfg["search_sn_registrant_url"] \
+    if "search_sn_registrant_url" in win_cfg.keys() else None
+activate_sn_url = win_cfg["activate_sn_url"] \
+    if "activate_sn_url" in win_cfg.keys() else None
+get_firmware_new_ver_url = win_cfg["get_firmware_new_ver_url"] \
+    if "get_firmware_new_ver_url" in win_cfg.keys() else None
+get_tool_new_ver_url = win_cfg["get_tool_new_ver_url"] \
+    if "get_tool_new_ver_url" in win_cfg.keys() else None
+
+cfg_fp.close()
 
 
 def hard_reset(com):
@@ -44,7 +83,7 @@ def hard_reset(com):
     select_com = com
     if select_com == None:
         return None
-    ser = serial.Serial(select_com, baud_rate, timeout=10)
+    ser = serial.Serial(select_com, download_baud_rate, timeout=10)
 
     ser.setDTR(False)  # IO0=HIGH
     ser.setRTS(True)  # EN=LOW, chip in reset
@@ -99,46 +138,44 @@ def get_flash_size(select_com):
 
     return flash_size, flash_size_text
 
-if __name__ == '__main__':
 
+def down():
     # cmd = ['espefuse.py', '-p', 'COM4', 'adc_info']
     # espefuse.main(cmd)
     try:
-        print("\n蓝星键盘刷机工具 %s By ClimbSnail\n" % TOOL_VERSION)
-        print("\n注：工具如有问题可联系QQ： ClimbSnail\n")
-        input("\n刷机注意事项：\n1. 确保安装好 USB-TTL 驱动.\n2. 插接好接口.\n3. 设置好拨码开关.\n\n\n准备好后敲下回车键继续。")
-        input("\n若给旋钮刷机，请将旋钮通过排线连接至键盘板。或外接独立的USB-TLL（注意连接RXD、TXD、DTR、RTS）。")
-        print("")
+        print("\n%s %s By ClimbSnail\n" % (tool_name, TOOL_VERSION))
+        input(tool_start_info)
 
-        # 选择刷机对象
-        refresh_obj = int(input("请选择刷机对象。（输入1 键盘主体， 输入2 旋钮）").strip())
-        if refresh_obj == 1:
-            refresh_obj_str = "keyboard"
-        else:
-            refresh_obj_str = "knob"
-        print("")
+        # 选择规则对象
 
-        # 选择刷机速率
-        baud_choose = int(input("选择刷机速率。（输入1 921600， 输入2 460800，输入3 230400）").strip())
-        baud = "921600"
-        if baud_choose == 1:
-            baud = "921600"
-        elif baud_choose == 2:
-            baud = "460800"
-        elif baud_choose == 3:
-            baud = "230400"
-        print("")        
-        
         com_obj_list = list(serial.tools.list_ports.comports())
         # serial.utilities.
         select_com = None
         # 获取可用COM口名字
-        com_list = [com_obj[0]+ " -> " +com_obj[1].split("(")[0].strip() for com_obj in com_obj_list]
+        com_list = [com_obj[0] + " -> " + com_obj[1].split("(")[0].strip() for com_obj in com_obj_list]
         print("您本机的串口设备有：", com_list, end='\n')
         if len(com_list) == 1:
             select_com = com_list[0].split(" ")[0].strip().upper()
         else:
             select_com = input("输入 COM口（例如 COM7）: ").strip().upper()
+
+        # 列出文件夹下所有的目录与文件
+        list_file = os.listdir(main_appdir_rules)
+        firmware_path_list = []
+        # print("main_app_rules" , main_app_rules)
+        for filename in list_file:
+            match_info = re.findall(main_app_rules, filename)
+            if match_info != []:
+                firmware_path_list.append(os.path.join(main_appdir_rules, filename))
+        firmware_num = 0  # 所选择的固件
+        if len(firmware_path_list) != 0:
+            print("已找到如下固件：")
+            for ind in range(len(firmware_path_list)):
+                print("\t%d: %s" % (ind + 1, firmware_path_list[ind]))
+            firmware_num = int(input("请选择固件序号：")) - 1
+        else:
+            print("未找到相关固件，程序终止。请检查目录路径或固件名称。")
+            return None
 
         # 刷机方式选择
         print("刷机类型:")
@@ -158,34 +195,37 @@ if __name__ == '__main__':
                 break
             else:
                 print("\n选择有误，请重新选择\n")
-        
-        
+
         print("正在获取存空间大小...")
         flash_size, flash_size_text = get_flash_size(select_com)
 
         #  --port COM7 --baud 921600 write_flash -fm dio -fs 4MB 0x1000 bootloader_dio_40m.bin 0x00008000 partitions.bin 0x0000e000 boot_app0.bin 0x00010000 
-        cmd = ['LX_Keyboard_Tool.py', '--port', select_com,
-            #    '--baud', '921600',
-                '--baud', baud,
-                '--after', 'hard_reset',
-                'write_flash',
-                '--flash_size', flash_size_text,
-                '0x00000000', "./lx_bin/lx_%s_bootloader.bin" % (refresh_obj_str),
-                '0x00008000', "./lx_bin/lx_%s_partitions.bin" % (refresh_obj_str),
-                '0x0000e000', "./lx_bin/lx_%s_boot_app0.bin" % (refresh_obj_str),
-                '0x00010000', "./lx_bin/lx_%s_firmware.bin" % (refresh_obj_str)
+        cmd = ['--port', select_com,
+               '--baud', download_baud_rate,
+               '--after', 'hard_reset',
+               'write_flash',
+               '--flash_size', flash_size_text
                ]
+        # 主固件
+        cmd.append(main_app_addr)
+        cmd.append(firmware_path_list[firmware_num])
+        # 辅助bin文件
+        if firmware_info_list != None and firmware_info_list != []:
+            for bin_obj in firmware_info_list:
+                cmd.append(bin_obj["addr"])
+                cmd.append(bin_obj["filepath"])
 
         # sys.argv = cmd
         print("刷机参数 --> ", cmd)
-        
-        esptool.main(cmd[1:])
+
+        esptool.main(cmd)
 
     except Exception as err:
-        print(err)
+        print(str(traceback.format_exc()))
 
-    print("\n\n刷机流程完毕，请保持通电等待屏幕将会亮起后才能断电。\n注：更新式刷机一般刷机完成后2s就能亮屏，清空式刷机则需等待10s左右。\n")
-
-    print("\n若无法刷机成功，先确认 USB-TTL 驱动以及连接线是否正常，重新打开软件执行刷机。\n")
-
+    print(tool_end_info)
     input("按回车以关闭本软件。")
+
+
+if __name__ == '__main__':
+    down()
