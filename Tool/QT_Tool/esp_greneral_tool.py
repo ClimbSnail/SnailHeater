@@ -23,7 +23,7 @@ import re
 import traceback
 import massagehead as mh
 
-TOOL_VERSION = "v1.0.0 Lite"
+TOOL_VERSION = "v1.0.1 Lite"
 
 cur_dir = os.getcwd()  # 当前目录
 
@@ -172,7 +172,7 @@ def down():
             print("已找到如下固件：")
             for ind in range(len(firmware_path_list)):
                 print("\t%d: %s" % (ind + 1, firmware_path_list[ind]))
-            firmware_num = int(input("请选择固件序号：")) - 1
+            firmware_num = int(input("请选择固件序号（例如输入1）：")) - 1
         else:
             print("未找到相关固件，程序终止。请检查目录路径或固件名称。")
             return None

@@ -52,15 +52,15 @@ windows_tool:
   # 辅助bin文件的
   firmware_info_list:
     # 这里可添加n个bin文件信息（以一行"-"符号隔离），会将指定格式以指定地址刷入
-    # -
-    #   addr: "0x00000000"
-    #   filepath: ./lx_bin/lx_keyboard_bootloader.bin
-    # - 
-    #   addr: "0x00008000"
-    #   filepath: ./lx_bin/lx_keyboard_partitions.bin
-    # - 
-    #   addr: "0x0000e000"
-    #   filepath: ./lx_bin/lx_keyboard_boot_app0.bin
+    -
+      addr: "0x00000000"
+      filepath: ./lx_bin/lx_keyboard_bootloader.bin
+    - 
+      addr: "0x00008000"
+      filepath: ./lx_bin/lx_keyboard_partitions.bin
+    - 
+      addr: "0x0000e000"
+      filepath: ./lx_bin/lx_keyboard_boot_app0.bin
 
   temp_sn_recode_path: temporary_sn_recode.txt
   # 预留的读取激活码的本地缓存文件 用于不在联网状态下使用（本字段需要配合固件联调）
