@@ -104,6 +104,11 @@ CHIP_ID_S2 = "S2"
 CHIP_ID_S3 = "S3"
 
 g_curr_chip_id = CHIP_ID_KNOWN
+g_autoActivate = True
+
+DOWN_CLEAR_FLAG_CLEAR = "清空式"
+DOWN_CLEAR_FLAG_UPDATE = "更新式"
+g_DownloadClearFlag = None
 
 count = 0
 
@@ -313,7 +318,7 @@ class FirmwareDownloader(QThread):
         try:
             # self.get_machine_software_ver.emit(True)
 
-            if self.mode == "清空式":
+            if self.mode == DOWN_CLEAR_FLAG_CLEAR:
                 self.print_log("正在清空主机数据...")
                 # esptool.py erase_region 0x00000 0x400000
                 # esptool.py erase_flash
@@ -353,7 +358,7 @@ class FirmwareDownloader(QThread):
                 self.quit()
                 return None
             exMediaParam = []
-            if self.mode == "清空式":
+            if self.mode == DOWN_CLEAR_FLAG_CLEAR:
                 exMediaParam = [
                     get_backgroup_addr_in_flash(g_curr_chip_id), default_backgroud,
                     get_wallpaper_addr_in_flash(g_curr_chip_id), default_wallpaper]
@@ -922,6 +927,8 @@ class DownloadController(object):
         """
         global default_wallpaper
         global default_backgroud
+        global g_autoActivate
+        global g_DownloadClearFlag
 
         try:
             self.print_log("准备更新固件...")
@@ -930,7 +937,7 @@ class DownloadController(object):
             self.form.UpdatePushButton.setEnabled(False)
 
             firmware_path = self.form.FirmwareComboBox.currentText().strip()
-            mode = "更新式" if self.form.UpdateModeMethodRadioButton.isChecked() else "清空式"
+            g_DownloadClearFlag = DOWN_CLEAR_FLAG_UPDATE if self.form.UpdateModeMethodRadioButton.isChecked() else DOWN_CLEAR_FLAG_CLEAR
 
             select_com = self.getSafeCom()
             if select_com == None or firmware_path == "":
@@ -951,7 +958,7 @@ class DownloadController(object):
 
             self.print_log("串口号：" + (COLOR_RED % select_com))
             self.print_log("固件文件：" + (COLOR_RED % firmware_path))
-            self.print_log("刷机模式：" + (COLOR_RED % mode))
+            self.print_log("刷机模式：" + (COLOR_RED % g_DownloadClearFlag))
 
             if "③" in firmware_path:
                 default_wallpaper = default_wallpaper_320
@@ -966,7 +973,7 @@ class DownloadController(object):
                 default_wallpaper = default_wallpaper_clean
 
             all_time = 6  # 粗略认为连接并复位芯片需要0.5s钟 自动激活需要6s
-            if mode == "清空式":
+            if g_DownloadClearFlag == DOWN_CLEAR_FLAG_CLEAR:
                 all_time += 24
             else:
                 all_time += 5
@@ -977,7 +984,7 @@ class DownloadController(object):
                          "./base_data/S2_partitions_4MB.bin",
                          #  "./base_data/S2_tinyuf2.bin",
                          os.path.join(firmware_dir, firmware_path)]
-            if mode == "清空式":
+            if g_DownloadClearFlag == DOWN_CLEAR_FLAG_CLEAR:
                 file_list = file_list + [default_backgroud, default_wallpaper]
             
             for filepath in file_list:
@@ -988,10 +995,16 @@ class DownloadController(object):
             # 进度条进程要在下载进程之前启动（为了在下载失败时可以立即查杀进度条进程）
             self.progress_bar_timer.start(int(all_time / 100 * 1000))
 
+            # 标记是否执行自动激活
+            if "Pro" in firmware_path:
+                g_autoActivate = False
+            else:
+                g_autoActivate = True
+
             if self.download_thread != None:
                 del self.download_thread
 
-            self.download_thread = FirmwareDownloader(mode, select_com, os.path.join(firmware_dir, firmware_path))
+            self.download_thread = FirmwareDownloader(g_DownloadClearFlag, select_com, os.path.join(firmware_dir, firmware_path))
             self.download_thread.print_signal.connect(self.print_log)
             self.download_thread.ret_finish.connect(self.down_action_finish)
             self.download_thread.get_machine_software_ver.connect(self.get_machine_software_ver)
@@ -1004,9 +1017,14 @@ class DownloadController(object):
 
     def down_action_finish(self, isOk):
         global g_curr_chip_id
-        if isOk == True:
+        global g_autoActivate
+        global g_DownloadClearFlag
+        if isOk == True and g_DownloadClearFlag == DOWN_CLEAR_FLAG_CLEAR:
             time.sleep(4)  # 等待文件系统初始化完成
-            self.auto_active()
+            if g_autoActivate == True:
+                self.auto_active()
+            else:
+                self.print_log(COLOR_RED % "请通电30秒后手动，查询激活码并激活。")
 
         self.reset_ui_button()
         g_curr_chip_id = CHIP_ID_KNOWN
