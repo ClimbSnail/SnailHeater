@@ -12,5 +12,6 @@ __pycache__/
 *.bin
 SnailHeater_WinTool.spec
 base_data/
+*base_data*
 Generate/
 ffmpeg.exe
