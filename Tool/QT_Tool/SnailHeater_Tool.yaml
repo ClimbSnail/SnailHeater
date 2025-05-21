@@ -23,7 +23,7 @@ windows_tool:
   # 通讯的波特率
   info_baud_rate: "921600"
   # 固件的目录
-  firmware_dir: "../蜗牛台管理工具v2.8.2（含v2.4.3固件）/"
+  firmware_dir: "../蜗牛台管理工具v2.8.3（含v2.4.4固件）/"
 
   temp_sn_recode_path: temporary_sn_recode.txt
   # 预留的读取激活码的本地缓存文件 用于不在联网状态下使用（本字段需要配合固件联调）
@@ -53,4 +53,21 @@ sn_search_server:
   # server启动绑定的服务器ip
   server_ip: "0.0.0.0"
   # server启动绑定的服务器端口
-  server_port: "5001"
+  server_port: 5001
+  # ftp服务的URL
+  ftp_url_header: "http://climbsnail.cn:5002/"
+  # ftp启动绑定的服务器端口
+  ftp_port: 5002
+
+  # mqtt的配置
+  mqtt_uri: climbsnail.cn
+  mqtt_port: 1883
+  mqtt_username: ClimbSnail
+  mqtt_password: ClimbSnail.v0
+  mqtt_clientID: Server
+  # 管理器的启动消息
+  mqtt_manager_topic: /snail/manager
+  # 要检测的焊台活动主题
+  mqtt_subscribe: /snail/+/+
+  # 要推送的topic
+  mqtt_action_topic: /snail/action

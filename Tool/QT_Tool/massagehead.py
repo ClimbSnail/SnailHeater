@@ -130,8 +130,8 @@ class MsgHead():
     """
 
     def __init__(self, from_who=0, to_who=0, action_type=AT.AT_UNKNOWN):
-        # self.header_mark = b'\x23\x23'  # 两个#号
-        self.header_mark = 8995  # 两个#号
+        # self.header_mark = 8995  # 两个#号
+        self.header_mark = 21930  # 0x55AA
         self.msg_len = 0
         self.from_who = from_who
         self.to_who = to_who

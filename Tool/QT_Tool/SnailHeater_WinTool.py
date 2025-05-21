@@ -153,6 +153,8 @@ def get_wallpaper_addr_in_flash(chip_id):
         return '0x00200000'
     elif chip_id == CHIP_ID_S3:
         return '0x004D0000'
+
+        
     else:
         return '0x00200000'
 
@@ -624,8 +626,8 @@ class DownloadController(object):
             self.ser.setRTS(False)  # EN=HIGH, chip out of reset
 
         time.sleep(0.5)
-        STRGLO = self.ser.read(self.ser.in_waiting).decode("utf8")
-        print("Count = ", count, "\tState: ", STRGLO)
+        serial_data = self.ser.read(self.ser.in_waiting)
+        print("Count = ", count, "\tState: ", serial_data)
 
         self.release_serial()
         return None
@@ -707,9 +709,11 @@ class DownloadController(object):
             time.sleep(1)
             if self.ser.in_waiting:
                 try:
-                    STRGLO = self.ser.read(self.ser.in_waiting)
-                    print("\nSTRGLO = ", STRGLO)
-                    match_info = re.findall(r"Success", STRGLO.decode("utf8"))
+                    serial_data = self.ser.read(self.ser.in_waiting)
+                    print("\nserial_data -> ", serial_data)
+                    serial_data = serial_data.replace(b"\x55\xaa", b"##").decode("utf8")
+                    
+                    match_info = re.findall(r"Success", serial_data)
                     if match_info != []:
                         act_ret = True
                 except Exception as err:
@@ -764,9 +768,11 @@ class DownloadController(object):
             time.sleep(1)
             if self.ser.in_waiting:
                 try:
-                    STRGLO = self.ser.read(self.ser.in_waiting)
-                    print("\nSTRGLO = ", STRGLO)
-                    match_info = re.findall(r"Color Success", STRGLO.decode("utf8"))
+                    serial_data = self.ser.read(self.ser.in_waiting)
+                    print("\nserial_data -> ", serial_data)
+                    serial_data = serial_data.replace(b"\x55\xaa", b"##").decode("utf8")
+                    
+                    match_info = re.findall(r"Color Success", serial_data)
                     if match_info != []:
                         act_ret = True
                 except Exception as err:
@@ -888,9 +894,11 @@ class DownloadController(object):
             time.sleep(1)
             if self.ser.in_waiting:
                 try:
-                    STRGLO = self.ser.read(self.ser.in_waiting).decode("utf8")
-                    print(STRGLO)
-                    color = re.findall(r"VALUE_TYPE_FORWARD_COLOR = \S* \S*", STRGLO)[0] \
+                    serial_data = self.ser.read(self.ser.in_waiting)
+                    print("\nserial_data -> ", serial_data)
+                    serial_data = serial_data.replace(b"\x55\xaa", b"##").decode("utf8")
+                    
+                    color = re.findall(r"VALUE_TYPE_FORWARD_COLOR = \S* \S*", serial_data)[0] \
                                 .split(" ")[-2:]
                 except Exception as err:
                     print(str(traceback.format_exc()))
@@ -1121,18 +1129,23 @@ class DownloadController(object):
             print(send_data.type)
             value = ""
             send_data.value = bytes(value, encoding='utf8')
-            print(send_data.encode('!'))
+            print("Sent: ", send_data.encode('!'))
 
             self.ser.write(send_data.encode('!'))
 
             time.sleep(1)
             if self.ser.in_waiting:
+                print("Recv OK")
                 try:
-                    STRGLO = self.ser.read(self.ser.in_waiting).decode("utf8")
-                    print("\nSTRGLO -> ", STRGLO)
-                    machine_code = re.findall(r"VALUE_TYPE[_MC]* = \d*", STRGLO)[0] \
+                    serial_data = self.ser.read(self.ser.in_waiting)
+                    print("\nserial_data -> ", serial_data)
+                    serial_data = serial_data.replace(b"\x55\xaa", b"##").decode("utf8")
+                    
+                    machine_code = re.findall(r"VALUE_TYPE[_MC]* = \d*", serial_data)[0] \
                         .split(" ")[-1]
                 except Exception as err:
+                    print("try Fail")
+                    print(str(traceback.format_exc()))
                     pass
                 print("machine_code = ", machine_code)
 
@@ -1181,9 +1194,11 @@ class DownloadController(object):
             time.sleep(1)
             if self.ser.in_waiting:
                 try:
-                    STRGLO = self.ser.read(self.ser.in_waiting).decode("utf8")
-                    print(STRGLO)
-                    sn = re.findall(r"VALUE_TYPE[_SN]* = \S*", STRGLO)[0] \
+                    serial_data = self.ser.read(self.ser.in_waiting)
+                    print("\nserial_data -> ", serial_data)
+                    serial_data = serial_data.replace(b"\x55\xaa", b"##").decode("utf8")
+                    
+                    sn = re.findall(r"VALUE_TYPE[_SN]* = \S*", serial_data)[0] \
                         .split(" ")[-1]
                 except Exception as err:
                     print(str(traceback.format_exc()))
@@ -1235,9 +1250,11 @@ class DownloadController(object):
             time.sleep(1)
             if self.ser.in_waiting:
                 try:
-                    STRGLO = self.ser.read(self.ser.in_waiting).decode("utf8")
-                    print(STRGLO)
-                    sw_ver = re.findall(r"VALUE_TYPE_SH_SOFTWARE_VER = \S*", STRGLO)[0] \
+                    serial_data = self.ser.read(self.ser.in_waiting)
+                    print("\nserial_data -> ", serial_data)
+                    serial_data = serial_data.replace(b"\x55\xaa", b"##").decode("utf8")
+
+                    sw_ver = re.findall(r"VALUE_TYPE_SH_SOFTWARE_VER = \S*", serial_data)[0] \
                         .split(" ")[-1]
                 except Exception as err:
                     print(str(traceback.format_exc()))
