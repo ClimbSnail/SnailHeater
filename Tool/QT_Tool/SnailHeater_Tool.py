@@ -23,7 +23,7 @@ import re
 import traceback
 import massagehead as mh
 
-TOOL_VERSION = "v2.8.1 Lite"
+TOOL_VERSION = "v2.8.3 Lite"
 
 cur_dir = os.getcwd()  # 当前目录
 # 生成的文件目录
@@ -135,9 +135,11 @@ def act_button_click(com):
         time.sleep(1)
         if ser.in_waiting:
             try:
-                STRGLO = ser.read(ser.in_waiting)
-                print("\nSTRGLO = ", STRGLO)
-                match_info = re.findall(r"Success", STRGLO.decode("utf8"))
+                serial_data = ser.read(ser.in_waiting)
+                print("\nserial_data -> ", serial_data)
+                serial_data = serial_data.replace(b"\x55\xaa", b"##").decode("utf8")
+                
+                match_info = re.findall(r"Success", serial_data)
                 if match_info != []:
                     act_ret = True
             except Exception as err:
@@ -239,10 +241,12 @@ def get_machine_code(com):
 
         time.sleep(1)
         if ser.in_waiting:
-            try:
-                STRGLO = ser.read(ser.in_waiting).decode("utf8")
-                print(STRGLO)
-                machine_code = re.findall(r"VALUE_TYPE[_MC]* = \d*", STRGLO)[0] \
+            try:                
+                serial_data = ser.read(ser.in_waiting)
+                print("\nserial_data -> ", serial_data)
+                serial_data = serial_data.replace(b"\x55\xaa", b"##").decode("utf8")
+                
+                machine_code = re.findall(r"VALUE_TYPE[_MC]* = \d*", serial_data)[0] \
                     .split(" ")[-1]
             except Exception as err:
                 pass
