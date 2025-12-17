@@ -44,6 +44,7 @@ from PyQt5.QtCore import pyqtSignal, QThread
 from PyQt5.QtCore import Qt
 
 import massagehead as mh
+import MyRtttl as rtttl
 # import spiffsgen
 # import lvgl_image_converter.lv_img_conv as image_conv
 import lvgl_image_converter as image_conv
@@ -96,6 +97,7 @@ waLLPAPER_JPG_MAX_SIZE = 17500
 
 TYPE_JPG = 0
 TYPE_MJPEG = 1
+TYPE_RTTTL = 127
 IMAGE_FORMAT = ["jpg", "JPG", "jpeg", "JPEG", "png", "PNG"]
 MOVIE_FORMAT = ["mp4", "MP4", "avi", "AVI", "mov", "MOV"]
 
@@ -1569,6 +1571,8 @@ class DownloadController(object):
             self.print_log((COLOR_RED % "请检查参数设置"))
             return None
 
+        # path = os.path.dirname(param["dst_path"][0])
+        # param["dst_path"][0] = f"{path}/rtttl.rtttl"
         wallpapers = param["dst_path"]
         verMark = 0x11  # 版本号
         total = 0  # 壁纸总数（1字节）
@@ -1584,6 +1588,8 @@ class DownloadController(object):
             suffix = os.path.basename(wallpapers[ind]).split(".")[-1]
             if suffix == "mjpeg":
                 type.append(TYPE_MJPEG)
+            elif suffix == "rtttl":
+                type.append(TYPE_RTTTL)
             else:
                 type.append(TYPE_JPG)
             startAddr.append(dataAddrOffset)
@@ -1632,17 +1638,14 @@ class DownloadController(object):
         """
         self.print_log((COLOR_RED % "正在转换（注:若视频比较大，界面会卡顿一段时间）"))
         param = self.get_output_param(self.form.choosePathEdit.text().strip())
+
         if param == False:
             self.print_log((COLOR_RED % "请检查参数设置"))
             return False
-
-        cmd_resize = 'ffmpeg -i "%s" -vf "scale=-1:%s:flags=lanczos" "%s"'  # 缩放转化
+        
         #  -c:v libx264 -crf 18
         #  -c copy
         cmd_time = 'ffmpeg -ss %s -to %s -i "%s" -c:v copy "%s"'  # 时间片截取 -i一定要放在时间参数后
-
-        # cmd_to_rgb 的倒数第二个参数其实没什么作用，因为rgb本身就是实际的像素点
-        cmd_to_rgb = 'ffmpeg -i "%s" -vf "fps=%s,scale=-1:%s:flags=lanczos,crop=%s:in_h:(in_w-%s)/2:0" -c:v rawvideo -pix_fmt rgb565be -q:v %s "%s"'
 
         # （这个是为了跟cmd_to_mjpeg统一格式才加的参数）
         # fps 帧率过滤器
@@ -1650,6 +1653,8 @@ class DownloadController(object):
         # crop 裁剪过滤器
         cmd_to_mjpeg = 'ffmpeg -y -i "%s" -vf "fps=%s,scale=-1:%s:flags=lanczos,crop=%s:in_h:(in_w-%s)/2:0" -q:v %s "%s"'
         cmd_to_mjpeg_t = 'ffmpeg -y -i "%s" -vf "fps=%s,scale=%s:-1:flags=lanczos,crop=in_w:%s:0:(in_h-%s)/2" -q:v %s "%s"'
+
+        rtttlConverter = rtttl.MP4ToRTTTLConverter()
 
         for ind in range(len(param["src_path"])):
 
@@ -1701,6 +1706,17 @@ class DownloadController(object):
                                            param["dst_path"][ind])
                     print(out_cmd)
                     os.system(out_cmd)
+            elif param["format"][ind] == "rtttl":
+                try:
+                    # 执行转换
+                    rtttlConverter.convert(
+                        mp4_path=param["src_path"][ind],
+                        output_rtttl=param["dst_path"][ind],
+                        rtttl_title="RTitle_"+str(ind)
+                    )
+                except Exception as e:
+                    print(str(traceback.format_exc()))
+                    print(f"转换失败：{str(e)}")
             elif param["format"][ind] in IMAGE_FORMAT:
                 wallpaper_cache_path = param["src_path"][ind]
                 src_im: Image.Image = Image.open(wallpaper_cache_path)
@@ -1754,18 +1770,29 @@ class DownloadController(object):
         """
         resolutionW, resolutionH = self.form.resolutionComboBox.currentText().split(" ")[0].split("x")
 
-        fileNameText = fileNameText_t
-        if fileNameText == "":
+        fileNameListText = fileNameText_t
+        if fileNameListText == "":
             self.print_log(COLOR_RED % "未选择素材文件")
             return False
-        fileNames = fileNameText.split(";")[0:-1]
+        oldFileNames = fileNameListText.split(";")[0:-1]
+        fileNames = []
         outFileNames = []
         qualitys = []
         formats = []
         # 文件转化的创建输出目录
-        for fileName in fileNames:
+        for ind in range(len(oldFileNames)):
+            fileName = oldFileNames[ind]
+            fileNames.append(fileName)
             name_suffix = os.path.basename(fileName).split(".")
             if name_suffix[1] in MOVIE_FORMAT:
+                # 音频数据文件
+                fileNames.append(fileName) # 音频文件多出一个
+                outFileNames.append(
+                    os.path.join(wallpaper_cache_dir,
+                                 name_suffix[0] + "_" + resolutionW + "x" + resolutionH + ".rtttl"))
+                formats.append("rtttl")
+                qualitys.append(self.form.qualityComboBox.currentText().strip())
+                # 视频数据文件
                 outFileNames.append(
                     os.path.join(wallpaper_cache_dir,
                                  name_suffix[0] + "_" + resolutionW + "x" + resolutionH + ".mjpeg"))
