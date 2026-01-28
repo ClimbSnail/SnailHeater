@@ -35,11 +35,9 @@ import datetime
 
 import serial  # pip install pyserial
 import serial.tools.list_ports
-# from PyQt5.Qt import *
 from PyQt5.Qt import QWidget, QApplication
 from PyQt5 import uic, QtCore
 from PyQt5.QtWidgets import QMessageBox, QApplication, QMainWindow, QFileDialog
-from PyQt5.QtGui import QGuiApplication
 from PyQt5.QtCore import pyqtSignal, QThread
 from PyQt5.QtCore import Qt
 
@@ -55,7 +53,6 @@ import esptool  # sys.path.append("./esptool_v41") or pip install esptool==4.1
 # STUBS_DIR = os.path.join(os.path.dirname(__file__), "targets", "stub_flasher")
 # 修改为如下
 # STUBS_DIR = os.path.join(os.getcwd(), "stub_flasher")
-
 
 from download import Ui_SanilHeaterTool
 import common
@@ -95,6 +92,7 @@ wallpaper_path = os.path.join(gen_path, "Wallpaper")
 wallpaper_name = os.path.join(wallpaper_path, "Wallpaper.lsw")
 WALLPAPER_JPG_MAX_SIZE = 17500
 
+WALLPAPER_MASK = 0x11 # 壁纸版本号
 TYPE_JPG = 0
 TYPE_MJPEG = 1
 TYPE_PCM_U8_1 = 124
@@ -195,7 +193,7 @@ def get_version():
     try:
         # This SH_TOOL version supports [ SH_SW v2.1.1~SH_SW UNKNOWN ].
         # Latest version [ SH_TOOL v2.7.8 ].
-        response = requests.get(get_tool_new_ver_url + "/" + common.TOOL_VERSION, timeout=3)  # , verify=False
+        response = requests.get(get_tool_new_ver_url + "/" + common.TOOL_VERSION, timeout=1)  # , verify=False
         new_version_info = re.findall(r'SH_TOOL v\d{1,2}\.\d{1,2}\.\d{1,2}', response.text.split("</p><p>")[1])
         new_version = new_version_info[0].split(" ")[1].strip()
 
@@ -829,10 +827,10 @@ class DownloadController(object):
             try:
                 if activate_sn_url != None and activate_sn_url != "":
                     self.print_log("联网查询激活码（管理员模式）...")
-                    response = requests.get(activate_sn_url + machine_code, timeout=3)  # , verify=False
+                    response = requests.get(activate_sn_url + machine_code, timeout=2)  # , verify=False
                 else:
                     self.print_log("联网查询激活码...")
-                    response = requests.get(search_sn_registrant_url + machine_code, timeout=3)  # , verify=False
+                    response = requests.get(search_sn_registrant_url + machine_code, timeout=2)  # , verify=False
                     print(search_sn_registrant_url + machine_code)
                     print(response)
                     # 注册者信息
@@ -1087,7 +1085,7 @@ class DownloadController(object):
         new_ver = None
         try:
             self.print_log("联网查询最新固件版本...")
-            response = requests.get(get_firmware_new_ver_url, timeout=3)  # , verify=False
+            response = requests.get(get_firmware_new_ver_url, timeout=1)  # , verify=False
             # sn = re.findall(r'\d+', response.text)
             if 'SnailHeater_v' in response.text.strip() or 'SH_SW v' in response.text.strip():
                 new_ver = response.text.strip()
@@ -1382,53 +1380,6 @@ class DownloadController(object):
         else:
             self.print_log(COLOR_RED % "此文件为图片Bin文件，无需图片转化，可直接写入")
             lvgl_filepath = param_v["src_path"]
-        # 生成 SPIFFS 文件系统镜像
-        # lvgl_filepath = os.path.join(gen_path, "backgroud.bin")
-        # image_size = 0x50000
-        # try:
-        #     os.makedirs(backgroud_base)
-        # except Exception as e:
-        #     self.form.WriteWallpaperButton.setEnabled(True)
-        #     pass
-
-        # if not os.path.exists(backgroud_base):
-        #     raise RuntimeError('given base directory %s does not exist' % backgroud_base)
-
-        # with open(lvgl_filepath, 'wb') as image_file:
-        #     # image_size = int(image_size, 0)
-        #     page_size = 256
-        #     block_size = 4096
-        #     meta_len = 4
-        #     obj_name_len = 48
-        #     big_endian = False
-        #     use_magic = True
-        #     use_magic_len = True
-        #     follow_symlinks = False
-
-        #     # Based on typedefs under spiffs_config.h
-        #     SPIFFS_OBJ_ID_LEN = 2  # spiffs_obj_id
-        #     SPIFFS_SPAN_IX_LEN = 2  # spiffs_span_ix
-        #     SPIFFS_PAGE_IX_LEN = 2  # spiffs_page_ix
-        #     SPIFFS_BLOCK_IX_LEN = 2  # spiffs_block_ix
-
-        #     spiffs_build_default = spiffsgen.SpiffsBuildConfig(page_size, SPIFFS_PAGE_IX_LEN,
-        #                                             block_size, SPIFFS_BLOCK_IX_LEN, meta_len,
-        #                                             obj_name_len, SPIFFS_OBJ_ID_LEN, SPIFFS_SPAN_IX_LEN,
-        #                                             True, True, 'big' if big_endian else 'little',
-        #                                             use_magic, use_magic_len)
-
-        #     spiffs = spiffsgen.SpiffsFS(image_size, spiffs_build_default)
-
-        #     for root, dirs, files in os.walk(backgroud_base, followlinks=follow_symlinks):
-        #         for f in files:
-        #             full_path = os.path.join(root, f)
-        #             spiffs.create_file('/' + os.path.relpath(full_path, backgroud_base).replace('\\', '/'), full_path)
-
-        #     image = spiffs.to_binary()
-        #     image_file.write(image)
-
-        # lvgl_filepath = os.path.join(gen_path, "Backgroud", "bridge_320x240.bin")
-
         print("lvgl_filepath = ", lvgl_filepath)
 
         # 50为预留值
@@ -1579,7 +1530,6 @@ class DownloadController(object):
         # param["dst_path"][0] = f"{path}/rtttl.rtttl"
         wallpapers = param["dst_path"]
         self.print_log("wallpapers->" + str(wallpapers))
-        verMark = 0x12  # 版本号
         total = 0  # 壁纸总数（1字节）
         fps = int(param["fps"])  # 帧率
         # fps = 22
@@ -1621,7 +1571,7 @@ class DownloadController(object):
             print(str(traceback.format_exc()))
 
         with open(wallpaper_name, "wb") as fbin:
-            binaryData = b'' + struct.pack('=' + "1H1B1B", *[verMark, total, fps])
+            binaryData = b'' + struct.pack('=' + "1H1B1B", *[WALLPAPER_MASK, total, fps])
             for ind in range(len(wallpapers)):
                 if isLegal[ind] == False:
                     continue
