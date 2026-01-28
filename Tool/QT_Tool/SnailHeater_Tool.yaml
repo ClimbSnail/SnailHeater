@@ -23,21 +23,23 @@ windows_tool:
   # 通讯的波特率
   info_baud_rate: "921600"
   # 固件的目录
-  firmware_dir: "../蜗牛台管理工具v2.8.3（含v2.4.5固件）/"
+  firmware_dir: "../蜗牛台管理工具v2.8.5（含v2.5.0固件）/"
 
-  temp_sn_recode_path: temporary_sn_recode.txt
   # 预留的读取激活码的本地缓存文件 用于不在联网状态下使用（本字段需要配合固件联调）
   temp_sn_recode_path: temporary_sn_recode.txt
-  # 激活码以及注册者信息查询的api 需要激活码管理员有服务器 http://127.0.0.1:5001/snailheater/sn_registrant/v1/search/
-  search_sn_registrant_url: http://climbsnail.cn:5001/snailheater/sn/v1/search/sn_registrant/
-  # 激活码查询的api 需要激活码管理员有服务器 http://127.0.0.1:5001/snailheater/sn/v1/search/
-  search_sn_url: http://climbsnail.cn:5001/snailheater/sn/v1/search/
-  # 获取最新固件版本的api http://127.0.0.1:5001/snailheater/sn/v1/version/firmware
-  get_firmware_new_ver_url: http://climbsnail.cn:5001/snailheater/sn/v1/version/firmware
-  # 获取最新工具版本的api http://127.0.0.1:5001/snailheater/sn/v1/version/tool
-  get_tool_new_ver_url: http://climbsnail.cn:5001/snailheater/sn/v1/version/tool
+  
+  # 激活码以及注册者信息查询的api 需要激活码管理员有服务器 
+  search_sn_registrant_url: http://climbsnail.cn:5001/snailheater/v1/sn/
+  # 获取最新固件版本的api
+  get_firmware_new_ver_url: http://climbsnail.cn:5001/snailheater/v1/firmware/version
+  # 获取最新工具版本的api
+  get_tool_new_ver_url: http://climbsnail.cn:5001/snailheater/v1/tool/version
   # 自动激活的api 用于工厂批量生产（应设超级权限）
-  # activate_sn_url: http://climbsnail.cn:5001/snailheater/sn/v1/
+  # activate_sn_url: http://climbsnail.cn:5001/snailheater/v1/sn/new/
+
+  # search_sn_registrant_url: http://127.0.0.1:5001/snailheater/v1/sn/
+  # get_firmware_new_ver_url: http://127.0.0.1:5001/snailheater/v1/firmware/version
+  # get_tool_new_ver_url: http://127.0.0.1:5001/snailheater/v1/tool/version
 
 sn_tool:
   # 保存激活过的激活码路径
@@ -45,19 +47,30 @@ sn_tool:
   # 保存工厂批量激活的序列号
   sn_factory_save_path: "active_recode_factory.txt"
 
+# 生产环境服务器配置
 sn_search_server:
   # 读取的已激活过的机器激活码路径
-  active_recode_path: "../../active_recode.txt"
+  active_recode_path: ./active_recode.txt
   # 读取的SH_TOOL所支持的固件版本
   tool_supports_info_path: ./tool_supports_info.txt
   # server启动绑定的服务器ip
   server_ip: "0.0.0.0"
   # server启动绑定的服务器端口
-  server_port: 5001
+  server_http_port: 5001
+  server_https_port: 5002
+  https_cert: ./server.crt
+  # https的私钥
+  https_key: ./private.key
+  ota_dir: 
+    root: ./ota
+    snailheater: ./ota/ota_snailheater
+    sel: ./ota/ota_sel
   # ftp服务的URL
-  ftp_url_header: "http://climbsnail.cn:5002/"
+  ftp_url_header: "http://climbsnail.cn:5003"
+  ftps_url_header: "https://climbsnail.cn:5004"
   # ftp启动绑定的服务器端口
-  ftp_port: 5002
+  ftp_port: 5003
+  ftps_port: 5004
 
   # mqtt的配置
   mqtt_uri: climbsnail.cn
@@ -71,3 +84,80 @@ sn_search_server:
   mqtt_subscribe: /snail/+/+
   # 要推送的topic
   mqtt_action_topic: /snail/action
+
+# # 开发环境服务器配置
+# sn_search_server:
+#   # 读取的已激活过的机器激活码路径
+#   active_recode_path: ./active_recode.txt
+#   # 读取的SH_TOOL所支持的固件版本
+#   tool_supports_info_path: ./tool_supports_info.txt
+#   # server启动绑定的服务器ip
+#   server_ip: "0.0.0.0"
+#   # server启动绑定的服务器端口
+#   server_http_port: 5011
+#   server_https_port: 5012
+#   https_cert: ./server.crt
+#   # https的私钥
+#   https_key: ./private.key
+#   ota_dir: 
+#     root: ./ota
+#     snailheater: ./ota/ota_snailheater
+#     sel: ./ota/ota_sel
+#   # ftp服务的URL
+#   ftp_url_header: "http://climbsnail.cn:5013"
+#   ftps_url_header: "https://climbsnail.cn:5014"
+#   # ftp启动绑定的服务器端口
+#   ftp_port: 5013
+#   ftps_port: 5014
+
+#   # mqtt的配置
+#   mqtt_uri: climbsnail.cn
+#   mqtt_port: 1883
+#   mqtt_username: ClimbSnail
+#   mqtt_password: ClimbSnail.v0
+#   mqtt_clientID: Server
+#   # 管理器的启动消息
+#   mqtt_manager_topic: /snail/manager
+#   # 要检测的焊台活动主题
+#   mqtt_subscribe: /snail/+/+
+#   # 要推送的topic
+#   mqtt_action_topic: /snail/action
+
+
+# # 本地环境服务器配置
+# sn_search_server:
+#   # 读取的已激活过的机器激活码路径
+#   active_recode_path: ./active_recode.txt
+#   # 读取的SH_TOOL所支持的固件版本
+#   tool_supports_info_path: ./tool_supports_info.txt
+#   # server启动绑定的服务器ip
+#   server_ip: "0.0.0.0"
+#   # server启动绑定的服务器端口
+#   server_http_port: 5001
+#   server_https_port: 5002
+#   https_cert: ./server.crt
+#   # https的私钥
+#   https_key: ./private.key
+#   ota_dir: 
+#     root: ./ota
+#     snailheater: ./ota/ota_snailheater
+#     sel: ./ota/ota_sel
+#   # ftp服务的URL
+#   ftp_url_header: "http://10.104.116.133:5003"
+#   ftps_url_header: "https://10.104.116.133:5004"
+#   # ftp启动绑定的服务器端口
+#   ftp_port: 5003
+#   ftps_port: 5004
+
+#   # mqtt的配置
+#   mqtt_uri: climbsnail.cn
+#   mqtt_port: 1883
+#   mqtt_username: ClimbSnail
+#   mqtt_password: ClimbSnail.v0
+#   mqtt_clientID: Server
+#   # 管理器的启动消息
+#   mqtt_manager_topic: /snail/manager
+#   # 要检测的焊台活动主题
+#   mqtt_subscribe: /snail/+/+
+#   # 要推送的topic
+#   mqtt_action_topic: /snail/action

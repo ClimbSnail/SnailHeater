@@ -93,11 +93,13 @@ wallpaper_cache_dir = os.path.join(gen_path, "Cache", "Wallpaper")
 wallpaper_path = os.path.join(gen_path, "Wallpaper")
 # 壁纸文件
 wallpaper_name = os.path.join(wallpaper_path, "Wallpaper.lsw")
-waLLPAPER_JPG_MAX_SIZE = 17500
+WALLPAPER_JPG_MAX_SIZE = 17500
 
 TYPE_JPG = 0
 TYPE_MJPEG = 1
-TYPE_RTTTL = 127
+TYPE_PCM_U8_1 = 124
+TYPE_RTTTL = 125
+TYPE_UNKNOWN = 126
 IMAGE_FORMAT = ["jpg", "JPG", "jpeg", "JPEG", "png", "PNG"]
 MOVIE_FORMAT = ["mp4", "MP4", "avi", "AVI", "mov", "MOV"]
 
@@ -153,10 +155,10 @@ def get_wallpaper_addr_in_flash(chip_id):
     # 背景图
     if chip_id == CHIP_ID_S2:
         return '0x00200000'
+    # elif chip_id == CHIP_ID_S3:
+    #     return '0x510000'
     elif chip_id == CHIP_ID_S3:
         return '0x004D0000'
-
-        
     else:
         return '0x00200000'
 
@@ -165,6 +167,8 @@ def get_backgroup_addr_in_flash(chip_id):
     # 壁纸文件
     if chip_id == CHIP_ID_S2:
         return '0x180000'
+    # elif chip_id == CHIP_ID_S3:
+    #     return '0x4C0000'
     elif chip_id == CHIP_ID_S3:
         return '0x480000'
     else:
@@ -1574,7 +1578,8 @@ class DownloadController(object):
         # path = os.path.dirname(param["dst_path"][0])
         # param["dst_path"][0] = f"{path}/rtttl.rtttl"
         wallpapers = param["dst_path"]
-        verMark = 0x11  # 版本号
+        self.print_log("wallpapers->" + str(wallpapers))
+        verMark = 0x12  # 版本号
         total = 0  # 壁纸总数（1字节）
         fps = int(param["fps"])  # 帧率
         # fps = 22
@@ -1590,12 +1595,16 @@ class DownloadController(object):
                 type.append(TYPE_MJPEG)
             elif suffix == "rtttl":
                 type.append(TYPE_RTTTL)
-            else:
+            elif suffix == "pcm_u8_1":
+                type.append(TYPE_PCM_U8_1)
+            elif suffix == "jpeg":
                 type.append(TYPE_JPG)
+            else:
+                type.append(TYPE_UNKNOWN)
             startAddr.append(dataAddrOffset)
             fileSize = os.path.getsize(wallpapers[ind])
             dataLen.append(fileSize)  # 壁纸数据长度
-            if suffix != "mjpeg" and fileSize >= 20000:
+            if suffix == "jpeg" and fileSize >= 20000:
                 # 超出最大长度
                 isLegal.append(False)
                 self.print_log(COLOR_RED % ("此图片文件过大（已被忽略）：" + param["src_path"][ind]))
@@ -1621,6 +1630,8 @@ class DownloadController(object):
                 params = [type[ind], startAddr[ind], dataLen[ind]]
                 binaryData = binaryData + struct.pack(byteOrder + format, *params)
 
+            # 壁纸的数据结构
+            # 预定义 580 字节存文件目录的WallPaperConfig信息
             binaryData = binaryData + b'\x00' * (580 - len(binaryData))
             for ind in range(len(wallpapers)):
                 if isLegal[ind] == False:
@@ -1717,6 +1728,26 @@ class DownloadController(object):
                 except Exception as e:
                     print(str(traceback.format_exc()))
                     print(f"转换失败：{str(e)}")
+            elif param["format"][ind] == "pcm_u8_1":
+                try:
+                    pcm_finally_cmd = ""
+                    pcm_cmd = 'ffmpeg -i "%s" -vn -ar 8000 -ac 1 -f u8 -acodec pcm_u8 "%s"'
+                    pcm_cmd_t = 'ffmpeg -i "%s" -vn -ss "%s" -t "%s" -ar 8000 -ac 1 -f u8 -acodec pcm_u8 "%s"'
+                    # 执行转换
+                    if param["end_time"] != '0':
+                        pcm_finally_cmd = pcm_cmd_t % (
+                            param["src_path"][ind],
+                            param["start_time"], param["end_time"],
+                            param["dst_path"][ind])
+                    else:
+                        pcm_finally_cmd = pcm_cmd % (
+                            param["src_path"][ind],
+                            param["dst_path"][ind])
+                    print(pcm_finally_cmd)
+                    os.system(pcm_finally_cmd)
+                except Exception as e:
+                    print(str(traceback.format_exc()))
+                    print(f"转换失败：{str(e)}")
             elif param["format"][ind] in IMAGE_FORMAT:
                 wallpaper_cache_path = param["src_path"][ind]
                 src_im: Image.Image = Image.open(wallpaper_cache_path)
@@ -1745,11 +1776,11 @@ class DownloadController(object):
                 # 缩放
                 new_im = src_im.resize((int(param["width"]), int(param["height"])), Image.BICUBIC)
                 new_im.save(param["dst_path"][ind])  # , format='JPEG', quality=95
-                if os.path.getsize(param["dst_path"][ind]) >= waLLPAPER_JPG_MAX_SIZE:
+                if os.path.getsize(param["dst_path"][ind]) >= WALLPAPER_JPG_MAX_SIZE:
                     # 超过固件的jpg 数据buffer的长度，再次压缩换得更小得图片
                     for qua in range(95, 5, -5):
                         new_im.save(param["dst_path"][ind], quality=qua)  # , format='JPEG', quality=95
-                        if os.path.getsize(param["dst_path"][ind]) < waLLPAPER_JPG_MAX_SIZE:
+                        if os.path.getsize(param["dst_path"][ind]) < WALLPAPER_JPG_MAX_SIZE:
                             break;
 
             try:
@@ -1791,6 +1822,10 @@ class DownloadController(object):
                     os.path.join(wallpaper_cache_dir,
                                  name_suffix[0] + "_" + resolutionW + "x" + resolutionH + ".rtttl"))
                 formats.append("rtttl")
+                # outFileNames.append(
+                #     os.path.join(wallpaper_cache_dir,
+                #                  name_suffix[0] + "_" + resolutionW + "x" + resolutionH + ".pcm_u8_1"))
+                # formats.append("pcm_u8_1")
                 qualitys.append(self.form.qualityComboBox.currentText().strip())
                 # 视频数据文件
                 outFileNames.append(
