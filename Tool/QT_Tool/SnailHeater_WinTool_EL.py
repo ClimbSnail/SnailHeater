@@ -17,7 +17,7 @@
 # QT教程  https://b23.tv/9R6dbDA
 # QT项目学习课件 https://doc.itprojects.cn/0001.zhishi/python.0008.pyqt5rumen/index.html
 
-# pyinstaller --icon ./images/SnailHeater_256.ico -w -F SnailHeater_WinTool.py
+# pyinstaller --icon ./images/SnailHeater_256.ico -w -F SnailHeater_WinTool_EL.py
 
 import sys
 import os
@@ -42,7 +42,6 @@ from PyQt5.QtCore import pyqtSignal, QThread
 from PyQt5.QtCore import Qt
 
 import massagehead as mh
-import MyRtttl as rtttl
 # import spiffsgen
 # import lvgl_image_converter.lv_img_conv as image_conv
 import lvgl_image_converter as image_conv
@@ -54,7 +53,7 @@ import esptool  # sys.path.append("./esptool_v41") or pip install esptool==4.1
 # 修改为如下
 # STUBS_DIR = os.path.join(os.getcwd(), "stub_flasher")
 
-from download import Ui_SanilHeaterTool
+from download_EL import Ui_SanilHeaterTool
 import common
 
 SH_SN = None
@@ -74,14 +73,12 @@ backgroud_base = os.path.join(gen_path, "Backgroud")
 # 背景缓存目录
 backgroud_cache_dir = os.path.join(gen_path, "Cache", "Backgroud")
 # 默认背景
-default_backgroud_280 = os.path.join(cur_dir, "base_data/Backgroud_280x240.bin")
 default_backgroud_320 = os.path.join(cur_dir, "base_data/Backgroud_320x240.bin")
-default_backgroud = default_backgroud_280
+default_backgroud = default_backgroud_320
 # 默认壁纸
-default_wallpaper_280 = os.path.join(cur_dir, "base_data/Wallpaper_280x240.lsw")
 default_wallpaper_320 = os.path.join(cur_dir, "base_data/Wallpaper_320x240.lsw")
 default_wallpaper_clean = os.path.join(cur_dir, "base_data/WallpaperClean.lsw")
-default_wallpaper = default_wallpaper_280
+default_wallpaper = default_wallpaper_320
 # coredump目录
 coredump_dir = os.path.join(gen_path, "Coredump")
 # 文件缓存目录
@@ -115,7 +112,7 @@ g_DownloadClearFlag = None
 count = 0
 
 # 读取配置信息
-cfg_fp = open("SnailHeater_Tool.yaml", "r", encoding="utf-8")
+cfg_fp = open("SnailHeater_Tool_EL.yaml", "r", encoding="utf-8")
 
 win_cfg = yaml.load(cfg_fp, Loader=yaml.SafeLoader)["windows_tool"]
 
@@ -151,26 +148,18 @@ support = None
 
 def get_wallpaper_addr_in_flash(chip_id):
     # 背景图
-    if chip_id == CHIP_ID_S2:
-        return '0x00200000'
-    # elif chip_id == CHIP_ID_S3:
-    #     return '0x510000'
-    elif chip_id == CHIP_ID_S3:
-        return '0x004D0000'
+    if chip_id == CHIP_ID_S3:
+        return '0x4B0000'
     else:
-        return '0x00200000'
+        return '0x4B0000'
 
 
 def get_backgroup_addr_in_flash(chip_id):
     # 壁纸文件
-    if chip_id == CHIP_ID_S2:
-        return '0x180000'
-    # elif chip_id == CHIP_ID_S3:
-    #     return '0x4C0000'
-    elif chip_id == CHIP_ID_S3:
-        return '0x480000'
+    if chip_id == CHIP_ID_S3:
+        return '0x460000'
     else:
-        return '0x180000'
+        return '0x460000'
 
 
 def getVerValue(ver):
@@ -335,6 +324,7 @@ class FirmwareDownloader(QThread):
                     esptool.main(cmd)
                     self.print_log("完成清空！")
                 except Exception as e:
+                    print(str(traceback.format_exc()))
                     self.print_log(COLOR_RED % ERR_UART_TEXT)
 
             g_curr_chip_id = get_chip_id(self.select_com)
@@ -369,53 +359,21 @@ class FirmwareDownloader(QThread):
                     get_backgroup_addr_in_flash(g_curr_chip_id), default_backgroud,
                     get_wallpaper_addr_in_flash(g_curr_chip_id), default_wallpaper]
             cmd = []
-            # curSWVersion = re.findall(r'SH_SW_v\d{1,2}\.\d{1,2}\.\d{1,2}', self.firmware_path)[0][6:].strip()
             curSWVersion = re.findall(r'v\d{1,2}\.\d{1,2}\.\d{1,2}', self.firmware_path)[0]
             print("curSWVersion", curSWVersion)
-            if getVerValue(curSWVersion) > getVerValue("v2.1.17"):
-                #  --port COM7 --baud 921600 write_flash -fm dio -fs 4MB 0x1000 S2_bootloader_dio_40m.bin 0x00008000 S2_partitions.bin 0x0000e000 S2_boot_app0.bin 0x00010000
-                if g_curr_chip_id == CHIP_ID_S2:
-                    flash_size_text = flash_size_text if flash_size_text in ["4MB", "8MB", "16MB", "32MB",
-                                                                             "64MB"] else "4MB"
-                    cmd = ['SnailHeater_WinTool.py', '--port', self.select_com,
-                           '--baud', baud_rate,
-                           '--after', 'hard_reset',
-                           'write_flash',
-                           '--flash_size', flash_size_text,
-                           '0x00001000', "./base_data/%s_bootloader_%s.bin" % (g_curr_chip_id, flash_size_text),
-                           '0x00008000', "./base_data/%s_partitions_%s.bin" % (g_curr_chip_id, flash_size_text),
-                           '0x0000e000', "./base_data/%s_boot_app0.bin" % (g_curr_chip_id),
-                           '0x00010000', self.firmware_path
-                           ] + exMediaParam
-                elif g_curr_chip_id == CHIP_ID_S3:
-                    flash_size_text = flash_size_text if flash_size_text in ["4MB", "8MB", "16MB", "32MB"] else "32MB"
-                    cmd = ['SnailHeater_WinTool.py', '--port', self.select_com,
-                           '--baud', baud_rate,
-                           '--after', 'hard_reset',
-                           'write_flash',
-                           '--flash_size', flash_size_text,
-                           '0x00000000', "./base_data/%s_bootloader_%s.bin" % (g_curr_chip_id, flash_size_text),
-                           '0x00008000', "./base_data/%s_partitions_%s.bin" % (g_curr_chip_id, flash_size_text),
-                           # '0x0000e000', "./base_data/%s_boot_app0.bin"% (g_curr_chip_id) ,
-                           '0x00010000', self.firmware_path
-                           ] + exMediaParam
-            elif getVerValue(curSWVersion) > getVerValue("v1.9.8"):
-                # S2版本支持的最大Flash容量为16M
-
-                #  --port COM7 --baud 921600 write_flash -fm dio -fs 4MB 0x1000 S2_bootloader_dio_40m.bin 0x00008000 S2_partitions.bin 0x0000e000 S2_boot_app0.bin 0x00010000
-                flash_size_text = flash_size_text if flash_size_text in ["4MB", "8MB", "16MB"] else "16MB"
+            #  --port COM7 --baud 921600 write_flash -fm dio -fs 4MB 0x1000 S2_bootloader_dio_40m.bin 0x00008000 S2_partitions.bin 0x0000e000 S2_boot_app0.bin 0x00010000
+            if g_curr_chip_id == CHIP_ID_S3:
+                flash_size_text = flash_size_text if flash_size_text in ["4MB", "8MB", "16MB", "32MB"] else "32MB"
                 cmd = ['SnailHeater_WinTool.py', '--port', self.select_com,
                        '--baud', baud_rate,
                        '--after', 'hard_reset',
                        'write_flash',
                        '--flash_size', flash_size_text,
-                       '0x00001000', "./old_base_data_2117/%s_bootloader_%s.bin" % (g_curr_chip_id, flash_size_text),
-                       '0x00008000', "./old_base_data_2117/%s_partitions_%s.bin" % (g_curr_chip_id, flash_size_text),
-                       '0x0000e000', "./old_base_data_2117/%s_boot_app0.bin" % (g_curr_chip_id),
-                       '0x00010000', self.firmware_path,
-                       get_wallpaper_addr_in_flash(g_curr_chip_id),
-                       default_wallpaper.replace("base_data", "old_base_data_2117")
-                       ]
+                       '0x00000000', "./base_data/bootloader_%s.bin" % (flash_size_text),
+                       '0x00008000', "./base_data/partition-table_%s.bin" % (flash_size_text),
+                       '0x0001e000', "./base_data/ota_data_initial_%s.bin" % (flash_size_text) ,
+                       '0x00020000', self.firmware_path
+                       ] + exMediaParam
             print(cmd)
 
             self.print_log("开始刷写固件...")
@@ -532,7 +490,6 @@ class DownloadController(object):
         self.form.QQInfolabel_2.setText(_translate("SanilHeaterTool", qq_info[1]))
         self.form.LinkInfolabel.setText(_translate("SanilHeaterTool", info_url_0))
         self.form.UpdateLogLinkInfolabel.setText(_translate("SanilHeaterTool", info_url_1))
-        self.form.resolutionComboBox.addItems(["280x240 (一、二车)", "320x240 (三车)"])
         self.form.qualityComboBox.addItems([str(num) for num in range(1, 20)])
         self.form.qualityComboBox.setCurrentText("5");
         self.form.fpsEdit.setText("20")
@@ -542,6 +499,9 @@ class DownloadController(object):
         self.form.sourceInfolabel.setStyleSheet('color: red')
         # self.form.autoScaleBox.setChecked(True)
 
+        self.form.resolutionComboBox.addItems(["320x240"])
+        self.form.resolutionComboBox.hide() # 暂时隐藏
+        self.form.resolutionlabel.hide()
         #
         self.form.UICLineEdit.setReadOnly(True)
 
@@ -579,7 +539,7 @@ class DownloadController(object):
         list_file = os.listdir(firmware_dir)
         firmware_path_list = []
         for file_name in list_file:
-            if 'SnailHeater_v' in file_name or 'SH_SW_v' in file_name:
+            if '.bin' in file_name:
                 firmware_path_list.append(file_name.strip())
 
         if len(firmware_path_list) == 0:
@@ -959,28 +919,19 @@ class DownloadController(object):
                 self.reset_ui_button()
                 return False
 
-            if support != None:
-                curSWVersion = re.findall(r'SH_SW_v\d{1,2}\.\d{1,2}\.\d{1,2}', firmware_path)[0][6:].strip()
-                if getVerValue(support[0]) > getVerValue(curSWVersion) or getVerValue(support[1]) < getVerValue(
-                        curSWVersion):
-                    self.print_log((COLOR_RED % "错误提示：") + "当前版本管理工具不支持该固件")
-                    self.form.UpdateModeMethodRadioButton.setEnabled(True)
-                    self.form.ClearModeMethodRadioButton.setEnabled(True)
-                    self.form.UpdatePushButton.setEnabled(True)
-                    return False
+            # if support != None:
+            #     curSWVersion = re.findall(r'SEL\S_SW_v\d{1,2}\.\d{1,2}\.\d{1,2}', firmware_path)[0][8:].strip()
+            #     if getVerValue(support[0]) > getVerValue(curSWVersion) or getVerValue(support[1]) < getVerValue(
+            #             curSWVersion):
+            #         self.print_log((COLOR_RED % "错误提示：") + "当前版本管理工具不支持该固件")
+            #         self.form.UpdateModeMethodRadioButton.setEnabled(True)
+            #         self.form.ClearModeMethodRadioButton.setEnabled(True)
+            #         self.form.UpdatePushButton.setEnabled(True)
+            #         return False
 
             self.print_log("串口号：" + (COLOR_RED % select_com))
             self.print_log("固件文件：" + (COLOR_RED % firmware_path))
             self.print_log("刷机模式：" + (COLOR_RED % g_DownloadClearFlag))
-
-            if "③" in firmware_path:
-                default_wallpaper = default_wallpaper_320
-                default_backgroud = default_backgroud_320
-            elif "①" in firmware_path or "②" in firmware_path:
-                default_wallpaper = default_wallpaper_280
-                default_backgroud = default_backgroud_280
-            else:
-                default_wallpaper = default_wallpaper_clean
 
             if not os.path.exists(default_wallpaper):
                 default_wallpaper = default_wallpaper_clean
@@ -992,10 +943,9 @@ class DownloadController(object):
                 all_time += 5
             # 此文件列表的 boot_app0 bootloader partitions 文件均不是特指，
             # 但与实际要写入的文件大小无异,只为了方便计算文件大小
-            file_list = ["./base_data/S2_boot_app0.bin",
-                         "./base_data/S2_bootloader_4MB.bin",
-                         "./base_data/S2_partitions_4MB.bin",
-                         #  "./base_data/S2_tinyuf2.bin",
+            file_list = ["./base_data/Backgroud_320x240.bin",
+                         "./base_data/bootloader_8MB.bin",
+                         "./base_data/partition-table_8MB.bin",
                          os.path.join(firmware_dir, firmware_path)]
             if g_DownloadClearFlag == DOWN_CLEAR_FLAG_CLEAR:
                 file_list = file_list + [default_backgroud, default_wallpaper]
@@ -1013,6 +963,7 @@ class DownloadController(object):
                 g_autoActivate = False
             else:
                 g_autoActivate = True
+            g_autoActivate = False
 
             if self.download_thread != None:
                 del self.download_thread
@@ -1088,7 +1039,7 @@ class DownloadController(object):
             self.print_log("联网查询最新固件版本...")
             response = requests.get(get_firmware_new_ver_url, timeout=1)  # , verify=False
             # sn = re.findall(r'\d+', response.text)
-            if 'SnailHeater_v' in response.text.strip() or 'SH_SW v' in response.text.strip():
+            if 'SEL' in response.text.strip():
                 new_ver = response.text.strip()
                 self.form.VerInfolabel.setText("最新固件版本 " + str(new_ver))
                 self.print_log("最新固件版本 " + (COLOR_RED % str(new_ver)))
@@ -1527,8 +1478,6 @@ class DownloadController(object):
             self.print_log((COLOR_RED % "请检查参数设置"))
             return None
 
-        # path = os.path.dirname(param["dst_path"][0])
-        # param["dst_path"][0] = f"{path}/rtttl.rtttl"
         wallpapers = param["dst_path"]
         self.print_log("wallpapers->" + str(wallpapers))
         total = 0  # 壁纸总数（1字节）
@@ -1544,8 +1493,6 @@ class DownloadController(object):
             suffix = os.path.basename(wallpapers[ind]).split(".")[-1]
             if suffix == "mjpeg":
                 type.append(TYPE_MJPEG)
-            elif suffix == "rtttl":
-                type.append(TYPE_RTTTL)
             elif suffix == "pcm_u8_1":
                 type.append(TYPE_PCM_U8_1)
             elif suffix == "jpeg":
@@ -1616,8 +1563,6 @@ class DownloadController(object):
         cmd_to_mjpeg = 'ffmpeg -y -i "%s" -vf "fps=%s,scale=-1:%s:flags=lanczos,crop=%s:in_h:(in_w-%s)/2:0" -q:v %s "%s"'
         cmd_to_mjpeg_t = 'ffmpeg -y -i "%s" -vf "fps=%s,scale=%s:-1:flags=lanczos,crop=in_w:%s:0:(in_h-%s)/2" -q:v %s "%s"'
 
-        rtttlConverter = rtttl.MP4ToRTTTLConverter()
-
         for ind in range(len(param["src_path"])):
 
             name = os.path.basename(param["src_path"][ind]).split(".")[0]
@@ -1668,17 +1613,6 @@ class DownloadController(object):
                                            param["dst_path"][ind])
                     print(out_cmd)
                     os.system(out_cmd)
-            elif param["format"][ind] == "rtttl":
-                try:
-                    # 执行转换
-                    rtttlConverter.convert(
-                        mp4_path=param["src_path"][ind],
-                        output_rtttl=param["dst_path"][ind],
-                        rtttl_title="RTitle_"+str(ind)
-                    )
-                except Exception as e:
-                    print(str(traceback.format_exc()))
-                    print(f"转换失败：{str(e)}")
             elif param["format"][ind] == "pcm_u8_1":
                 try:
                     pcm_finally_cmd = ""
@@ -1770,14 +1704,11 @@ class DownloadController(object):
             if name_suffix[1] in MOVIE_FORMAT:
                 # 音频数据文件
                 fileNames.append(fileName) # 音频文件多出一个
+
                 outFileNames.append(
                     os.path.join(wallpaper_cache_dir,
-                                 name_suffix[0] + "_" + resolutionW + "x" + resolutionH + ".rtttl"))
-                formats.append("rtttl")
-                # outFileNames.append(
-                #     os.path.join(wallpaper_cache_dir,
-                #                  name_suffix[0] + "_" + resolutionW + "x" + resolutionH + ".pcm_u8_1"))
-                # formats.append("pcm_u8_1")
+                                 name_suffix[0] + "_" + resolutionW + "x" + resolutionH + ".pcm_u8_1"))
+                formats.append("pcm_u8_1")
                 qualitys.append(self.form.qualityComboBox.currentText().strip())
                 # 视频数据文件
                 outFileNames.append(
@@ -1904,13 +1835,13 @@ class DownloadController(object):
         """
         # # 最后的Yes表示弹框的按钮显示为Yes，默认按钮显示为OK,不填QMessageBox.Yes即为默认
         # reply = QMessageBox.warning(self.win_main, "重要提示",
-        #                                COLOR_RED % "开始前一定要拔掉220V电源线！",
+        #                                COLOR_RED % "开始前一定要拔掉除刷机线外的其他电源线，并按住旋钮中键！",
         #                                QMessageBox.Yes | QMessageBox.Cancel,
         #                                QMessageBox.Cancel)
 
         # 创建自定义消息框
         self.mbox = QMessageBox(QMessageBox.Warning, "重要提示",
-                                COLOR_RED % "开始前一定要拔掉220V电源线！")
+                                COLOR_RED % "开始前一定要拔掉除刷机线外的其他电源线，并按住旋钮中键！")
         # 添加自定义按钮
         do = self.mbox.addButton('确定', QMessageBox.YesRole)
         cancle = self.mbox.addButton('取消', QMessageBox.NoRole)
@@ -1927,7 +1858,7 @@ class DownloadController(object):
 
         # 创建自定义消息框
         self.mbox = QMessageBox(QMessageBox.Warning, "重要提示",
-                                COLOR_RED % "开始前一定要拔掉220V电源线！")
+                                COLOR_RED % "开始前一定要拔掉除刷机线外的其他电源线，并按住旋钮中键！")
         # 添加自定义按钮
         do = self.mbox.addButton('确定', QMessageBox.YesRole)
         cancle = self.mbox.addButton('取消', QMessageBox.NoRole)
@@ -1944,7 +1875,7 @@ class DownloadController(object):
 
         # 创建自定义消息框
         self.mbox = QMessageBox(QMessageBox.Warning, "重要提示",
-                                COLOR_RED % "开始前一定要拔掉220V电源线！")
+                                COLOR_RED % "开始前一定要拔掉除刷机线外的其他电源线，并按住旋钮中键！")
         # 添加自定义按钮
         do = self.mbox.addButton('确定', QMessageBox.YesRole)
         cancle = self.mbox.addButton('取消', QMessageBox.NoRole)
@@ -1961,7 +1892,7 @@ class DownloadController(object):
 
         # 创建自定义消息框
         self.mbox = QMessageBox(QMessageBox.Warning, "重要提示",
-                                COLOR_RED % "开始前一定要拔掉220V电源线！")
+                                COLOR_RED % "开始前一定要拔掉除刷机线外的其他电源线，并按住旋钮中键！")
         # 添加自定义按钮
         do = self.mbox.addButton('确定', QMessageBox.YesRole)
         cancle = self.mbox.addButton('取消', QMessageBox.NoRole)
