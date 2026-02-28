@@ -164,12 +164,13 @@ def get_backgroup_addr_in_flash(chip_id):
 
 def getVerValue(ver):
     """
-    获取版本的值 v2.12.15
+    获取版本的值 v2.12.1500
     """
     if "UNKNOWN" in ver:
         return 100 * 100 * 100  # 返回最大值 int默认不能太大
     value1_list = ver[1:].split(".")
     sum = 0
+    # sum = value1_list[0] * 1000000 + value1_list[1] * 10000 + value1_list[2]
     for val in value1_list:
         # 第三位小版本使是S3引入的，故需要特殊处理第三位版本只有2位数的情况
         # curVal = int(val) * 100 if int(val) < 100 else int(val)
@@ -359,7 +360,7 @@ class FirmwareDownloader(QThread):
                     get_backgroup_addr_in_flash(g_curr_chip_id), default_backgroud,
                     get_wallpaper_addr_in_flash(g_curr_chip_id), default_wallpaper]
             cmd = []
-            curSWVersion = re.findall(r'v\d{1,2}\.\d{1,2}\.\d{1,2}', self.firmware_path)[0]
+            curSWVersion = re.findall(r'SEL\S_SW_v\d{1,2}\.\d{1,2}\.\d{1,2}', self.firmware_path)[0][8:].strip()
             print("curSWVersion", curSWVersion)
             #  --port COM7 --baud 921600 write_flash -fm dio -fs 4MB 0x1000 S2_bootloader_dio_40m.bin 0x00008000 S2_partitions.bin 0x0000e000 S2_boot_app0.bin 0x00010000
             if g_curr_chip_id == CHIP_ID_S3:
@@ -387,9 +388,7 @@ class FirmwareDownloader(QThread):
                 return None
 
             self.print_log(COLOR_RED % "刷机结束！")
-            self.print_log("刷机流程完毕，请保持typec通电等待焊台屏幕将会亮起后才能断电。")
-            self.print_log((COLOR_RED % "注：") + "更新式刷机一般刷机完成后2s就能亮屏，清空式刷机则需等待10s左右。")
-            self.print_log("如25s后始终未能自动亮屏，请手动按一次复位键或者拔插一次typec接口再次等待10s。\n")
+            self.print_log("刷机流程完毕，请手动开机。")
 
         except Exception as err:
             self.print_log(COLOR_RED % ERR_UART_TEXT)
@@ -985,10 +984,10 @@ class DownloadController(object):
         global g_DownloadClearFlag
         if isOk == True and g_DownloadClearFlag == DOWN_CLEAR_FLAG_CLEAR:
             time.sleep(4)  # 等待文件系统初始化完成
-            if g_autoActivate == True:
-                self.auto_active()
-            else:
-                self.print_log(COLOR_RED % "请通电30秒后手动，查询激活码并激活。")
+            # if g_autoActivate == True:
+            #     self.auto_active()
+            # else:
+            #     self.print_log(COLOR_RED % "请通电30秒后手动，查询激活码并激活。")
 
         self.reset_ui_button()
         g_curr_chip_id = CHIP_ID_KNOWN

@@ -74,13 +74,13 @@ backgroud_base = os.path.join(gen_path, "Backgroud")
 # 背景缓存目录
 backgroud_cache_dir = os.path.join(gen_path, "Cache", "Backgroud")
 # 默认背景
-default_backgroud_280 = os.path.join(cur_dir, "base_data/Backgroud_280x240.bin")
-default_backgroud_320 = os.path.join(cur_dir, "base_data/Backgroud_320x240.bin")
+default_backgroud_280 = os.path.join(cur_dir, "base_data_new/Backgroud_280x240.bin")
+default_backgroud_320 = os.path.join(cur_dir, "base_data_new/Backgroud_320x240.bin")
 default_backgroud = default_backgroud_280
 # 默认壁纸
-default_wallpaper_280 = os.path.join(cur_dir, "base_data/Wallpaper_280x240.lsw")
-default_wallpaper_320 = os.path.join(cur_dir, "base_data/Wallpaper_320x240.lsw")
-default_wallpaper_clean = os.path.join(cur_dir, "base_data/WallpaperClean.lsw")
+default_wallpaper_280 = os.path.join(cur_dir, "base_data_new/Wallpaper_280x240.lsw")
+default_wallpaper_320 = os.path.join(cur_dir, "base_data_new/Wallpaper_320x240.lsw")
+default_wallpaper_clean = os.path.join(cur_dir, "base_data_new/WallpaperClean.lsw")
 default_wallpaper = default_wallpaper_280
 # coredump目录
 coredump_dir = os.path.join(gen_path, "Coredump")
@@ -152,35 +152,36 @@ support = None
 def get_wallpaper_addr_in_flash(chip_id):
     # 背景图
     if chip_id == CHIP_ID_S2:
-        return '0x00200000'
+        return '0x001E0000'
     # elif chip_id == CHIP_ID_S3:
     #     return '0x510000'
     elif chip_id == CHIP_ID_S3:
-        return '0x004D0000'
+        return '0x00500000'
     else:
-        return '0x00200000'
+        return '0x001E0000'
 
 
 def get_backgroup_addr_in_flash(chip_id):
     # 壁纸文件
     if chip_id == CHIP_ID_S2:
-        return '0x180000'
+        return '0x190000'
     # elif chip_id == CHIP_ID_S3:
     #     return '0x4C0000'
     elif chip_id == CHIP_ID_S3:
-        return '0x480000'
+        return '0x4B0000'
     else:
-        return '0x180000'
+        return '0x190000'
 
 
 def getVerValue(ver):
     """
-    获取版本的值 v2.12.15
+    获取版本的值 v2.12.1500
     """
     if "UNKNOWN" in ver:
         return 100 * 100 * 100  # 返回最大值 int默认不能太大
     value1_list = ver[1:].split(".")
     sum = 0
+    # sum = value1_list[0] * 1000000 + value1_list[1] * 10000 + value1_list[2]
     for val in value1_list:
         # 第三位小版本使是S3引入的，故需要特殊处理第三位版本只有2位数的情况
         # curVal = int(val) * 100 if int(val) < 100 else int(val)
@@ -370,51 +371,50 @@ class FirmwareDownloader(QThread):
                     get_wallpaper_addr_in_flash(g_curr_chip_id), default_wallpaper]
             cmd = []
             # curSWVersion = re.findall(r'SH_SW_v\d{1,2}\.\d{1,2}\.\d{1,2}', self.firmware_path)[0][6:].strip()
-            curSWVersion = re.findall(r'v\d{1,2}\.\d{1,2}\.\d{1,2}', self.firmware_path)[0]
-            print("curSWVersion", curSWVersion)
+            curSWVersion = re.findall(r'SH_SW_v\d{1,2}\.\d{1,2}\.\d{1,2}', self.firmware_path)[0][6:].strip()
+            print("curSWVersion", curSWVersion, getVerValue(curSWVersion))
+            flash_size_text = flash_size_text if flash_size_text in ["4MB", "8MB", "16MB", "32MB", "64MB"] else "16MB"
             if getVerValue(curSWVersion) > getVerValue("v2.1.17"):
-                #  --port COM7 --baud 921600 write_flash -fm dio -fs 4MB 0x1000 S2_bootloader_dio_40m.bin 0x00008000 S2_partitions.bin 0x0000e000 S2_boot_app0.bin 0x00010000
+                partitions_num = 0
+                if getVerValue(curSWVersion) > getVerValue("v2.5.30"):
+                    partitions_num = 1
+                #  --port COM7 --baud 921600 write_flash -fm dio -fs 4MB 0x1000 S2_bootloader_dio_40m.bin 0x00008000 S2_partitions.bin 0x0000e000 S2_ota_data_initial.bin 0x00010000
                 if g_curr_chip_id == CHIP_ID_S2:
-                    flash_size_text = flash_size_text if flash_size_text in ["4MB", "8MB", "16MB", "32MB",
-                                                                             "64MB"] else "4MB"
                     cmd = ['SnailHeater_WinTool.py', '--port', self.select_com,
                            '--baud', baud_rate,
                            '--after', 'hard_reset',
                            'write_flash',
                            '--flash_size', flash_size_text,
-                           '0x00001000', "./base_data/%s_bootloader_%s.bin" % (g_curr_chip_id, flash_size_text),
-                           '0x00008000', "./base_data/%s_partitions_%s.bin" % (g_curr_chip_id, flash_size_text),
-                           '0x0000e000', "./base_data/%s_boot_app0.bin" % (g_curr_chip_id),
-                           '0x00010000', self.firmware_path
+                           '0x00001000', "./base_data_new/%s_bootloader_%s.bin" % (g_curr_chip_id, flash_size_text),
+                           '0x00008000', "./base_data_new/%s_partitions_%s_%d.bin" % (g_curr_chip_id, flash_size_text, partitions_num),
+                           '0x0002E000', "./base_data_new/%s_ota_data_initial.bin" % (g_curr_chip_id),
+                           '0x00030000', self.firmware_path
                            ] + exMediaParam
                 elif g_curr_chip_id == CHIP_ID_S3:
-                    flash_size_text = flash_size_text if flash_size_text in ["4MB", "8MB", "16MB", "32MB"] else "32MB"
                     cmd = ['SnailHeater_WinTool.py', '--port', self.select_com,
                            '--baud', baud_rate,
                            '--after', 'hard_reset',
                            'write_flash',
                            '--flash_size', flash_size_text,
-                           '0x00000000', "./base_data/%s_bootloader_%s.bin" % (g_curr_chip_id, flash_size_text),
-                           '0x00008000', "./base_data/%s_partitions_%s.bin" % (g_curr_chip_id, flash_size_text),
-                           # '0x0000e000', "./base_data/%s_boot_app0.bin"% (g_curr_chip_id) ,
-                           '0x00010000', self.firmware_path
+                           '0x00000000', "./base_data_new/%s_bootloader_%s.bin" % (g_curr_chip_id, flash_size_text),
+                           '0x00008000', "./base_data_new/%s_partitions_%s_%d.bin" % (g_curr_chip_id, flash_size_text, partitions_num),
+                           '0x0002E000', "./base_data_new/%s_ota_data_initial.bin" % (g_curr_chip_id) ,
+                           '0x00030000', self.firmware_path
                            ] + exMediaParam
             elif getVerValue(curSWVersion) > getVerValue("v1.9.8"):
                 # S2版本支持的最大Flash容量为16M
-
-                #  --port COM7 --baud 921600 write_flash -fm dio -fs 4MB 0x1000 S2_bootloader_dio_40m.bin 0x00008000 S2_partitions.bin 0x0000e000 S2_boot_app0.bin 0x00010000
-                flash_size_text = flash_size_text if flash_size_text in ["4MB", "8MB", "16MB"] else "16MB"
+                #  --port COM7 --baud 921600 write_flash -fm dio -fs 4MB 0x1000 S2_bootloader_dio_40m.bin 0x00008000 S2_partitions.bin 0x0000e000 S2_ota_data_initial.bin 0x00010000
                 cmd = ['SnailHeater_WinTool.py', '--port', self.select_com,
                        '--baud', baud_rate,
                        '--after', 'hard_reset',
                        'write_flash',
                        '--flash_size', flash_size_text,
-                       '0x00001000', "./old_base_data_2117/%s_bootloader_%s.bin" % (g_curr_chip_id, flash_size_text),
-                       '0x00008000', "./old_base_data_2117/%s_partitions_%s.bin" % (g_curr_chip_id, flash_size_text),
-                       '0x0000e000', "./old_base_data_2117/%s_boot_app0.bin" % (g_curr_chip_id),
+                       '0x00001000', "./base_data_2117/%s_bootloader_%s.bin" % (g_curr_chip_id, flash_size_text),
+                       '0x00008000', "./base_data_2117/%s_partitions_%s.bin" % (g_curr_chip_id, flash_size_text),
+                       '0x0000e000', "./base_data_2117/%s_ota_data_initial.bin" % (g_curr_chip_id),
                        '0x00010000', self.firmware_path,
                        get_wallpaper_addr_in_flash(g_curr_chip_id),
-                       default_wallpaper.replace("base_data", "old_base_data_2117")
+                       default_wallpaper.replace("base_data_new", "base_data_2117")
                        ]
             print(cmd)
 
@@ -990,12 +990,11 @@ class DownloadController(object):
                 all_time += 24
             else:
                 all_time += 5
-            # 此文件列表的 boot_app0 bootloader partitions 文件均不是特指，
+            # 此文件列表的 ota_data_initial bootloader partitions 文件均不是特指，
             # 但与实际要写入的文件大小无异,只为了方便计算文件大小
-            file_list = ["./base_data/S2_boot_app0.bin",
-                         "./base_data/S2_bootloader_4MB.bin",
-                         "./base_data/S2_partitions_4MB.bin",
-                         #  "./base_data/S2_tinyuf2.bin",
+            file_list = ["./base_data_new/S2_ota_data_initial.bin",
+                         "./base_data_new/S2_bootloader_4MB.bin",
+                         "./base_data_new/S2_partitions_4MB_1.bin",
                          os.path.join(firmware_dir, firmware_path)]
             if g_DownloadClearFlag == DOWN_CLEAR_FLAG_CLEAR:
                 file_list = file_list + [default_backgroud, default_wallpaper]

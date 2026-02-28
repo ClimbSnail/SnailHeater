@@ -23,7 +23,7 @@ windows_tool:
   # 通讯的波特率
   info_baud_rate: "921600"
   # 固件的目录
-  firmware_dir: "../蜗牛台管理工具v2.8.5（含v2.5.0固件）/"
+  firmware_dir: "../蜗牛台管理工具v2.8.7（含v2.6.0固件）/"
 
   # 预留的读取激活码的本地缓存文件 用于不在联网状态下使用（本字段需要配合固件联调）
   temp_sn_recode_path: temporary_sn_recode.txt
