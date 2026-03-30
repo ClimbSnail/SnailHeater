@@ -262,12 +262,12 @@
     <string>操作日志</string>
    </property>
    <property name="alignment">
-    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
    </property>
    <widget class="QTextBrowser" name="LogInfoTextBrowser">
     <property name="geometry">
      <rect>
-      <x>0</x>
+      <x>5</x>
       <y>18</y>
       <width>295</width>
       <height>290</height>

@@ -91,13 +91,10 @@ def getVerValue(ver):
     """
     if "UNKNOWN" in ver:
         return 100 * 100 * 100  # 返回最大值 int默认不能太大
-    value1_list = ver[1:].split(".")
-    sum = 0
-    # sum = value1_list[0] * 1000000 + value1_list[1] * 10000 + value1_list[2]
-    for val in value1_list:
-        # 第三位小版本使是S3引入的，故需要特殊处理第三位版本只有2位数的情况
-        # curVal = int(val) * 100 if int(val) < 100 else int(val)
-        sum = sum * 100 + int(val)
+    values = ver[1:].split(".")
+    values = [int(value) for value in values]
+    sum = values[0] * 1000000 + values[1] * 10000
+    sum += (values[2] * 100 if values[2] < 100 else values[2])
     return sum
 
 def get_wallpaper_addr_in_flash(chip_id):
