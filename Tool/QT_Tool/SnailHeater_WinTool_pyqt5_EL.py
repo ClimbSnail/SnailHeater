@@ -69,6 +69,8 @@ import esptool  # sys.path.append("./esptool_v41") or pip install esptool==4.1
 # STUBS_DIR = os.path.join(os.path.dirname(__file__), "targets", "stub_flasher")
 # 修改为如下
 # STUBS_DIR = os.path.join(os.getcwd(), "stub_flasher")
+from esptool import loader
+loader.STUBS_DIR = os.path.join(os.getcwd(), "stub_flasher")
 
 from download_EL import Ui_SanilHeaterTool
 import common

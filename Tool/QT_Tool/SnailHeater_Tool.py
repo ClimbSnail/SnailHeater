@@ -9,12 +9,14 @@ import os
 import time
 import serial  # pip install pyserial
 import serial.tools.list_ports
-# from esptoolpy import espefuse
-import esptool
+
+import esptool  # sys.path.append("./esptool_v41") or pip install esptool==4.1
 # 需要修改esptool源码loader.py中得一个文件路径
 # STUBS_DIR = os.path.join(os.path.dirname(__file__), "targets", "stub_flasher")
 # 修改为如下
 # STUBS_DIR = os.path.join(os.getcwd(), "stub_flasher")
+from esptool import loader
+loader.STUBS_DIR = os.path.join(os.getcwd(), "stub_flasher")
 
 import requests
 import yaml  # pip install pyyaml
@@ -24,7 +26,7 @@ import traceback
 import massagehead as mh
 from common import getVerValue
 
-TOOL_VERSION = "v2.8.7 Lite"
+TOOL_VERSION = "v2.8.9 Lite"
 
 cur_dir = os.getcwd()  # 当前目录
 # 生成的文件目录
@@ -501,7 +503,7 @@ if __name__ == '__main__':
 
         flash_size_text = flash_size_text if flash_size_text in ["4MB", "8MB", "16MB", "32MB", "64MB"] else "16MB"
         partitions_num = 0
-        if getVerValue(curSWVersion) > getVerValue("v2.5.30"):
+        if getVerValue(curSWVersion) > getVerValue("v2.5.03"):
             partitions_num = 1
         if chip_id == CHIP_ID_S2:
             cmd = ['SnailHeater_WinTool.py', '--port', select_com,
