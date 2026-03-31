@@ -14,7 +14,7 @@ import inspect
 import traceback
 import re
 
-TOOL_VERSION = "v2.8.8"
+TOOL_VERSION = "v2.8.9"
 ROOT_PATH = "OutFile"
 CACHE_PATH = "Cache"
 
@@ -89,3 +89,15 @@ def kill_thread(h_thread, stoptype): #= SystemExit
     except Exception as e:
         print(e)
         # return -1
+
+def getVerValue(ver: str):
+    """
+    获取版本的值 v2.12.15
+    """
+    if "UNKNOWN" in ver:
+        return 100 * 100 * 100  # 返回最大值 int默认不能太大
+    values = ver[1:].split(".")
+    values = [int(value) for value in values]
+    sum = values[0] * 10000 + values[1] * 100 + values[2]
+    # sum += (values[2] * 100 if values[2] < 100 else values[2])
+    return sum

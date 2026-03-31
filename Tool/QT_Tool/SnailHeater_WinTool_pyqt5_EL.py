@@ -72,6 +72,7 @@ import esptool  # sys.path.append("./esptool_v41") or pip install esptool==4.1
 
 from download_EL import Ui_SanilHeaterTool
 import common
+from common import getVerValue
 
 SH_SN = None
 if SH_SN == None and os.path.exists("SnailHeater_SN.py"):
@@ -177,19 +178,6 @@ def get_backgroup_addr_in_flash(chip_id):
         return '0x460000'
     else:
         return '0x460000'
-
-
-def getVerValue(ver):
-    """
-    获取版本的值 v2.12.1500
-    """
-    if "UNKNOWN" in ver:
-        return 100 * 100 * 100  # 返回最大值 int默认不能太大
-    values = ver[1:].split(".")
-    values = [int(value) for value in values]
-    sum = values[0] * 1000000 + values[1] * 10000
-    sum += (values[2] * 100 if values[2] < 100 else values[2])
-    return sum
 
 
 def get_version():

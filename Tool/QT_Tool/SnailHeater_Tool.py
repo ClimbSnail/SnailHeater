@@ -22,6 +22,7 @@ import io
 import re
 import traceback
 import massagehead as mh
+from common import getVerValue
 
 TOOL_VERSION = "v2.8.7 Lite"
 
@@ -84,18 +85,6 @@ firmware_dir = win_cfg["firmware_dir"] \
     if "firmware_dir" in win_cfg.keys() else None
 
 cfg_fp.close()
-
-def getVerValue(ver):
-    """
-    获取版本的值 v2.12.1500
-    """
-    if "UNKNOWN" in ver:
-        return 100 * 100 * 100  # 返回最大值 int默认不能太大
-    values = ver[1:].split(".")
-    values = [int(value) for value in values]
-    sum = values[0] * 1000000 + values[1] * 10000
-    sum += (values[2] * 100 if values[2] < 100 else values[2])
-    return sum
 
 def get_wallpaper_addr_in_flash(chip_id):
     # 背景图
