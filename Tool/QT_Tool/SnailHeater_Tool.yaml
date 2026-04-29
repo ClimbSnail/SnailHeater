@@ -45,10 +45,6 @@ windows_tool:
 sn_tool:
   # 蜗牛台数据库(保存激活过的激活码路径)
   snail_db_path: "../../snail_db.db"
-  # 保存激活过的激活码路径
-  sn_save_path: "../../active_recode.txt"
-  # 保存工厂批量激活的序列号
-  sn_factory_save_path: ./active_recode_factory.txt
 
 # 配置服务端的配置文件 
 sn_search_server:

@@ -15,7 +15,7 @@ class UI_VERSION(Enum):
     PYSIDE6 = 2
     UNKNOW = 127
 
-ui_lib_version = UI_VERSION.PYQT5
+ui_lib_version = UI_VERSION.PYSIDE2
 
 if ui_lib_version == UI_VERSION.PYQT5:
     from PyQt5 import QtCore, QtGui, QtWidgets

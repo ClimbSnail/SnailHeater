@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>746</width>
-    <height>553</height>
+    <height>575</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,6 +17,169 @@
    <iconset>
     <normalon>:/images/SnailHeater_256.jpg</normalon>
    </iconset>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QWidget#SanilHeaterTool {
+    background-color: #1e1e1e;
+    color: #e6e6e6;
+    font-family: "Microsoft YaHei UI", "Microsoft YaHei", "Segoe UI";
+    font-size: 12px;
+}
+QLabel {
+    color: #e3e3e3;
+    font-weight: 500;
+}
+QLabel#LinkInfolabel, QLabel#UpdateLogLinkInfolabel {
+    color: #6fd3c1;
+}
+QGroupBox {
+    background-color: #252526;
+    border: 1px solid #3c3c3c;
+    border-radius: 10px;
+    margin-top: 12px;
+    color: #f0f0f0;
+    font-weight: 600;
+}
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 12px;
+    padding: 0 6px;
+}
+QGroupBox#LogInfoGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    left: 12px;
+    top: 1px;
+    padding: 0 6px;
+    background-color: transparent;
+}
+QLineEdit, QComboBox, QTextBrowser {
+    background-color: #1f1f1f;
+    border: 1px solid #3c3c3c;
+    border-radius: 6px;
+    padding: 2px 6px;
+    color: #f3f3f3;
+    selection-background-color: #094771;
+    selection-color: #ffffff;
+}
+QLineEdit:focus, QComboBox:focus, QTextBrowser:focus {
+    border: 1px solid #6a6a6a;
+}
+QComboBox {
+    padding-right: 18px;
+}
+QComboBox::drop-down {
+    width: 16px;
+    border-left: 1px solid #3c3c3c;
+    background-color: #252526;
+}
+QComboBox::down-arrow {
+    image: none;
+    width: 0px;
+    height: 0px;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid #d0d0d0;
+}
+QTextBrowser#LogInfoTextBrowser {
+    background-color: #1b1b1c;
+    border: 1px solid #3c3c3c;
+    color: #ececec;
+    font-family: Consolas, "Microsoft YaHei UI";
+}
+QPushButton {
+    background-color: #2d2d30;
+    color: #ececec;
+    border: 1px solid #3c3c3c;
+    border-radius: 8px;
+    padding: 3px 8px;
+}
+QPushButton#QueryPushButton, QPushButton#ActivatePushButton, QPushButton#QueryPushButton_2,
+QPushButton#chooseWPButton, QPushButton#chooseFileButton {
+    padding: 2px 5px;
+}
+QPushButton:hover {
+    background-color: #37373d;
+}
+QPushButton:pressed {
+    background-color: #414148;
+}
+QPushButton:disabled {
+    color: #7f7f7f;
+    background-color: #2a2a2a;
+    border-color: #353535;
+}
+QPushButton#UpdatePushButton, QPushButton#WriteWallpaperButton, QPushButton#WriteWallpaperButton_2,
+QPushButton#ActivatePushButton, QPushButton#uiWriteColorBnt {
+    background-color: #0e639c;
+    border: 1px solid #0e639c;
+    color: #ffffff;
+    font-weight: 600;
+}
+QPushButton#UpdatePushButton:hover, QPushButton#WriteWallpaperButton:hover, QPushButton#WriteWallpaperButton_2:hover,
+QPushButton#ActivatePushButton:hover, QPushButton#uiWriteColorBnt:hover {
+    background-color: #1177bb;
+    border-color: #1177bb;
+}
+QPushButton#CanclePushButton, QPushButton#reflushWallpaperButton {
+    background-color: #6a2e2e;
+    border: 1px solid #b25b5b;
+    color: #ffd6d6;
+    font-weight: 600;
+}
+QPushButton#CanclePushButton:hover, QPushButton#reflushWallpaperButton:hover {
+    background-color: #7a3636;
+}
+QTabWidget::pane {
+    border: 1px solid #3c3c3c;
+    border-radius: 10px;
+    top: -1px;
+    background-color: #252526;
+}
+QTabBar::tab {
+    background-color: #2d2d30;
+    color: #d7d7d7;
+    border: 1px solid #3c3c3c;
+    border-bottom: none;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    padding: 6px 16px;
+    margin-right: 4px;
+}
+QTabBar::tab:selected {
+    background-color: #252526;
+    color: #ffffff;
+    font-weight: 600;
+}
+QProgressBar {
+    border: 1px solid #3c3c3c;
+    border-radius: 6px;
+    text-align: center;
+    color: #ededed;
+    background-color: #1f1f1f;
+}
+QProgressBar::chunk {
+    border-radius: 6px;
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0e639c, stop:1 #1177bb);
+}
+QRadioButton {
+    color: #e6e6e6;
+    spacing: 6px;
+}
+QRadioButton::indicator {
+    width: 14px;
+    height: 14px;
+}
+QRadioButton::indicator:unchecked {
+    border: 1px solid #8c8c8c;
+    border-radius: 7px;
+    background: #1f1f1f;
+}
+QRadioButton::indicator:checked {
+    border: 1px solid #0e639c;
+    border-radius: 7px;
+    background: #0e639c;
+}</string>
   </property>
   <widget class="QComboBox" name="ComComboBox">
    <property name="geometry">
@@ -253,24 +416,21 @@
    <property name="geometry">
     <rect>
      <x>6</x>
-     <y>84</y>
+     <y>92</y>
      <width>305</width>
-     <height>316</height>
+     <height>300</height>
     </rect>
    </property>
    <property name="title">
     <string>操作日志</string>
    </property>
-   <property name="alignment">
-    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-   </property>
    <widget class="QTextBrowser" name="LogInfoTextBrowser">
     <property name="geometry">
      <rect>
       <x>5</x>
-      <y>18</y>
+      <y>24</y>
       <width>295</width>
-      <height>290</height>
+      <height>268</height>
      </rect>
     </property>
    </widget>
@@ -353,7 +513,7 @@
     <enum>QFrame::NoFrame</enum>
    </property>
    <property name="text">
-    <string>&lt;a href=&quot;https://docs.qq.com/doc/DQWdkTFpvV2ZSR29G&quot;&gt;https://docs.qq.com/doc/DQWdkTFpvV2ZSR29G</string>
+    <string>&lt;a href=&quot;https://docs.qq.com/doc/DQWdkTFpvV2ZSR29G&quot;&gt;https://docs.qq.com/doc/DQWdkTFpvV2ZSR29G&lt;/a&gt;</string>
    </property>
    <property name="scaledContents">
     <bool>true</bool>
@@ -384,7 +544,7 @@
     <enum>QFrame::NoFrame</enum>
    </property>
    <property name="text">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://www.bilibili.com/video/BV1oG4y1h7A8?p=2&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;https://www.bilibili.com/video/BV1oG4y1h7A8?p=2&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    <string>&lt;a href=&quot;https://www.bilibili.com/video/BV1oG4y1h7A8?p=2&quot;&gt;https://www.bilibili.com/video/BV1oG4y1h7A8?p=2&lt;/a&gt;</string>
    </property>
    <property name="scaledContents">
     <bool>true</bool>
@@ -604,7 +764,7 @@
    <property name="geometry">
     <rect>
      <x>4</x>
-     <y>394</y>
+     <y>400</y>
      <width>733</width>
      <height>159</height>
     </rect>
@@ -806,7 +966,7 @@
       <rect>
        <x>530</x>
        <y>50</y>
-       <width>39</width>
+       <width>48</width>
        <height>25</height>
       </rect>
      </property>
@@ -904,9 +1064,9 @@
      <widget class="QPushButton" name="uiReadColorBnt">
       <property name="geometry">
        <rect>
-        <x>245</x>
+       <x>255</x>
         <y>16</y>
-        <width>97</width>
+       <width>87</width>
         <height>35</height>
        </rect>
       </property>
@@ -925,7 +1085,7 @@
        <rect>
         <x>27</x>
         <y>56</y>
-        <width>147</width>
+       <width>155</width>
         <height>31</height>
        </rect>
       </property>
@@ -947,7 +1107,7 @@
        <rect>
         <x>27</x>
         <y>20</y>
-        <width>149</width>
+       <width>155</width>
         <height>31</height>
        </rect>
       </property>
@@ -967,7 +1127,7 @@
      <widget class="QLineEdit" name="uiForwardROColorLineEdit">
       <property name="geometry">
        <rect>
-        <x>174</x>
+       <x>184</x>
         <y>22</y>
         <width>65</width>
         <height>27</height>
@@ -980,7 +1140,7 @@
      <widget class="QLineEdit" name="uiForwardClickedColorLineEdit">
       <property name="geometry">
        <rect>
-        <x>174</x>
+       <x>184</x>
         <y>56</y>
         <width>65</width>
         <height>27</height>
@@ -993,9 +1153,9 @@
      <widget class="QPushButton" name="uiWriteColorBnt">
       <property name="geometry">
        <rect>
-        <x>245</x>
+       <x>255</x>
         <y>54</y>
-        <width>97</width>
+       <width>87</width>
         <height>35</height>
        </rect>
       </property>
@@ -1016,7 +1176,7 @@
    <property name="geometry">
     <rect>
      <x>2</x>
-     <y>462</y>
+     <y>468</y>
      <width>141</width>
      <height>89</height>
     </rect>
@@ -1082,7 +1242,7 @@
    <property name="geometry">
     <rect>
      <x>70</x>
-     <y>420</y>
+     <y>430</y>
      <width>131</width>
      <height>25</height>
     </rect>
@@ -1092,7 +1252,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>418</y>
+     <y>428</y>
      <width>53</width>
      <height>31</height>
     </rect>

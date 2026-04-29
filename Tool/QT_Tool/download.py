@@ -15,10 +15,173 @@ from choose_ver import QtCore, QtGui, QtWidgets, ClickableComboBox
 class Ui_SanilHeaterTool(object):
     def setupUi(self, SanilHeaterTool):
         SanilHeaterTool.setObjectName("SanilHeaterTool")
-        SanilHeaterTool.resize(746, 553)
+        SanilHeaterTool.resize(746, 575)
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(":/images/SnailHeater_256.jpg"), QtGui.QIcon.Normal, QtGui.QIcon.On)
         SanilHeaterTool.setWindowIcon(icon)
+        SanilHeaterTool.setStyleSheet("""
+QWidget#SanilHeaterTool {
+    background-color: #1e1e1e;
+    color: #e6e6e6;
+    font-family: "Microsoft YaHei UI", "Microsoft YaHei", "Segoe UI";
+    font-size: 12px;
+}
+QLabel {
+    color: #e3e3e3;
+    font-weight: 500;
+}
+QLabel#LinkInfolabel, QLabel#UpdateLogLinkInfolabel {
+    color: #6fd3c1;
+}
+QGroupBox {
+    background-color: #252526;
+    border: 1px solid #3c3c3c;
+    border-radius: 10px;
+    margin-top: 12px;
+    color: #f0f0f0;
+    font-weight: 600;
+}
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 12px;
+    padding: 0 6px;
+}
+QGroupBox#LogInfoGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    left: 12px;
+    top: 1px;
+    padding: 0 6px;
+    background-color: transparent;
+}
+QLineEdit, QComboBox, QTextBrowser {
+    background-color: #1f1f1f;
+    border: 1px solid #3c3c3c;
+    border-radius: 6px;
+    padding: 2px 6px;
+    color: #f3f3f3;
+    selection-background-color: #094771;
+    selection-color: #ffffff;
+}
+QLineEdit:focus, QComboBox:focus, QTextBrowser:focus {
+    border: 1px solid #6a6a6a;
+}
+QComboBox {
+    padding-right: 18px;
+}
+QComboBox::drop-down {
+    width: 16px;
+    border-left: 1px solid #3c3c3c;
+    background-color: #252526;
+}
+QComboBox::down-arrow {
+    image: none;
+    width: 0px;
+    height: 0px;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid #d0d0d0;
+}
+QTextBrowser#LogInfoTextBrowser {
+    background-color: #1b1b1c;
+    border: 1px solid #3c3c3c;
+    color: #ececec;
+    font-family: Consolas, "Microsoft YaHei UI";
+}
+QPushButton {
+    background-color: #2d2d30;
+    color: #ececec;
+    border: 1px solid #3c3c3c;
+    border-radius: 8px;
+    padding: 3px 8px;
+}
+QPushButton#QueryPushButton, QPushButton#ActivatePushButton, QPushButton#QueryPushButton_2,
+QPushButton#chooseWPButton, QPushButton#chooseFileButton {
+    padding: 2px 5px;
+}
+QPushButton:hover {
+    background-color: #37373d;
+}
+QPushButton:pressed {
+    background-color: #414148;
+}
+QPushButton:disabled {
+    color: #7f7f7f;
+    background-color: #2a2a2a;
+    border-color: #353535;
+}
+QPushButton#UpdatePushButton, QPushButton#WriteWallpaperButton, QPushButton#WriteWallpaperButton_2,
+QPushButton#ActivatePushButton, QPushButton#uiWriteColorBnt {
+    background-color: #0e639c;
+    border: 1px solid #0e639c;
+    color: #ffffff;
+    font-weight: 600;
+}
+QPushButton#UpdatePushButton:hover, QPushButton#WriteWallpaperButton:hover, QPushButton#WriteWallpaperButton_2:hover,
+QPushButton#ActivatePushButton:hover, QPushButton#uiWriteColorBnt:hover {
+    background-color: #1177bb;
+    border-color: #1177bb;
+}
+QPushButton#CanclePushButton, QPushButton#reflushWallpaperButton {
+    background-color: #6a2e2e;
+    border: 1px solid #b25b5b;
+    color: #ffd6d6;
+    font-weight: 600;
+}
+QPushButton#CanclePushButton:hover, QPushButton#reflushWallpaperButton:hover {
+    background-color: #7a3636;
+}
+QTabWidget::pane {
+    border: 1px solid #3c3c3c;
+    border-radius: 10px;
+    top: -1px;
+    background-color: #252526;
+}
+QTabBar::tab {
+    background-color: #2d2d30;
+    color: #d7d7d7;
+    border: 1px solid #3c3c3c;
+    border-bottom: none;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    padding: 6px 16px;
+    margin-right: 4px;
+}
+QTabBar::tab:selected {
+    background-color: #252526;
+    color: #ffffff;
+    font-weight: 600;
+}
+QProgressBar {
+    border: 1px solid #3c3c3c;
+    border-radius: 6px;
+    text-align: center;
+    color: #ededed;
+    background-color: #1f1f1f;
+}
+QProgressBar::chunk {
+    border-radius: 6px;
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0e639c, stop:1 #1177bb);
+}
+QRadioButton {
+    color: #e6e6e6;
+    spacing: 6px;
+}
+QRadioButton::indicator {
+    width: 14px;
+    height: 14px;
+}
+QRadioButton::indicator:unchecked {
+    border: 1px solid #8c8c8c;
+    border-radius: 7px;
+    background: #1f1f1f;
+}
+QRadioButton::indicator:checked {
+    border: 1px solid #0e639c;
+    border-radius: 7px;
+    background: #0e639c;
+}
+        """)
         self.ComComboBox = ClickableComboBox(SanilHeaterTool)
         self.ComComboBox.setGeometry(QtCore.QRect(84, 60, 161, 25))
         self.ComComboBox.setLayoutDirection(QtCore.Qt.LeftToRight)
@@ -99,11 +262,10 @@ class Ui_SanilHeaterTool(object):
         self.sourceInfolabel.setText("")
         self.sourceInfolabel.setObjectName("sourceInfolabel")
         self.LogInfoGroupBox = QtWidgets.QGroupBox(SanilHeaterTool)
-        self.LogInfoGroupBox.setGeometry(QtCore.QRect(6, 84, 305, 316))
-        self.LogInfoGroupBox.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.LogInfoGroupBox.setGeometry(QtCore.QRect(6, 92, 305, 300))
         self.LogInfoGroupBox.setObjectName("LogInfoGroupBox")
         self.LogInfoTextBrowser = QtWidgets.QTextBrowser(self.LogInfoGroupBox)
-        self.LogInfoTextBrowser.setGeometry(QtCore.QRect(5, 18, 295, 290))
+        self.LogInfoTextBrowser.setGeometry(QtCore.QRect(5, 24, 295, 268))
         self.LogInfoTextBrowser.setObjectName("LogInfoTextBrowser")
         self.QQInfolabel_2 = QtWidgets.QLabel(SanilHeaterTool)
         self.QQInfolabel_2.setGeometry(QtCore.QRect(25, 32, 150, 16))
@@ -217,7 +379,7 @@ class Ui_SanilHeaterTool(object):
         self.VerInfolabel.setText("")
         self.VerInfolabel.setObjectName("VerInfolabel")
         self.tabWidget = QtWidgets.QTabWidget(SanilHeaterTool)
-        self.tabWidget.setGeometry(QtCore.QRect(4, 394, 733, 159))
+        self.tabWidget.setGeometry(QtCore.QRect(4, 400, 733, 159))
         self.tabWidget.setObjectName("tabWidget")
         self.tab = QtWidgets.QWidget()
         self.tab.setObjectName("tab")
@@ -285,7 +447,7 @@ class Ui_SanilHeaterTool(object):
         self.timeLabel_2.setTextFormat(QtCore.Qt.AutoText)
         self.timeLabel_2.setObjectName("timeLabel_2")
         self.qualityComboBox = QtWidgets.QComboBox(self.tab)
-        self.qualityComboBox.setGeometry(QtCore.QRect(530, 50, 39, 25))
+        self.qualityComboBox.setGeometry(QtCore.QRect(530, 50, 48, 25))
         self.qualityComboBox.setObjectName("qualityComboBox")
         self.WriteWallpaperButton = QtWidgets.QPushButton(self.tab)
         self.WriteWallpaperButton.setGeometry(QtCore.QRect(626, 20, 79, 35))
@@ -320,14 +482,14 @@ class Ui_SanilHeaterTool(object):
         self.PictureModeGroupBox_2.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.PictureModeGroupBox_2.setObjectName("PictureModeGroupBox_2")
         self.uiReadColorBnt = QtWidgets.QPushButton(self.PictureModeGroupBox_2)
-        self.uiReadColorBnt.setGeometry(QtCore.QRect(245, 16, 97, 35))
+        self.uiReadColorBnt.setGeometry(QtCore.QRect(255, 16, 87, 35))
         font = QtGui.QFont()
         font.setFamily("微软雅黑")
         font.setPointSize(12)
         self.uiReadColorBnt.setFont(font)
         self.uiReadColorBnt.setObjectName("uiReadColorBnt")
         self.uiForwardClickedColorlabel = QtWidgets.QLabel(self.PictureModeGroupBox_2)
-        self.uiForwardClickedColorlabel.setGeometry(QtCore.QRect(27, 56, 147, 31))
+        self.uiForwardClickedColorlabel.setGeometry(QtCore.QRect(27, 56, 155, 31))
         font = QtGui.QFont()
         font.setFamily("微软雅黑")
         font.setPointSize(12)
@@ -335,7 +497,7 @@ class Ui_SanilHeaterTool(object):
         self.uiForwardClickedColorlabel.setTextFormat(QtCore.Qt.AutoText)
         self.uiForwardClickedColorlabel.setObjectName("uiForwardClickedColorlabel")
         self.uiForwardROColorlabel = QtWidgets.QLabel(self.PictureModeGroupBox_2)
-        self.uiForwardROColorlabel.setGeometry(QtCore.QRect(27, 20, 149, 31))
+        self.uiForwardROColorlabel.setGeometry(QtCore.QRect(27, 20, 155, 31))
         font = QtGui.QFont()
         font.setFamily("微软雅黑")
         font.setPointSize(12)
@@ -343,15 +505,15 @@ class Ui_SanilHeaterTool(object):
         self.uiForwardROColorlabel.setTextFormat(QtCore.Qt.AutoText)
         self.uiForwardROColorlabel.setObjectName("uiForwardROColorlabel")
         self.uiForwardROColorLineEdit = QtWidgets.QLineEdit(self.PictureModeGroupBox_2)
-        self.uiForwardROColorLineEdit.setGeometry(QtCore.QRect(174, 22, 65, 27))
+        self.uiForwardROColorLineEdit.setGeometry(QtCore.QRect(184, 22, 65, 27))
         self.uiForwardROColorLineEdit.setText("")
         self.uiForwardROColorLineEdit.setObjectName("uiForwardROColorLineEdit")
         self.uiForwardClickedColorLineEdit = QtWidgets.QLineEdit(self.PictureModeGroupBox_2)
-        self.uiForwardClickedColorLineEdit.setGeometry(QtCore.QRect(174, 56, 65, 27))
+        self.uiForwardClickedColorLineEdit.setGeometry(QtCore.QRect(184, 56, 65, 27))
         self.uiForwardClickedColorLineEdit.setText("")
         self.uiForwardClickedColorLineEdit.setObjectName("uiForwardClickedColorLineEdit")
         self.uiWriteColorBnt = QtWidgets.QPushButton(self.PictureModeGroupBox_2)
-        self.uiWriteColorBnt.setGeometry(QtCore.QRect(245, 54, 97, 35))
+        self.uiWriteColorBnt.setGeometry(QtCore.QRect(255, 54, 87, 35))
         font = QtGui.QFont()
         font.setFamily("微软雅黑")
         font.setPointSize(12)
@@ -359,7 +521,7 @@ class Ui_SanilHeaterTool(object):
         self.uiWriteColorBnt.setObjectName("uiWriteColorBnt")
         self.tabWidget.addTab(self.tab_2, "")
         self.PictureModeGroupBox = QtWidgets.QGroupBox(SanilHeaterTool)
-        self.PictureModeGroupBox.setGeometry(QtCore.QRect(2, 462, 141, 89))
+        self.PictureModeGroupBox.setGeometry(QtCore.QRect(2, 468, 141, 89))
         font = QtGui.QFont()
         font.setFamily("微软雅黑")
         font.setPointSize(12)
@@ -379,10 +541,10 @@ class Ui_SanilHeaterTool(object):
         self.PictureModeRadioButton_0.setChecked(True)
         self.PictureModeRadioButton_0.setObjectName("PictureModeRadioButton_0")
         self.resolutionComboBox = QtWidgets.QComboBox(SanilHeaterTool)
-        self.resolutionComboBox.setGeometry(QtCore.QRect(70, 420, 131, 25))
+        self.resolutionComboBox.setGeometry(QtCore.QRect(70, 430, 131, 25))
         self.resolutionComboBox.setObjectName("resolutionComboBox")
         self.resolutionlabel = QtWidgets.QLabel(SanilHeaterTool)
-        self.resolutionlabel.setGeometry(QtCore.QRect(10, 418, 53, 31))
+        self.resolutionlabel.setGeometry(QtCore.QRect(10, 428, 53, 31))
         font = QtGui.QFont()
         font.setFamily("微软雅黑")
         font.setPointSize(12)
@@ -408,8 +570,8 @@ class Ui_SanilHeaterTool(object):
         self.LogInfoGroupBox.setTitle(_translate("SanilHeaterTool", "操作日志"))
         self.QQInfolabel_2.setText(_translate("SanilHeaterTool", "QQ_2群 686756592"))
         self.updateLoglabel.setText(_translate("SanilHeaterTool", "固件更新日志："))
-        self.UpdateLogLinkInfolabel.setText(_translate("SanilHeaterTool", "<a href=\"https://docs.qq.com/doc/DQWdkTFpvV2ZSR29G\">https://docs.qq.com/doc/DQWdkTFpvV2ZSR29G"))
-        self.LinkInfolabel.setText(_translate("SanilHeaterTool", "<html><head/><body><p><a href=\"https://www.bilibili.com/video/BV1oG4y1h7A8?p=2\"><span style=\" text-decoration: underline; color:#0000ff;\">https://www.bilibili.com/video/BV1oG4y1h7A8?p=2</span></a></p></body></html>"))
+        self.UpdateLogLinkInfolabel.setText(_translate("SanilHeaterTool", "<a href=\"https://docs.qq.com/doc/DQWdkTFpvV2ZSR29G\">https://docs.qq.com/doc/DQWdkTFpvV2ZSR29G</a>"))
+        self.LinkInfolabel.setText(_translate("SanilHeaterTool", "<a href=\"https://www.bilibili.com/video/BV1oG4y1h7A8?p=2\">https://www.bilibili.com/video/BV1oG4y1h7A8?p=2</a>"))
         self.QueryPushButton_2.setText(_translate("SanilHeaterTool", "上报\n"
 "异常"))
         self.UpdateGroupBox.setTitle(_translate("SanilHeaterTool", "刷机"))

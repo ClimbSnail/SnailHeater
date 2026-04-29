@@ -29,6 +29,7 @@ import os
 import time
 # import threading
 import re
+import json
 import yaml  # pip install pyyaml
 import requests
 import traceback
@@ -788,18 +789,20 @@ class DownloadController(object):
         # 尝试联网查询
         if sn == "":
             try:
+                sn = ""
                 if activate_sn_url != None and activate_sn_url != "":
                     self.print_log("联网查询激活码（管理员模式）...")
                     response = requests.get(activate_sn_url + machine_code, timeout=2)  # , verify=False
+                    sn = response.text.strip().split("\t")[0]
                 else:
                     self.print_log("联网查询激活码...")
                     response = requests.get(search_sn_registrant_url + machine_code, timeout=2)  # , verify=False
                     print(search_sn_registrant_url + machine_code)
                     print(response)
+                    ret = json.loads(response.text.strip())
                     # 注册者信息
-                    registrant = response.text.strip().split("\t")[1]
-                # sn = re.findall(r'\d+', response.text)
-                sn = response.text.strip().split("\t")[0]
+                    sn = ret["data"]["sn"]
+                    registrant = ret["data"]["msg"]
                 self.print_log("sn " + str(sn))
             except Exception as err:
                 print(str(traceback.format_exc()))

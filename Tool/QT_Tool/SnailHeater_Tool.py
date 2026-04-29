@@ -22,11 +22,12 @@ import requests
 import yaml  # pip install pyyaml
 import io
 import re
+import json
 import traceback
 import massagehead as mh
 from common import getVerValue
 
-TOOL_VERSION = "v2.8.9 Lite"
+TOOL_VERSION = "v2.9.0 Lite"
 
 cur_dir = os.getcwd()  # 当前目录
 # 生成的文件目录
@@ -185,18 +186,20 @@ def query_button_click(com):
     # 尝试联网查询
     if sn == "":
         try:
+            sn = ""
             if activate_sn_url != None and activate_sn_url != "":
                 print("联网查询激活码（管理员模式）...")
                 response = requests.get(activate_sn_url + machine_code, timeout=3)  # , verify=False
+                sn = response.text.strip().split("\t")[0]
             else:
                 print("联网查询激活码...")
                 response = requests.get(search_sn_registrant_url + machine_code, timeout=3)  # , verify=False
                 print(search_sn_registrant_url + machine_code)
                 print(response)
+                ret = json.loads(response.text.strip())
                 # 注册者信息
-                registrant = response.text.strip().split("\t")[1]
-            # sn = re.findall(r'\d+', response.text)
-            sn = response.text.strip().split("\t")[0]
+                sn = ret["data"]["sn"]
+                registrant = ret["data"]["msg"]
             print("sn " + str(sn))
         except Exception as err:
             print(str(traceback.format_exc()))

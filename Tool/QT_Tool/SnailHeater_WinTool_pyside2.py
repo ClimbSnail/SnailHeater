@@ -1,10 +1,17 @@
-# encoding: utf-8
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # python 3.8.6
 
-# pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
+# python -m venv pyside_venv
+# pyside_venv\Scripts\activate
+# deactivate
+# pip install -r requirements_pyside_venv.txt -i https://mirrors.aliyun.com/pypi/simple/
+# pip freeze > requirements.txt
+# pyinstaller --icon ./images/SnailHeater_256.ico -w -F SnailHeater_WinTool_pyside2.py
 
 # pip install requests -i https://mirrors.aliyun.com/pypi/simple/
 # pip install pyserial -i https://mirrors.aliyun.com/pypi/simple/
+# pip install pyside2 -i https://pypi.tuna.tsinghua.edu.cn/simple
 # pip install pyqt5==5.15.10  -i https://mirrors.aliyun.com/pypi/simple/
 # pip install pyqt5-tools -i https://mirrors.aliyun.com/pypi/simple/
 # pip install pyyaml -i https://mirrors.aliyun.com/pypi/simple/
@@ -17,13 +24,12 @@
 # QT教程  https://b23.tv/9R6dbDA
 # QT项目学习课件 https://doc.itprojects.cn/0001.zhishi/python.0008.pyqt5rumen/index.html
 
-# pyinstaller --icon ./images/SnailHeater_256.ico -w -F SnailHeater_WinTool.py
-
 import sys
 import os
 import time
 # import threading
 import re
+import json
 import yaml  # pip install pyyaml
 import requests
 import traceback
@@ -35,27 +41,42 @@ import datetime
 
 import serial  # pip install pyserial
 import serial.tools.list_ports
-from PyQt5.Qt import QWidget, QApplication
-from PyQt5 import uic, QtCore
-from PyQt5.QtWidgets import QMessageBox, QApplication, QMainWindow, QFileDialog
-from PyQt5.QtCore import pyqtSignal, QThread
-from PyQt5.QtCore import Qt
+
+from choose_ver import ui_lib_version, UI_VERSION
+if ui_lib_version == UI_VERSION.PYQT5:
+    from PyQt5.Qt import QWidget, QApplication
+    from PyQt5 import uic, QtCore
+    from PyQt5.QtWidgets import QMessageBox, QApplication, QFileDialog
+    from PyQt5.QtCore import QThread
+    from PyQt5.QtCore import pyqtSignal as Signal
+    from PyQt5.QtCore import Qt
+elif ui_lib_version == UI_VERSION.PYSIDE2:
+    from PySide2 import QtCore
+    from PySide2.QtCore import Qt, QThread, Signal, QFile, QIODevice
+    from PySide2.QtUiTools import QUiLoader
+    from PySide2.QtWidgets import QWidget, QApplication, QMessageBox, QFileDialog, QStyleFactory
+elif ui_lib_version == UI_VERSION.PYSIDE6:
+    from PySide6 import QtCore
+    from PySide6.QtCore import Qt, QThread, Signal, QFile, QIODevice
+    from PySide6.QtUiTools import QUiLoader
+    from PySide6.QtWidgets import QWidget, QApplication, QMessageBox, QFileDialog, QStyleFactory
 
 import massagehead as mh
-import MyRtttl as rtttl
+# import MyRtttl as rtttl
 # import spiffsgen
-# import lvgl_image_converter.lv_img_conv as image_conv
 import lvgl_image_converter as image_conv
-# from lvgl_image_converter import lv_img_conv as image_conv
 
 import esptool  # sys.path.append("./esptool_v41") or pip install esptool==4.1
 # 需要修改esptool源码loader.py中得一个文件路径
 # STUBS_DIR = os.path.join(os.path.dirname(__file__), "targets", "stub_flasher")
 # 修改为如下
 # STUBS_DIR = os.path.join(os.getcwd(), "stub_flasher")
+from esptool import loader
+loader.STUBS_DIR = os.path.join(os.getcwd(), "stub_flasher")
 
 from download import Ui_SanilHeaterTool
 import common
+from common import getVerValue
 
 SH_SN = None
 if SH_SN == None and os.path.exists("SnailHeater_SN.py"):
@@ -173,22 +194,6 @@ def get_backgroup_addr_in_flash(chip_id):
         return '0x190000'
 
 
-def getVerValue(ver):
-    """
-    获取版本的值 v2.12.1500
-    """
-    if "UNKNOWN" in ver:
-        return 100 * 100 * 100  # 返回最大值 int默认不能太大
-    value1_list = ver[1:].split(".")
-    sum = 0
-    # sum = value1_list[0] * 1000000 + value1_list[1] * 10000 + value1_list[2]
-    for val in value1_list:
-        # 第三位小版本使是S3引入的，故需要特殊处理第三位版本只有2位数的情况
-        # curVal = int(val) * 100 if int(val) < 100 else int(val)
-        sum = sum * 100 + int(val)
-    return sum
-
-
 def get_version():
     global support
     try:
@@ -300,9 +305,9 @@ def get_chip_id(select_com):
 
 
 class FirmwareDownloader(QThread):
-    print_signal = pyqtSignal(str)
-    ret_finish = pyqtSignal(bool)
-    get_machine_software_ver = pyqtSignal(bool)
+    print_signal = Signal(str)
+    ret_finish = Signal(bool)
+    get_machine_software_ver = Signal(bool)
 
     def __init__(self, mode, select_com, firmware_path):
         super().__init__()
@@ -370,7 +375,6 @@ class FirmwareDownloader(QThread):
                     get_backgroup_addr_in_flash(g_curr_chip_id), default_backgroud,
                     get_wallpaper_addr_in_flash(g_curr_chip_id), default_wallpaper]
             cmd = []
-            # curSWVersion = re.findall(r'SH_SW_v\d{1,2}\.\d{1,2}\.\d{1,2}', self.firmware_path)[0][6:].strip()
             curSWVersion = re.findall(r'SH_SW_v\d{1,2}\.\d{1,2}\.\d{1,2}', self.firmware_path)[0][6:].strip()
             print("curSWVersion", curSWVersion, getVerValue(curSWVersion))
             flash_size_text = flash_size_text if flash_size_text in ["4MB", "8MB", "16MB", "32MB", "64MB"] else "16MB"
@@ -476,11 +480,12 @@ class DownloadController(object):
                                                 tool_name + common.TOOL_VERSION + " " + get_version()))
 
         # 设置文本可复制
-        self.form.LinkInfolabel.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        self.form.UpdateLogLinkInfolabel.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        self.form.QQInfolabel.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        self.form.QQInfolabel_2.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        self.form.sourceInfolabel.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        text_selectable_flag = getattr(Qt, "TextSelectableByMouse", Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.form.LinkInfolabel.setTextInteractionFlags(text_selectable_flag)
+        self.form.UpdateLogLinkInfolabel.setTextInteractionFlags(text_selectable_flag)
+        self.form.QQInfolabel.setTextInteractionFlags(text_selectable_flag)
+        self.form.QQInfolabel_2.setTextInteractionFlags(text_selectable_flag)
+        self.form.sourceInfolabel.setTextInteractionFlags(text_selectable_flag)
 
         self.form.ComComboBox.clicked.connect(self.scan_com)  # 信号与槽函数的绑定
         self.form.FirmwareComboBox.clicked.connect(self.scan_firmware)
@@ -534,7 +539,7 @@ class DownloadController(object):
         self.form.UpdateLogLinkInfolabel.setText(_translate("SanilHeaterTool", info_url_1))
         self.form.resolutionComboBox.addItems(["280x240 (一、二车)", "320x240 (三车)"])
         self.form.qualityComboBox.addItems([str(num) for num in range(1, 20)])
-        self.form.qualityComboBox.setCurrentText("5");
+        self.form.qualityComboBox.setCurrentText("5")
         self.form.fpsEdit.setText("20")
         self.form.startTimeEdit.setText("0")
         self.form.endTimeEdit.setText("0")
@@ -826,18 +831,20 @@ class DownloadController(object):
         # 尝试联网查询
         if sn == "":
             try:
+                sn = ""
                 if activate_sn_url != None and activate_sn_url != "":
                     self.print_log("联网查询激活码（管理员模式）...")
                     response = requests.get(activate_sn_url + machine_code, timeout=2)  # , verify=False
+                    sn = response.text.strip().split("\t")[0]
                 else:
                     self.print_log("联网查询激活码...")
                     response = requests.get(search_sn_registrant_url + machine_code, timeout=2)  # , verify=False
                     print(search_sn_registrant_url + machine_code)
                     print(response)
+                    ret = json.loads(response.text.strip())
                     # 注册者信息
-                    registrant = response.text.strip().split("\t")[1]
-                # sn = re.findall(r'\d+', response.text)
-                sn = response.text.strip().split("\t")[0]
+                    sn = ret["data"]["sn"]
+                    registrant = ret["data"]["msg"]
                 self.print_log("sn " + str(sn))
             except Exception as err:
                 print(str(traceback.format_exc()))
@@ -1526,13 +1533,10 @@ class DownloadController(object):
             self.print_log((COLOR_RED % "请检查参数设置"))
             return None
 
-        # path = os.path.dirname(param["dst_path"][0])
-        # param["dst_path"][0] = f"{path}/rtttl.rtttl"
         wallpapers = param["dst_path"]
         self.print_log("wallpapers->" + str(wallpapers))
         total = 0  # 壁纸总数（1字节）
         fps = int(param["fps"])  # 帧率
-        # fps = 22
 
         type = []  # 壁纸类型（1字节）jpg图片0 mjpeg视频1
         startAddr = []  # 4字节
@@ -1615,8 +1619,6 @@ class DownloadController(object):
         cmd_to_mjpeg = 'ffmpeg -y -i "%s" -vf "fps=%s,scale=-1:%s:flags=lanczos,crop=%s:in_h:(in_w-%s)/2:0" -q:v %s "%s"'
         cmd_to_mjpeg_t = 'ffmpeg -y -i "%s" -vf "fps=%s,scale=%s:-1:flags=lanczos,crop=in_w:%s:0:(in_h-%s)/2" -q:v %s "%s"'
 
-        rtttlConverter = rtttl.MP4ToRTTTLConverter()
-
         for ind in range(len(param["src_path"])):
 
             name = os.path.basename(param["src_path"][ind]).split(".")[0]
@@ -1669,6 +1671,7 @@ class DownloadController(object):
                     os.system(out_cmd)
             elif param["format"][ind] == "rtttl":
                 try:
+                    rtttlConverter = rtttl.MP4ToRTTTLConverter()
                     # 执行转换
                     rtttlConverter.convert(
                         mp4_path=param["src_path"][ind],
@@ -1768,16 +1771,17 @@ class DownloadController(object):
             name_suffix = os.path.splitext(os.path.basename(fileName))[1].split(".")
             if name_suffix[1] in MOVIE_FORMAT:
                 # 音频数据文件
-                fileNames.append(fileName) # 音频文件多出一个
-                outFileNames.append(
-                    os.path.join(wallpaper_cache_dir,
-                                 name_suffix[0] + "_" + resolutionW + "x" + resolutionH + ".rtttl"))
-                formats.append("rtttl")
+                # fileNames.append(fileName) # 音频文件多出一个
+                # outFileNames.append(
+                #     os.path.join(wallpaper_cache_dir,
+                #                  name_suffix[0] + "_" + resolutionW + "x" + resolutionH + ".rtttl"))
+                # formats.append("rtttl")
                 # outFileNames.append(
                 #     os.path.join(wallpaper_cache_dir,
                 #                  name_suffix[0] + "_" + resolutionW + "x" + resolutionH + ".pcm_u8_1"))
                 # formats.append("pcm_u8_1")
-                qualitys.append(self.form.qualityComboBox.currentText().strip())
+                # qualitys.append(self.form.qualityComboBox.currentText().strip())
+
                 # 视频数据文件
                 outFileNames.append(
                     os.path.join(wallpaper_cache_dir,
@@ -1914,7 +1918,7 @@ class DownloadController(object):
         do = self.mbox.addButton('确定', QMessageBox.YesRole)
         cancle = self.mbox.addButton('取消', QMessageBox.NoRole)
         # 设置消息框中内容前面的图标
-        self.mbox.setIcon(2)
+        self.mbox.setIcon(QMessageBox.Warning)
         do.clicked.connect(self.update_button_click)
         self.mbox.show()
 
@@ -1931,7 +1935,7 @@ class DownloadController(object):
         do = self.mbox.addButton('确定', QMessageBox.YesRole)
         cancle = self.mbox.addButton('取消', QMessageBox.NoRole)
         # 设置消息框中内容前面的图标
-        self.mbox.setIcon(2)
+        self.mbox.setIcon(QMessageBox.Warning)
         do.clicked.connect(self.writeWallpaper)
         self.mbox.show()
 
@@ -1948,7 +1952,7 @@ class DownloadController(object):
         do = self.mbox.addButton('确定', QMessageBox.YesRole)
         cancle = self.mbox.addButton('取消', QMessageBox.NoRole)
         # 设置消息框中内容前面的图标
-        self.mbox.setIcon(2)
+        self.mbox.setIcon(QMessageBox.Warning)
         do.clicked.connect(self.cleanWallpaper)
         self.mbox.show()
 
@@ -1965,28 +1969,49 @@ class DownloadController(object):
         do = self.mbox.addButton('确定', QMessageBox.YesRole)
         cancle = self.mbox.addButton('取消', QMessageBox.NoRole)
         # 设置消息框中内容前面的图标
-        self.mbox.setIcon(2)
+        self.mbox.setIcon(QMessageBox.Warning)
         do.clicked.connect(self.writeBackgroud)
         self.mbox.show()
 
 
 def main():
+    global PYSIDE_MAJOR
+    print("正在使用的是 PySide %d" % PYSIDE_MAJOR)
+
     # app = QApplication([])
     app = QApplication(sys.argv)
-    download_ui = uic.loadUi("download.ui")
+    DownloadController._apply_compatible_style(app)
+    loader = QUiLoader()
+    ui_file = QFile("download.ui")
+    open_mode = getattr(getattr(QIODevice, "OpenModeFlag", QIODevice), "ReadOnly", QIODevice.ReadOnly)
+    if not ui_file.open(open_mode):
+        print("无法打开 download.ui")
+        return
+    download_ui = loader.load(ui_file)
+    ui_file.close()
+    if download_ui is None:
+        print("加载 download.ui 失败")
+        return
     # download_ui.ComComboBox.
     download_ui.show()
-    app.exec_()
+    DownloadController._exec_app(app)
 
 
 if __name__ == '__main__':
     # 解决不同电脑不同缩放比例问题
     # QGuiApplication.setAttribute(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
-    QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
-    # 和designer设计的窗口比例一致
-    QtCore.QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
-    # 适应高DPI设备
-    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
+    if hasattr(Qt, "HighDpiScaleFactorRoundingPolicy"):
+        QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
+
+    app_attr = getattr(Qt, "ApplicationAttribute", None)
+    if app_attr is not None and hasattr(app_attr, "AA_EnableHighDpiScaling"):
+        # 和designer设计的窗口比例一致 / 适应高DPI设备
+        QtCore.QCoreApplication.setAttribute(app_attr.AA_EnableHighDpiScaling)
+        QApplication.setAttribute(app_attr.AA_EnableHighDpiScaling)
+    elif hasattr(Qt, "AA_EnableHighDpiScaling"):
+        # 兼容旧枚举路径
+        QtCore.QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
+        QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
     # 解决图片在不同分辨率显示模糊问题
     # QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
 
