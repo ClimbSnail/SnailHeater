@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# python 3.8.6
 
-# python -m venv pyside_venv
-# pyside_venv\Scripts\activate
+# python 3.8.6
+# python -m venv pyside_py38_venv
+# pyside_py38_venv\Scripts\activate
+# pip install -r requirements_pyside_py38_venv.txt -i https://mirrors.aliyun.com/pypi/simple/
 # deactivate
-# pip install -r requirements_pyside_venv.txt -i https://mirrors.aliyun.com/pypi/simple/
-# pip freeze > requirements.txt
+# pip freeze > requirements_pyside_py38_venv.txt
 # pyinstaller --icon ./images/SnailHeater_256.ico -w -F SnailHeater_WinTool_pyside2.py
 
 # pip install requests -i https://mirrors.aliyun.com/pypi/simple/

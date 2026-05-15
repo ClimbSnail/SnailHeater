@@ -27,7 +27,7 @@ import traceback
 import massagehead as mh
 from common import getVerValue
 
-TOOL_VERSION = "v2.9.0 Lite"
+TOOL_VERSION = "v2.9.1 Lite"
 
 cur_dir = os.getcwd()  # 当前目录
 # 生成的文件目录
