@@ -27,7 +27,7 @@ import traceback
 import massagehead as mh
 from common import getVerValue
 
-TOOL_VERSION = "v2.9.1 Lite"
+TOOL_VERSION = "v2.9.2 Lite"
 
 cur_dir = os.getcwd()  # 当前目录
 # 生成的文件目录
@@ -84,8 +84,10 @@ baud_rate = win_cfg["baud_rate"] \
     if "baud_rate" in win_cfg.keys() else ""
 info_baud_rate = win_cfg["info_baud_rate"] \
     if "info_baud_rate" in win_cfg.keys() else ""
-firmware_dir = win_cfg["firmware_dir"] \
-    if "firmware_dir" in win_cfg.keys() else None
+main_appdir_rules = win_cfg["main_appdir_rules"] \
+    if "main_appdir_rules" in win_cfg.keys() else None
+main_app_rules = win_cfg["main_app_rules"] \
+    if "main_app_rules" in win_cfg.keys() else None
 
 cfg_fp.close()
 
@@ -422,11 +424,12 @@ if __name__ == '__main__':
             select_com = input("输入 COM口（例如 COM7）: ").strip().upper()
 
         # 列出文件夹下所有的目录与文件
-        list_file = os.listdir(firmware_dir)
+        list_file = os.listdir(main_appdir_rules)
         firmware_path = ''
         firmware_path_list = []
         for file_name in list_file:
-            if 'SnailHeater_v' in file_name or 'SH_SW_v' in file_name:
+            match_info = re.findall(main_app_rules, file_name)
+            if match_info != []:
                 firmware_path_list.append(file_name.strip())
 
         # 固件选择
@@ -518,7 +521,7 @@ if __name__ == '__main__':
                    '0x00008000',
                    "./base_data_new/%s_partitions_%s_%d.bin" % (chip_id, flash_size_text, partitions_num),
                    '0x0002E000', "./base_data_new/%s_ota_data_initial.bin" % (chip_id),
-                   '0x00030000', os.path.join(firmware_dir, firmware_path)
+                   '0x00030000', os.path.join(main_appdir_rules, firmware_path)
                    ] + exMediaParam
         elif chip_id == CHIP_ID_S3:
             cmd = ['SnailHeater_WinTool.py', '--port', select_com,
@@ -530,7 +533,7 @@ if __name__ == '__main__':
                    '0x00008000',
                    "./base_data_new/%s_partitions_%s_%d.bin" % (chip_id, flash_size_text, partitions_num),
                    '0x0002E000', "./base_data_new/%s_ota_data_initial.bin" % (chip_id),
-                   '0x00030000', os.path.join(firmware_dir, firmware_path)
+                   '0x00030000', os.path.join(main_appdir_rules, firmware_path)
                    ] + exMediaParam
         # sys.argv = cmd
         print(cmd)

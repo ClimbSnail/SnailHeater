@@ -112,3 +112,6 @@ platformIO模拟器 https://github.com/lvgl/lv_platformio
 * 使用`figma`绘制UI图
 * ESP32与ESP32S2的ADC心得 https://blog.csdn.net/qq_42437017/article/details/127796716
 * 在线 非对称加密测试工具， 记住：用私钥加密，公钥解密!!! http://tool.chacuo.net/cryptrsapubkey
+* SIMD解码 https://bitbanksoftware.blogspot.com/2024/01/esp32-s3-simd-minimal-example.html
+* SIMD解码 https://github.com/bitbank2/JPEGDEC
+* 蜂鸣器播放音乐 https://blog.csdn.net/2301_81138204/article/details/139676958

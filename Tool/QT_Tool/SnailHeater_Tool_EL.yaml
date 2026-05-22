@@ -21,8 +21,12 @@ windows_tool:
   baud_rate: "921600"
   # 通讯的波特率
   info_baud_rate: "921600"
-  # 固件的目录
-  firmware_dir: "./"
+  # 主固件的目录
+  # main_appdir_rules: "../蜗牛台管理工具v2.8.7（含v2.6.0固件）/"
+  main_appdir_rules: ./
+  # main_app_rules 为页面搜索框中搜索主程序的适配规则
+  # 下面的匹配规则（正则表达式）
+  main_app_rules: SEL\S_SW_v\d{1,2}\.\d{1,2}\.\d{1,2}\S*\.bin
 
   # 预留的读取激活码的本地缓存文件 用于不在联网状态下使用（本字段需要配合固件联调）
   temp_sn_recode_path: temporary_sn_recode.txt

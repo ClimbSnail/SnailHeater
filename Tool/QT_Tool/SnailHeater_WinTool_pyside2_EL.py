@@ -143,8 +143,10 @@ baud_rate = win_cfg["baud_rate"] \
     if "baud_rate" in win_cfg.keys() else ""
 info_baud_rate = win_cfg["info_baud_rate"] \
     if "info_baud_rate" in win_cfg.keys() else ""
-firmware_dir = win_cfg["firmware_dir"] \
-    if "firmware_dir" in win_cfg.keys() else None
+main_appdir_rules = win_cfg["main_appdir_rules"] \
+    if "main_appdir_rules" in win_cfg.keys() else None
+main_app_rules = win_cfg["main_app_rules"] \
+    if "main_app_rules" in win_cfg.keys() else None
 
 cfg_fp.close()
 
@@ -523,10 +525,11 @@ class DownloadController(object):
         self.print_log("搜索同目录下的可用固件...")
         self.form.FirmwareComboBox.clear()
         # 列出文件夹下所有的目录与文件
-        list_file = os.listdir(firmware_dir)
+        list_file = os.listdir(main_appdir_rules)
         firmware_path_list = []
         for file_name in list_file:
-            if '.bin' in file_name:
+            match_info = re.findall(main_app_rules, file_name)
+            if match_info != []:
                 firmware_path_list.append(file_name.strip())
 
         if len(firmware_path_list) == 0:
@@ -935,7 +938,7 @@ class DownloadController(object):
             file_list = ["./base_data/Backgroud_320x240.bin",
                          "./base_data/bootloader_8MB.bin",
                          "./base_data/partition-table_8MB.bin",
-                         os.path.join(firmware_dir, firmware_path)]
+                         os.path.join(main_appdir_rules, firmware_path)]
             if g_DownloadClearFlag == DOWN_CLEAR_FLAG_CLEAR:
                 file_list = file_list + [default_backgroud, default_wallpaper]
             
@@ -957,7 +960,7 @@ class DownloadController(object):
             if self.download_thread != None:
                 del self.download_thread
 
-            self.download_thread = FirmwareDownloader(g_DownloadClearFlag, select_com, os.path.join(firmware_dir, firmware_path))
+            self.download_thread = FirmwareDownloader(g_DownloadClearFlag, select_com, os.path.join(main_appdir_rules, firmware_path))
             self.download_thread.print_signal.connect(self.print_log)
             self.download_thread.ret_finish.connect(self.down_action_finish)
             self.download_thread.get_machine_software_ver.connect(self.get_machine_software_ver)
