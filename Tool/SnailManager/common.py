@@ -1,0 +1,113 @@
+# -*- coding: utf-8 -*-
+################################################################################
+#
+# Author: ClimbSnail(HQ)
+# original source is here.
+#   https://github.com/ClimbSnail/HoloCubic_AIO_Tool
+# 
+#
+################################################################################
+
+import binascii
+import ctypes
+import inspect
+import traceback
+import re
+
+TOOL_VERSION = "v3.0.1"
+ROOT_PATH = "OutFile"
+CACHE_PATH = "Cache"
+
+# 字节序定义
+byteOrders = {'Native order': '@',  # 本机（默认）
+              'Native standard': '=',  # 本机
+              'Little-endian': '<',  # 小端
+              'Big-endian': '>',  # 大端
+              'Network order': '!'}  # network(大端)
+
+
+# 关于struct格式串字节大小 https://blog.csdn.net/qq_30638831/article/details/80421019
+
+def getSendInfo(info):
+    """
+    打印网络数据流, 
+    :param info: ctypes.create_string_buffer()
+    :return : str
+    """
+    info = binascii.hexlify(info)
+    print(info)
+    re_obj = re.compile('.{1,2}')  # 匹配任意字符1-2次
+    t = ' '.join(re_obj.findall(str(info).upper()))
+    return t
+
+
+def _async_raise(thread_obj):
+    """
+    释放进程
+    :param thread: 进程对象
+    :param exctype:
+    :return:
+    """
+    try:
+        tid = thread_obj.ident
+        tid = ctypes.c_long(tid)
+        exctype = SystemExit
+        """raises the exception, performs cleanup if needed"""
+        if not inspect.isclass(exctype):
+            exctype = type(exctype)
+        res = ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, ctypes.py_object(exctype))
+        if res == 0:
+            raise ValueError("invalid thread id")
+        elif res != 1:
+            # """if it returns a number greater than one, you're in trouble,
+            # and you should call it again with exc=NULL to revert the effect"""
+            ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, None)
+            raise SystemError("PyThreadState_SetAsyncExc failed")
+    except Exception as err:
+        print(err)
+
+def kill_thread(h_thread, stoptype): #= SystemExit
+    """
+    请求终止指定的线程。
+
+    Args:
+        h_thread: 对应的输入参数。
+        stoptype: 对应的输入参数。
+
+    Returns:
+        函数处理结果；具体类型由调用场景决定。
+    """
+    import inspect
+    import ctypes
+    try:
+        """raises the exception, performs cleanup if needed"""
+
+        tid = ctypes.c_long(h_thread.ident)
+        if not inspect.isclass(stoptype):
+            stoptype = type(stoptype)
+
+        res = ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, ctypes.py_object(stoptype))
+        if res == 0:
+            raise ValueError("invalid thread id")
+
+        elif res != 1:
+            # """if it returns a number greater than one, you're in trouble,
+            # and you should call it again with exc=NULL to revert the effect"""
+            ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, None)
+            raise SystemError("kill_thread failed")
+        return res
+    except Exception as e:
+        print(e)
+        # return -1
+
+def getVerValue(ver: str):
+    """
+    获取版本的值 v2.12.15
+    """
+    if "UNKNOWN" in ver:
+        return 100 * 100 * 100  # 返回最大值 int默认不能太大
+    values = ver[1:].split(".")
+    values = [int(value) for value in values]
+    sum = values[0] * 10000 + values[1] * 100 + values[2]
+    # sum += (values[2] * 100 if values[2] < 100 else values[2])
+    return sum

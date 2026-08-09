@@ -1,0 +1,1301 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SanilHeaterTool</class>
+ <widget class="QWidget" name="SanilHeaterTool">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>746</width>
+    <height>575</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>蜗牛台SnailHeater管理工具</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normalon>:/images/SnailHeater_256.jpg</normalon>
+   </iconset>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QWidget#SanilHeaterTool {
+    background-color: #1e1e1e;
+    color: #e6e6e6;
+    font-family: "Microsoft YaHei UI", "Microsoft YaHei", "Segoe UI";
+    font-size: 12px;
+}
+QLabel {
+    color: #e3e3e3;
+    font-weight: 500;
+}
+QLabel#LinkInfolabel, QLabel#UpdateLogLinkInfolabel {
+    color: #6fd3c1;
+}
+QGroupBox {
+    background-color: #252526;
+    border: 1px solid #3c3c3c;
+    border-radius: 10px;
+    margin-top: 12px;
+    color: #f0f0f0;
+    font-weight: 600;
+}
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 12px;
+    padding: 0 6px;
+}
+QGroupBox#LogInfoGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    left: 12px;
+    top: 1px;
+    padding: 0 6px;
+    background-color: transparent;
+}
+QLineEdit, QComboBox, QTextBrowser {
+    background-color: #1f1f1f;
+    border: 1px solid #3c3c3c;
+    border-radius: 6px;
+    padding: 2px 6px;
+    color: #f3f3f3;
+    selection-background-color: #094771;
+    selection-color: #ffffff;
+}
+QLineEdit:focus, QComboBox:focus, QTextBrowser:focus {
+    border: 1px solid #6a6a6a;
+}
+QComboBox {
+    padding-right: 18px;
+}
+QComboBox::drop-down {
+    width: 16px;
+    border-left: 1px solid #3c3c3c;
+    background-color: #252526;
+}
+QComboBox::down-arrow {
+    image: none;
+    width: 0px;
+    height: 0px;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid #d0d0d0;
+}
+QTextBrowser#LogInfoTextBrowser {
+    background-color: #1b1b1c;
+    border: 1px solid #3c3c3c;
+    color: #ececec;
+    font-family: Consolas, "Microsoft YaHei UI";
+}
+QPushButton {
+    background-color: #2d2d30;
+    color: #ececec;
+    border: 1px solid #3c3c3c;
+    border-radius: 8px;
+    padding: 3px 8px;
+}
+QPushButton#QueryPushButton, QPushButton#ActivatePushButton, QPushButton#QueryPushButton_2,
+QPushButton#chooseWPButton, QPushButton#chooseFileButton {
+    padding: 2px 5px;
+}
+QPushButton:hover {
+    background-color: #37373d;
+}
+QPushButton:pressed {
+    background-color: #414148;
+}
+QPushButton:disabled {
+    color: #7f7f7f;
+    background-color: #2a2a2a;
+    border-color: #353535;
+}
+QPushButton#UpdatePushButton, QPushButton#WriteWallpaperButton, QPushButton#WriteWallpaperButton_2,
+QPushButton#ActivatePushButton, QPushButton#uiWriteColorBnt {
+    background-color: #0e639c;
+    border: 1px solid #0e639c;
+    color: #ffffff;
+    font-weight: 600;
+}
+QPushButton#UpdatePushButton:hover, QPushButton#WriteWallpaperButton:hover, QPushButton#WriteWallpaperButton_2:hover,
+QPushButton#ActivatePushButton:hover, QPushButton#uiWriteColorBnt:hover {
+    background-color: #1177bb;
+    border-color: #1177bb;
+}
+QPushButton#CanclePushButton, QPushButton#reflushWallpaperButton {
+    background-color: #6a2e2e;
+    border: 1px solid #b25b5b;
+    color: #ffd6d6;
+    font-weight: 600;
+}
+QPushButton#CanclePushButton:hover, QPushButton#reflushWallpaperButton:hover {
+    background-color: #7a3636;
+}
+QTabWidget::pane {
+    border: 1px solid #3c3c3c;
+    border-radius: 10px;
+    top: -1px;
+    background-color: #252526;
+}
+QTabBar::tab {
+    background-color: #2d2d30;
+    color: #d7d7d7;
+    border: 1px solid #3c3c3c;
+    border-bottom: none;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    padding: 6px 16px;
+    margin-right: 4px;
+}
+QTabBar::tab:selected {
+    background-color: #252526;
+    color: #ffffff;
+    font-weight: 600;
+}
+QProgressBar {
+    border: 1px solid #3c3c3c;
+    border-radius: 6px;
+    text-align: center;
+    color: #ededed;
+    background-color: #1f1f1f;
+}
+QProgressBar::chunk {
+    border-radius: 6px;
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0e639c, stop:1 #1177bb);
+}
+QRadioButton {
+    color: #e6e6e6;
+    spacing: 6px;
+}
+QRadioButton::indicator {
+    width: 14px;
+    height: 14px;
+}
+QRadioButton::indicator:unchecked {
+    border: 1px solid #8c8c8c;
+    border-radius: 7px;
+    background: #1f1f1f;
+}
+QRadioButton::indicator:checked {
+    border: 1px solid #0e639c;
+    border-radius: 7px;
+    background: #0e639c;
+}</string>
+  </property>
+  <widget class="QComboBox" name="ComComboBox">
+   <property name="geometry">
+    <rect>
+     <x>84</x>
+     <y>60</y>
+     <width>161</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="layoutDirection">
+    <enum>Qt::LeftToRight</enum>
+   </property>
+  </widget>
+  <widget class="QLabel" name="Comlabel">
+   <property name="geometry">
+    <rect>
+     <x>26</x>
+     <y>56</y>
+     <width>55</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>微软雅黑</family>
+     <pointsize>12</pointsize>
+    </font>
+   </property>
+   <property name="mouseTracking">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>串口号</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::AutoText</enum>
+   </property>
+  </widget>
+  <widget class="QLabel" name="QQInfolabel">
+   <property name="geometry">
+    <rect>
+     <x>25</x>
+     <y>6</y>
+     <width>150</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>微软雅黑</family>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
+   <property name="mouseTracking">
+    <bool>true</bool>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::NoFrame</enum>
+   </property>
+   <property name="text">
+    <string>QQ_1群 148563337</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="Infolabel">
+   <property name="geometry">
+    <rect>
+     <x>226</x>
+     <y>8</y>
+     <width>130</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>微软雅黑</family>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
+   <property name="mouseTracking">
+    <bool>true</bool>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::NoFrame</enum>
+   </property>
+   <property name="text">
+    <string>刷机教程：</string>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+   <property name="openExternalLinks">
+    <bool>false</bool>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+   </property>
+  </widget>
+  <widget class="QGroupBox" name="ActivateGroupBox">
+   <property name="geometry">
+    <rect>
+     <x>314</x>
+     <y>298</y>
+     <width>420</width>
+     <height>100</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>微软雅黑</family>
+     <pointsize>12</pointsize>
+    </font>
+   </property>
+   <property name="title">
+    <string>激活</string>
+   </property>
+   <widget class="QLineEdit" name="UICLineEdit">
+    <property name="geometry">
+     <rect>
+      <x>78</x>
+      <y>33</y>
+      <width>260</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="QueryPushButton">
+    <property name="geometry">
+     <rect>
+      <x>348</x>
+      <y>30</y>
+      <width>49</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>查询</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="SNLineEdit">
+    <property name="geometry">
+     <rect>
+      <x>78</x>
+      <y>68</y>
+      <width>260</width>
+      <height>20</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="ActivatePushButton">
+    <property name="geometry">
+     <rect>
+      <x>350</x>
+      <y>66</y>
+      <width>43</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>激活</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="MachineCodelabel">
+    <property name="geometry">
+     <rect>
+      <x>14</x>
+      <y>26</y>
+      <width>53</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微软雅黑</family>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>机器码</string>
+    </property>
+    <property name="textFormat">
+     <enum>Qt::AutoText</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="SerialNumberlabel">
+    <property name="geometry">
+     <rect>
+      <x>14</x>
+      <y>62</y>
+      <width>53</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微软雅黑</family>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>激活码</string>
+    </property>
+    <property name="textFormat">
+     <enum>Qt::AutoText</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="sourceInfolabel">
+    <property name="geometry">
+     <rect>
+      <x>54</x>
+      <y>0</y>
+      <width>217</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微软雅黑</family>
+      <pointsize>10</pointsize>
+     </font>
+    </property>
+    <property name="mouseTracking">
+     <bool>true</bool>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::NoFrame</enum>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QGroupBox" name="LogInfoGroupBox">
+   <property name="geometry">
+    <rect>
+     <x>6</x>
+     <y>92</y>
+     <width>305</width>
+     <height>300</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>操作日志</string>
+   </property>
+   <widget class="QTextBrowser" name="LogInfoTextBrowser">
+    <property name="geometry">
+     <rect>
+      <x>5</x>
+      <y>24</y>
+      <width>295</width>
+      <height>268</height>
+     </rect>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QLabel" name="QQInfolabel_2">
+   <property name="geometry">
+    <rect>
+     <x>25</x>
+     <y>32</y>
+     <width>150</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>微软雅黑</family>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
+   <property name="mouseTracking">
+    <bool>true</bool>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::NoFrame</enum>
+   </property>
+   <property name="text">
+    <string>QQ_2群 686756592</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="updateLoglabel">
+   <property name="geometry">
+    <rect>
+     <x>226</x>
+     <y>32</y>
+     <width>130</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>微软雅黑</family>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
+   <property name="mouseTracking">
+    <bool>true</bool>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::NoFrame</enum>
+   </property>
+   <property name="text">
+    <string>固件更新日志：</string>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+   <property name="openExternalLinks">
+    <bool>false</bool>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="UpdateLogLinkInfolabel">
+   <property name="geometry">
+    <rect>
+     <x>360</x>
+     <y>30</y>
+     <width>349</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>微软雅黑</family>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
+   <property name="mouseTracking">
+    <bool>true</bool>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::NoFrame</enum>
+   </property>
+   <property name="text">
+    <string>&lt;a href=&quot;https://docs.qq.com/doc/DQWdkTFpvV2ZSR29G&quot;&gt;https://docs.qq.com/doc/DQWdkTFpvV2ZSR29G&lt;/a&gt;</string>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+   <property name="openExternalLinks">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="LinkInfolabel">
+   <property name="geometry">
+    <rect>
+     <x>360</x>
+     <y>6</y>
+     <width>349</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>微软雅黑</family>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
+   <property name="mouseTracking">
+    <bool>true</bool>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::NoFrame</enum>
+   </property>
+   <property name="text">
+    <string>&lt;a href=&quot;https://www.bilibili.com/video/BV1oG4y1h7A8?p=2&quot;&gt;https://www.bilibili.com/video/BV1oG4y1h7A8?p=2&lt;/a&gt;</string>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+   <property name="openExternalLinks">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="QueryPushButton_2">
+   <property name="geometry">
+    <rect>
+     <x>698</x>
+     <y>8</y>
+     <width>43</width>
+     <height>39</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>上报
+异常</string>
+   </property>
+  </widget>
+  <widget class="QGroupBox" name="UpdateGroupBox">
+   <property name="geometry">
+    <rect>
+     <x>314</x>
+     <y>66</y>
+     <width>420</width>
+     <height>230</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>微软雅黑</family>
+     <pointsize>12</pointsize>
+    </font>
+   </property>
+   <property name="title">
+    <string>刷机</string>
+   </property>
+   <widget class="QComboBox" name="FirmwareComboBox">
+    <property name="geometry">
+     <rect>
+      <x>116</x>
+      <y>30</y>
+      <width>287</width>
+      <height>30</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="Firmwarelabel">
+    <property name="geometry">
+     <rect>
+      <x>42</x>
+      <y>28</y>
+      <width>69</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微软雅黑</family>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>选择固件</string>
+    </property>
+    <property name="textFormat">
+     <enum>Qt::AutoText</enum>
+    </property>
+   </widget>
+   <widget class="QGroupBox" name="MethodGroupBox">
+    <property name="geometry">
+     <rect>
+      <x>34</x>
+      <y>74</y>
+      <width>141</width>
+      <height>107</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微软雅黑</family>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="title">
+     <string>刷机模式</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+    </property>
+    <widget class="QRadioButton" name="ClearModeMethodRadioButton">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>58</x>
+       <y>64</y>
+       <width>77</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="text">
+      <string>清空式</string>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QRadioButton" name="UpdateModeMethodRadioButton">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>58</x>
+       <y>26</y>
+       <width>75</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="text">
+      <string>更新式</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QProgressBar" name="progressBar">
+    <property name="geometry">
+     <rect>
+      <x>12</x>
+      <y>192</y>
+      <width>397</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="value">
+     <number>0</number>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="UpdatePushButton">
+    <property name="geometry">
+     <rect>
+      <x>212</x>
+      <y>132</y>
+      <width>79</width>
+      <height>35</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微软雅黑</family>
+      <pointsize>14</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>刷机</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="CanclePushButton">
+    <property name="geometry">
+     <rect>
+      <x>310</x>
+      <y>134</y>
+      <width>79</width>
+      <height>35</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微软雅黑</family>
+      <pointsize>14</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>中止</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="VerInfolabel">
+    <property name="geometry">
+     <rect>
+      <x>54</x>
+      <y>0</y>
+      <width>217</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微软雅黑</family>
+      <pointsize>10</pointsize>
+     </font>
+    </property>
+    <property name="mouseTracking">
+     <bool>true</bool>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::NoFrame</enum>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QTabWidget" name="tabWidget">
+   <property name="geometry">
+    <rect>
+     <x>4</x>
+     <y>400</y>
+     <width>733</width>
+     <height>159</height>
+    </rect>
+   </property>
+   <property name="currentIndex">
+    <number>0</number>
+   </property>
+   <widget class="QWidget" name="tab">
+    <attribute name="title">
+     <string>壁纸</string>
+    </attribute>
+    <widget class="QPushButton" name="reflushWallpaperButton">
+     <property name="geometry">
+      <rect>
+       <x>626</x>
+       <y>80</y>
+       <width>79</width>
+       <height>35</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>微软雅黑</family>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>清除壁纸</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="chooseWPButton">
+     <property name="geometry">
+      <rect>
+       <x>505</x>
+       <y>3</y>
+       <width>70</width>
+       <height>30</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>选择壁纸</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="endTimeEdit">
+     <property name="geometry">
+      <rect>
+       <x>345</x>
+       <y>90</y>
+       <width>40</width>
+       <height>25</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="fpslabel">
+     <property name="geometry">
+      <rect>
+       <x>461</x>
+       <y>90</y>
+       <width>67</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>微软雅黑</family>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>帧率(fps)</string>
+     </property>
+     <property name="textFormat">
+      <enum>Qt::AutoText</enum>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="fpsEdit">
+     <property name="geometry">
+      <rect>
+       <x>530</x>
+       <y>90</y>
+       <width>35</width>
+       <height>25</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="startTimeEdit">
+     <property name="geometry">
+      <rect>
+       <x>269</x>
+       <y>90</y>
+       <width>40</width>
+       <height>25</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="qualitylabel">
+     <property name="geometry">
+      <rect>
+       <x>459</x>
+       <y>48</y>
+       <width>63</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>微软雅黑</family>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>视频质量</string>
+     </property>
+     <property name="textFormat">
+      <enum>Qt::AutoText</enum>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="choosePathEdit">
+     <property name="geometry">
+      <rect>
+       <x>235</x>
+       <y>5</y>
+       <width>260</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="timeLabel_1">
+     <property name="geometry">
+      <rect>
+       <x>315</x>
+       <y>90</y>
+       <width>27</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>微软雅黑</family>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>s到</string>
+     </property>
+     <property name="textFormat">
+      <enum>Qt::AutoText</enum>
+     </property>
+    </widget>
+    <widget class="QLabel" name="timeLabel_0">
+     <property name="geometry">
+      <rect>
+       <x>233</x>
+       <y>90</y>
+       <width>37</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>微软雅黑</family>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>从第</string>
+     </property>
+     <property name="textFormat">
+      <enum>Qt::AutoText</enum>
+     </property>
+    </widget>
+    <widget class="QLabel" name="timeLabel_2">
+     <property name="geometry">
+      <rect>
+       <x>390</x>
+       <y>90</y>
+       <width>47</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>微软雅黑</family>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>s截取</string>
+     </property>
+     <property name="textFormat">
+      <enum>Qt::AutoText</enum>
+     </property>
+    </widget>
+    <widget class="QComboBox" name="qualityComboBox">
+     <property name="geometry">
+      <rect>
+       <x>530</x>
+       <y>50</y>
+       <width>48</width>
+       <height>25</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="WriteWallpaperButton">
+     <property name="geometry">
+      <rect>
+       <x>626</x>
+       <y>20</y>
+       <width>79</width>
+       <height>35</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>微软雅黑</family>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>写入壁纸</string>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="tab_2">
+    <attribute name="title">
+     <string>背景图</string>
+    </attribute>
+    <widget class="QPushButton" name="WriteWallpaperButton_2">
+     <property name="geometry">
+      <rect>
+       <x>626</x>
+       <y>20</y>
+       <width>97</width>
+       <height>35</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>微软雅黑</family>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>写入背景图</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="chooseFileButton">
+     <property name="geometry">
+      <rect>
+       <x>505</x>
+       <y>3</y>
+       <width>70</width>
+       <height>30</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>选择文件</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="choosePathEdit_2">
+     <property name="geometry">
+      <rect>
+       <x>235</x>
+       <y>5</y>
+       <width>260</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QGroupBox" name="PictureModeGroupBox_2">
+     <property name="geometry">
+      <rect>
+       <x>146</x>
+       <y>46</y>
+       <width>351</width>
+       <height>89</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>微软雅黑</family>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="title">
+      <string>UI前台字体颜色</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+     <widget class="QPushButton" name="uiReadColorBnt">
+      <property name="geometry">
+       <rect>
+       <x>255</x>
+        <y>16</y>
+       <width>87</width>
+        <height>35</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>微软雅黑</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>读取颜色</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="uiForwardClickedColorlabel">
+      <property name="geometry">
+       <rect>
+        <x>27</x>
+        <y>56</y>
+       <width>155</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>微软雅黑</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>可点按钮（RGB）0x</string>
+      </property>
+      <property name="textFormat">
+       <enum>Qt::AutoText</enum>
+      </property>
+     </widget>
+     <widget class="QLabel" name="uiForwardROColorlabel">
+      <property name="geometry">
+       <rect>
+        <x>27</x>
+        <y>20</y>
+       <width>155</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>微软雅黑</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>文本颜色（RGB）0x</string>
+      </property>
+      <property name="textFormat">
+       <enum>Qt::AutoText</enum>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="uiForwardROColorLineEdit">
+      <property name="geometry">
+       <rect>
+       <x>184</x>
+        <y>22</y>
+        <width>65</width>
+        <height>27</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="uiForwardClickedColorLineEdit">
+      <property name="geometry">
+       <rect>
+       <x>184</x>
+        <y>56</y>
+        <width>65</width>
+        <height>27</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="uiWriteColorBnt">
+      <property name="geometry">
+       <rect>
+       <x>255</x>
+        <y>54</y>
+       <width>87</width>
+        <height>35</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>微软雅黑</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>写入颜色</string>
+      </property>
+     </widget>
+    </widget>
+   </widget>
+  </widget>
+  <widget class="QGroupBox" name="PictureModeGroupBox">
+   <property name="geometry">
+    <rect>
+     <x>2</x>
+     <y>468</y>
+     <width>141</width>
+     <height>89</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>微软雅黑</family>
+     <pointsize>12</pointsize>
+    </font>
+   </property>
+   <property name="title">
+    <string>图片适配模式</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+   </property>
+   <widget class="QRadioButton" name="PictureModeRadioButton_1">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>14</x>
+      <y>58</y>
+      <width>103</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="layoutDirection">
+     <enum>Qt::LeftToRight</enum>
+    </property>
+    <property name="text">
+     <string>全尺寸缩放</string>
+    </property>
+    <property name="checked">
+     <bool>false</bool>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="PictureModeRadioButton_0">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>14</x>
+      <y>26</y>
+      <width>119</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="layoutDirection">
+     <enum>Qt::LeftToRight</enum>
+    </property>
+    <property name="text">
+     <string>保持比例裁剪</string>
+    </property>
+    <property name="checked">
+     <bool>true</bool>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QComboBox" name="resolutionComboBox">
+   <property name="geometry">
+    <rect>
+     <x>70</x>
+     <y>430</y>
+     <width>131</width>
+     <height>25</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="resolutionlabel">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>428</y>
+     <width>53</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>微软雅黑</family>
+     <pointsize>12</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>分辨率</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::AutoText</enum>
+   </property>
+  </widget>
+ </widget>
+ <resources>
+  <include location="apprcc.qrc"/>
+ </resources>
+ <connections/>
+ <designerdata>
+  <property name="gridDeltaX">
+   <number>2</number>
+  </property>
+  <property name="gridDeltaY">
+   <number>2</number>
+  </property>
+  <property name="gridSnapX">
+   <bool>true</bool>
+  </property>
+  <property name="gridSnapY">
+   <bool>true</bool>
+  </property>
+  <property name="gridVisible">
+   <bool>true</bool>
+  </property>
+ </designerdata>
+</ui>

@@ -1,0 +1,49 @@
+# 本行为yaml文件注释范例
+# yaml配置格式以空格缩进区分层级关系
+# key后面紧跟一个冒号 冒号后需加一个空格方可填写value
+
+windows_tool:
+  
+  # 本工具模板地址
+  tool_open_url: "本工具开源地址：https://github.com/ClimbSnail/esp_win_tool"
+
+  # 工具的名称
+  tool_name: "S-EL管理工具 "
+  
+  # 自定义QQ群信息 一共需填写两个群号，中间英文的分号隔开
+  qq_info: QQ_1群 792983270,QQ_2群 暂无
+  
+  # 自定义额外的视频或文档链接
+  info_url_0:
+    name: OSHWHub开源页
+    url: "https://oshwhub.com/climbsnail/s-elo-dian-zi-fu-zai"
+  info_url_1:
+    name: 说明书
+    url: 详情请看《S-EL系列电子负载说明书.pdf》
+  
+  # 下载的波特率
+  baud_rate: "921600"
+  # 通讯的波特率
+  info_baud_rate: "921600"
+  # 主固件的目录
+  # main_appdir_rules: "../蜗牛台管理工具v2.8.7（含v2.6.0固件）/"
+  main_appdir_rules: ./
+  # main_app_rules 为页面搜索框中搜索主程序的适配规则
+  # 下面的匹配规则（正则表达式）
+  main_app_rules: SEL\S_SW_v\d{1,2}\.\d{1,2}\.\d{1,2}\S*\.bin
+
+  # 预留的读取激活码的本地缓存文件 用于不在联网状态下使用（本字段需要配合固件联调）
+  temp_sn_recode_path: temporary_sn_recode.txt
+  
+  # 激活码以及注册者信息查询的api 需要激活码管理员有服务器 
+  search_sn_registrant_url: http://climbsnail.cn/api/v1/sel/sn
+  # 获取最新固件版本的api
+  get_firmware_new_ver_url: http://climbsnail.cn/api/v1/sel/ota/info/open/
+  # 获取最新工具版本的api
+  get_tool_new_ver_url: http://climbsnail.cn/api/v1/snailheater/tool/version
+  # 自动激活的api 用于工厂批量生产（应设超级权限）
+  # activate_sn_url: http://climbsnail.cn/api/v1/snailheater/sn/new/
+
+  # search_sn_registrant_url: http://127.0.0.1:5001/api/v1/snailheater/sn/
+  # get_firmware_new_ver_url: http://127.0.0.1:5001/api/v1/snailheater/firmware/version
+  # get_tool_new_ver_url: http://127.0.0.1:5001/api/v1/snailheater/tool/version
