@@ -249,23 +249,24 @@ class BaseToolController(object):
         return None
 
     def read_coredump(self):
-        """读取设备 coredump；当前按钮默认未绑定。"""
+        """通过串口读取当前芯片的 coredump 分区并保存到本地。"""
         port = self.getSafeCom()
         if not port:
             return None
         try:
-            machine_code = self.get_machine_code() or "UNKNOWN"
-            now = datetime.datetime.now().strftime("%Y%m%d_%H_%M_%S")
-            output = str(self.paths.coredump_dir / f"SH_{now}_{machine_code}.coredump")
-            self.print_log("正在获取异常信息...")
+            chip_id = self.firmware_service.get_chip_id(port, self.print_log)
+            if chip_id not in self.profile.coredump or chip_id not in self.profile.coredumpSize:
+                raise ValueError(f"当前芯片不支持读取 Coredump：{chip_id or '未知'}")
+            output = self.paths.coredump_dir / f"{datetime.datetime.now():%Y%m%d_%H%M%S}.coredump"
+            self.print_log("正在读取 Coredump，请等待……")
             self.firmware_service.read_flash(
-                port, "0x1D0000", "0x10000", output, self.print_log
+                port, self.profile.coredump[chip_id], self.profile.coredumpSize[chip_id], str(output), self.print_log
             )
-            self.print_log(COLOR_RED % ("异常报告已生成：" + output))
-            return output
+            self.print_log(COLOR_RED % f"Coredump 已保存至：{output}")
+            return str(output)
         except Exception as error:
             print(traceback.format_exc())
-            self.print_log(COLOR_RED % f"无法获取异常信息：{error}")
+            self.print_log(COLOR_RED % f"读取 Coredump 失败：{error}")
             return None
 
     def act_button_click(self):
@@ -668,19 +669,21 @@ class BaseToolController(object):
         """生成背景文件并通过固件服务写入。"""
         self.form.WriteWallpaperButton_2.setEnabled(False)
         try:
-            params = self.get_output_param(self.form.choosePathEdit_2.text().strip())
-            if not params:
-                return False
-            crop_to_fill = self.form.PictureModeRadioButton_0.isChecked()
-            background = self.media_service.prepare_background(params, crop_to_fill, self.print_log)
-            capacity = 320 * 1024
-            rate = self.media_service.validate_capacity(background, capacity)
-            self.print_log(COLOR_RED % f"背景图可用容量为 {capacity // 1024} KB")
-            self.print_log(COLOR_RED % f"本次背景图占用 {rate}%")
             port = self.getSafeCom()
             if not port:
                 return False
             chip_id = self.firmware_service.get_chip_id(port, self.print_log)
+            capacity = int(self.profile.backgroundSize[chip_id], 16)
+            params = self.get_output_param(self.form.choosePathEdit_2.text().strip())
+            if not params:
+                return False
+            crop_to_fill = self.form.PictureModeRadioButton_0.isChecked()
+            background = self.media_service.prepare_background(
+                params, crop_to_fill, self.print_log, capacity
+            )
+            rate = self.media_service.validate_capacity(background, capacity)
+            self.print_log(COLOR_RED % f"背景图可用容量为 {capacity // 1024} KB")
+            self.print_log(COLOR_RED % f"本次背景图占用 {rate}%")
             self.print_log("正在烧入背景数据到主机，请等待......")
             self.firmware_service.write_entries(
                 port,

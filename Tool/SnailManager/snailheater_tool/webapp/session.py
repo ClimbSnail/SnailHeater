@@ -245,11 +245,14 @@ class WebToolSession:
 
     def _write_background(self, payload: dict[str, Any], operation: Operation) -> dict[str, Any]:
         """转换背景图片并写入当前芯片对应的背景闪存区域。"""
-        params = self._media_params(payload)
-        background = self.media_service.prepare_background(params, bool(payload.get("cropToFill", True)), self._logger(operation))
-        rate = self.media_service.validate_capacity(background, 320 * 1024)
         port = self._require_port(str(payload.get("port", "")))
         chip_id = self.firmware_service.get_chip_id(port, self._logger(operation))
+        capacity = int(self.profile.backgroundSize[chip_id], 16)
+        params = self._media_params(payload)
+        background = self.media_service.prepare_background(
+            params, bool(payload.get("cropToFill", True)), self._logger(operation), capacity
+        )
+        rate = self.media_service.validate_capacity(background, capacity)
         address = self.profile.background_address(chip_id)
         self._log(operation, f"正在将背景写入 {address}……")
         self.firmware_service.write_entries(
@@ -323,13 +326,22 @@ class WebToolSession:
         return {"path": str(result)}
 
     def _read_coredump(self, payload: dict[str, Any], operation: Operation) -> dict[str, Any]:
-        """从固定闪存区域读取 coredump 并保存到生成目录。"""
+        """通过串口读取当前芯片的 coredump 分区并保存到本地。"""
         port = self._require_port(str(payload.get("port", "")))
-        machine_code = self._read_machine_code(port) or "UNKNOWN"
-        now = datetime.datetime.now().strftime("%Y%m%d_%H_%M_%S")
-        output = self.paths.coredump_dir / f"SH_{now}_{machine_code}.coredump"
-        self.firmware_service.read_flash(port, "0x1D0000", "0x10000", str(output), self._logger(operation))
-        return {"path": str(output)}
+        chip_id = self.firmware_service.get_chip_id(port, self._logger(operation))
+        if chip_id not in self.profile.coredump or chip_id not in self.profile.coredumpSize:
+            raise ValueError(f"当前芯片不支持读取 Coredump：{chip_id or '未知'}")
+        output = self.paths.coredump_dir / f"{datetime.datetime.now():%Y%m%d_%H%M%S}.coredump"
+        self._log(operation, "正在读取 Coredump，请等待……")
+        self.firmware_service.read_flash(
+            port,
+            self.profile.coredump[chip_id],
+            self.profile.coredumpSize[chip_id],
+            str(output),
+            self._logger(operation),
+        )
+        self._log(operation, f"Coredump 已保存至：{output}")
+        return {"path": str(output), "chipId": chip_id}
 
     def _media_params(self, payload: dict[str, Any]) -> dict[str, object]:
         """验证 WebUI 媒体选项并复用现有媒体参数构造逻辑。"""

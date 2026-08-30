@@ -2,7 +2,7 @@
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Mapping, Tuple
 from common import getVerValue
 from .config import ToolConfig, load_tool_config
 from .models import DownloadMode, FlashEntry, FlashPlan, OperationState
@@ -21,20 +21,25 @@ class ProductProfile:
     supports_rtttl: bool
     auto_activation: bool
     resolutions: Tuple[str, ...]
-    background_address_s2: str
-    background_address_s3: str
-    wallpaper_address_s2: str
-    wallpaper_address_s3: str
+    bootloaderAddr: Mapping[str, str]
+    tableAddr: Mapping[str, str]
+    otaInitAddr: Mapping[str, str]
+    userFwAddr: Mapping[str, str]
+    backgroundAddr: Mapping[str, str]
+    backgroundSize: Mapping[str, str]
+    wallpaperAddr: Mapping[str, str]
+    coredump: Mapping[str, str]
+    coredumpSize: Mapping[str, str]
 
     @property
     def is_el(self) -> bool:
         return self.name == "el"
 
     def background_address(self, chip_id: str) -> str:
-        return self.background_address_s3 if chip_id == CHIP_ID_S3 else self.background_address_s2
+        return self.backgroundAddr[chip_id]
 
     def wallpaper_address(self, chip_id: str) -> str:
-        return self.wallpaper_address_s3 if chip_id == CHIP_ID_S3 else self.wallpaper_address_s2
+        return self.wallpaperAddr[chip_id]
 
     def load_config(self, paths: RuntimePaths) -> ToolConfig:
         return load_tool_config(self.config_filename, paths)
@@ -155,10 +160,10 @@ class ProductProfile:
             base = paths.external_resource_dir("base_data")
             entries.extend(
                 [
-                    FlashEntry("0x00000000", str(base / f"bootloader_{normalized_size}.bin")),
-                    FlashEntry("0x00008000", str(base / f"partition-table_{normalized_size}.bin")),
-                    FlashEntry("0x0001e000", str(base / f"ota_data_initial_{normalized_size}.bin")),
-                    FlashEntry("0x00020000", str(firmware_path)),
+                    FlashEntry(self.bootloaderAddr[chip_id], str(base / f"bootloader_{normalized_size}.bin")),
+                    FlashEntry(self.tableAddr[chip_id], str(base / f"partition-table_{normalized_size}.bin")),
+                    FlashEntry(self.otaInitAddr[chip_id], str(base / f"ota_data_initial_{normalized_size}.bin")),
+                    FlashEntry(self.userFwAddr[chip_id], str(firmware_path)),
                 ]
             )
         else:
@@ -170,23 +175,23 @@ class ProductProfile:
             if getVerValue(version) > getVerValue("v2.1.17"):
                 partition_number = 1 if getVerValue(version) > getVerValue("v2.5.30") else 0
                 base = paths.external_resource_dir("base_data_new")
-                boot_address = "0x00001000" if chip_id == CHIP_ID_S2 else "0x00000000"
                 if chip_id not in {CHIP_ID_S2, CHIP_ID_S3}:
                     raise ValueError(f"暂不支持的芯片：{chip_id or '未知'}")
+                boot_address = self.bootloaderAddr[chip_id]
                 entries.extend(
                     [
                         FlashEntry(
                             boot_address, str(base / f"{chip_id}_bootloader_{normalized_size}.bin")
                         ),
                         FlashEntry(
-                            "0x00008000",
+                            self.tableAddr[chip_id],
                             str(
                                 base
                                 / f"{chip_id}_partitions_{normalized_size}_{partition_number}.bin"
                             ),
                         ),
-                        FlashEntry("0x0002E000", str(base / f"{chip_id}_ota_data_initial.bin")),
-                        FlashEntry("0x00030000", str(firmware_path)),
+                        FlashEntry(self.otaInitAddr[chip_id], str(base / f"{chip_id}_ota_data_initial.bin")),
+                        FlashEntry(self.userFwAddr[chip_id], str(firmware_path)),
                     ]
                 )
             elif getVerValue(version) > getVerValue("v1.9.8"):
@@ -194,15 +199,15 @@ class ProductProfile:
                 entries.extend(
                     [
                         FlashEntry(
-                            "0x00001000", str(base / f"{chip_id}_bootloader_{normalized_size}.bin")
+                            self.bootloaderAddr["legacy"], str(base / f"{chip_id}_bootloader_{normalized_size}.bin")
                         ),
                         FlashEntry(
-                            "0x00008000", str(base / f"{chip_id}_partitions_{normalized_size}.bin")
+                            self.tableAddr["legacy"], str(base / f"{chip_id}_partitions_{normalized_size}.bin")
                         ),
-                        FlashEntry("0x0000e000", str(base / f"{chip_id}_ota_data_initial.bin")),
-                        FlashEntry("0x00010000", str(firmware_path)),
+                        FlashEntry(self.otaInitAddr["legacy"], str(base / f"{chip_id}_ota_data_initial.bin")),
+                        FlashEntry(self.userFwAddr["legacy"], str(firmware_path)),
                         FlashEntry(
-                            self.wallpaper_address(chip_id),
+                            self.wallpaperAddr[chip_id],
                             state.default_wallpaper.replace("base_data_new", "base_data_2117"),
                         ),
                     ]
@@ -213,8 +218,8 @@ class ProductProfile:
         if mode == DownloadMode.CLEAR and (not is_legacy_snailheater):
             entries.extend(
                 [
-                    FlashEntry(self.background_address(chip_id), state.default_background),
-                    FlashEntry(self.wallpaper_address(chip_id), state.default_wallpaper),
+                    FlashEntry(self.backgroundAddr[chip_id], state.default_background),
+                    FlashEntry(self.wallpaperAddr[chip_id], state.default_wallpaper),
                 ]
             )
         return FlashPlan(
@@ -237,10 +242,15 @@ SNAILHEATER_PROFILE = ProductProfile(
     supports_rtttl=True,
     auto_activation=True,
     resolutions=("280x240 (一、二车)", "320x240 (三车/三车Pro)"),
-    background_address_s2="0x190000",
-    background_address_s3="0x4B0000",
-    wallpaper_address_s2="0x001E0000",
-    wallpaper_address_s3="0x00500000",
+    bootloaderAddr={CHIP_ID_S2: "0x00001000", CHIP_ID_S3: "0x00000000", "legacy": "0x00001000"},
+    tableAddr={CHIP_ID_S2: "0x00008000", CHIP_ID_S3: "0x00008000", "legacy": "0x00008000"},
+    otaInitAddr={CHIP_ID_S2: "0x0002E000", CHIP_ID_S3: "0x0002E000", "legacy": "0x0000e000"},
+    userFwAddr={CHIP_ID_S2: "0x00030000", CHIP_ID_S3: "0x00030000", "legacy": "0x00010000"},
+    backgroundAddr={CHIP_ID_S2: "0x190000", CHIP_ID_S3: "0x4B0000"},
+    backgroundSize={CHIP_ID_S2: "0x50000", CHIP_ID_S3: "0x50000"},
+    wallpaperAddr={CHIP_ID_S2: "0x001E0000", CHIP_ID_S3: "0x00500000"},
+    coredump={CHIP_ID_S2: "0x0001E000", CHIP_ID_S3: "0x0001E000"},
+    coredumpSize={CHIP_ID_S2: "0x10000", CHIP_ID_S3: "0x10000"},
 )
 EL_PROFILE = ProductProfile(
     name="el",
@@ -249,8 +259,13 @@ EL_PROFILE = ProductProfile(
     supports_rtttl=False,
     auto_activation=False,
     resolutions=("320x240",),
-    background_address_s2="0x460000",
-    background_address_s3="0x460000",
-    wallpaper_address_s2="0x4B0000",
-    wallpaper_address_s3="0x4B0000",
+    bootloaderAddr={CHIP_ID_S3: "0x00000000"},
+    tableAddr={CHIP_ID_S3: "0x00008000"},
+    otaInitAddr={CHIP_ID_S3: "0x0001e000"},
+    userFwAddr={CHIP_ID_S3: "0x00020000"},
+    backgroundAddr={CHIP_ID_S3: "0x480000"},
+    backgroundSize={CHIP_ID_S3: "0x50000"},
+    wallpaperAddr={CHIP_ID_S3: "0x4D0000"},
+    coredump={CHIP_ID_S3: "0x460000"},
+    coredumpSize={CHIP_ID_S3: "0x20000"},
 )

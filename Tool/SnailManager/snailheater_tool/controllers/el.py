@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from download_EL import Ui_SanilHeaterTool
+from SnailManagerToolUi_EL import Ui_ManagerTool
 from .base import BaseToolController
 from ..profiles import EL_PROFILE
 
@@ -8,7 +8,7 @@ class ELController(BaseToolController):
     """EL 两个 Qt 入口共用的产品控制器。"""
 
     def __init__(self):
-        super().__init__(EL_PROFILE, Ui_SanilHeaterTool)
+        super().__init__(EL_PROFILE, Ui_ManagerTool)
 
     def configure_product_ui(self):
         """

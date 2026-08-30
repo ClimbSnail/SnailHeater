@@ -1,5 +1,7 @@
 Doc/*.pdf
+Doc/
 Hardware/
+Model/
 Hardware/ExtendBoard/History
 Hardware/ExtendBoard/History
 Hardware/ExtendBoard/__Previews

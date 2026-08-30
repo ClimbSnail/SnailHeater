@@ -145,7 +145,11 @@ class MediaService:
         }
 
     def convert(
-        self, params: Dict[str, object], crop_to_fill: bool, log: Callable[[str], None]
+        self,
+        params: Dict[str, object],
+        crop_to_fill: bool,
+        log: Callable[[str], None],
+        capacity: int,
     ) -> None:
         """
         执行输入数据的格式转换。
@@ -353,7 +357,7 @@ class MediaService:
                 converter.convert()
         if not output.is_file():
             raise FileNotFoundError(f"背景文件生成失败：{output}")
-        self.validate_capacity(output, 320 * 1024)
+        self.validate_capacity(output, capacity)
         return output
 
     @staticmethod
