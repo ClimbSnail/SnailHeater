@@ -112,6 +112,7 @@ function App(): ReactElement {
   const [operation, setOperation] = useState<Operation | null>(null);
   const [progress, setProgress] = useState<ProgressState | null>(null);
   const [notice, setNotice] = useState<{ kind: "success" | "error" | "info"; text: string } | null>(null);
+  const [coredumpSavedPath, setCoredumpSavedPath] = useState<string | null>(null);
   const [confirmationMessage, setConfirmationMessage] = useState<string | null>(null);
   const confirmationResolver = useRef<((accepted: boolean) => void) | null>(null);
   const [busy, setBusy] = useState(false);
@@ -281,8 +282,15 @@ function App(): ReactElement {
         if (data.type === "log" && data.message) appendLog(data.message);
         if (data.type === "completed") {
           setOperation((current) => current ? { ...current, status: "completed", cancellable: false, result: data.result } : current);
-          setNotice({ kind: "success", text: "任务已完成。" });
-          appendLog("任务完成。");
+          const coredumpPath = next.kind === "coredump" && data.result && typeof data.result === "object"
+            ? (data.result as { path?: unknown }).path
+            : undefined;
+          const completionMessage = typeof coredumpPath === "string"
+            ? `Coredump 已保存至：${coredumpPath}`
+            : "任务已完成。";
+          if (typeof coredumpPath === "string") setCoredumpSavedPath(coredumpPath);
+          setNotice({ kind: "success", text: completionMessage });
+          appendLog(completionMessage);
           stream.close();
         }
         if (data.type === "failed") {
@@ -366,6 +374,13 @@ function App(): ReactElement {
         </section>}
         <footer className="statusbar"><span><Activity size={14} /> {operation?.status === "running" ? `正在执行：${operation.kind}` : "就绪"}</span><span><HardDrive size={14} /> 本地模式</span></footer>
       </main>
+      {coredumpSavedPath && <div className="confirmation-backdrop" onMouseDown={() => setCoredumpSavedPath(null)}>
+        <section className="confirmation-dialog" role="dialog" aria-modal="true" aria-labelledby="coredump-saved-title" onMouseDown={(event) => event.stopPropagation()} onKeyDown={(event) => { if (event.key === "Escape") setCoredumpSavedPath(null); }}>
+          <div className="confirmation-icon"><CheckCircle2 size={22} /></div>
+          <div className="confirmation-copy"><h2 id="coredump-saved-title">Coredump 已保存</h2><p>{coredumpSavedPath}</p></div>
+          <div className="confirmation-actions"><button className="primary-button" autoFocus onClick={() => setCoredumpSavedPath(null)}>知道了</button></div>
+        </section>
+      </div>}
       {confirmationMessage && <div className="confirmation-backdrop" onMouseDown={() => resolveConfirmation(false)}>
         <section className="confirmation-dialog" role="alertdialog" aria-modal="true" aria-labelledby="confirmation-title" aria-describedby="confirmation-message" onMouseDown={(event) => event.stopPropagation()} onKeyDown={(event) => { if (event.key === "Escape") resolveConfirmation(false); }}>
           <div className="confirmation-icon"><CircleAlert size={22} /></div>

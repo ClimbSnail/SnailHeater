@@ -250,7 +250,7 @@ class WebToolSession:
         capacity = int(self.profile.backgroundSize[chip_id], 16)
         params = self._media_params(payload)
         background = self.media_service.prepare_background(
-            params, bool(payload.get("cropToFill", True)), self._logger(operation), capacity
+            params, bool(payload.get("cropToFill", True)), self._logger(operation)
         )
         rate = self.media_service.validate_capacity(background, capacity)
         address = self.profile.background_address(chip_id)
@@ -271,8 +271,8 @@ class WebToolSession:
             raise RuntimeError("无法识别芯片或 Flash 容量")
         capacity = min(flash_size_real, flash_size_max) - (int(self.profile.wallpaper_address(chip_id), 16) + 50)
         params = self._media_params(payload)
-        if params["format"][0] == "lsw":
-            shutil.copy(params["src_path"][0], self.paths.wallpaper_file)
+        if params.format[0] == "lsw":
+            shutil.copy(params.src_path[0], self.paths.wallpaper_file)
             self._log(operation, "正在使用已打包好的壁纸文件")
         else:
             self.media_service.convert(params, bool(payload.get("cropToFill", True)), self._logger(operation))
@@ -300,7 +300,7 @@ class WebToolSession:
         """仅转换素材而不执行任何设备写入操作。"""
         params = self._media_params(payload)
         self.media_service.convert(params, bool(payload.get("cropToFill", True)), self._logger(operation))
-        return {"files": list(params["dst_path"])}
+        return {"files": list(params.dst_path)}
 
     def _convert_rtttl(self, payload: dict[str, Any], operation: Operation) -> dict[str, Any]:
         """执行与旧 Qt 工具相同的 MP4→WAV→RTTTL 专用转换。"""
@@ -314,8 +314,8 @@ class WebToolSession:
         """转换选中的壁纸素材并打包为 LSW 文件。"""
         params = self._media_params(payload)
         logger = self._logger(operation)
-        if params["format"][0] == "lsw":
-            source = Path(params["src_path"][0])
+        if params.format[0] == "lsw":
+            source = Path(params.src_path[0])
             if source.resolve() != self.paths.wallpaper_file.resolve():
                 shutil.copy(source, self.paths.wallpaper_file)
             self._log(operation, "正在使用已打包好的壁纸文件")

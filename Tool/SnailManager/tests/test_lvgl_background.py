@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 import tempfile
 import unittest
+import struct
 from pathlib import Path
 from unittest.mock import patch
 
 from PIL import Image
 
-from snailheater_tool.media_service import MediaService
+from snailheater_tool.media_service import MediaOptions, MediaParams, MediaService
 from snailheater_tool.paths import RuntimePaths
 from snailheater_tool.profiles import EL_PROFILE, SNAILHEATER_PROFILE
 from snailheater_tool.webapp.session import WebToolSession
@@ -23,12 +24,17 @@ class LvglBackgroundTests(unittest.TestCase):
         self.paths = RuntimePaths(self.root)
         self.source = self.root / "source.png"
         Image.new("RGB", (2, 1), (255, 0, 0)).save(self.source)
-        self.params = {
-            "format": ["jpeg"],
-            "src_path": [str(self.source)],
-            "width": "2",
-            "height": "1",
-        }
+        self.params = MediaParams(
+            src_path=[str(self.source)],
+            dst_path=[str(self.root / "background.jpeg")],
+            width=2,
+            height=1,
+            start_time="0",
+            end_time="0",
+            fps="20",
+            quality=["10"],
+            format=["jpeg"],
+        )
 
     def tearDown(self) -> None:
         self.external_root_patcher.stop()
@@ -89,6 +95,33 @@ class LvglBackgroundTests(unittest.TestCase):
         self.assertEqual(WebToolSession("el").media_service.background_lvgl_version, 9)
         self.assertEqual(WebToolSession("snailheater").media_service.background_lvgl_version, 8)
 
+    def test_mp4_builds_mjpeg_and_pwm_song_outputs(self) -> None:
+        service = MediaService(self.paths, SNAILHEATER_PROFILE)
+        params = service.build_output_params(
+            "movie.mp4;",
+            MediaOptions("320x240", 0, 0, "20", "5"),
+        )
+
+        self.assertEqual(params.src_path, ["movie.mp4", "movie.mp4"])
+        self.assertEqual(params.format, ["pwm_song", "mjpeg"])
+        self.assertEqual(params.quality, ["10", "5"])
+        self.assertEqual(
+            [Path(path).suffix for path in params.dst_path],
+            [".pwm_song", ".mjpeg"],
+        )
+
+    def test_pwm_song_uses_little_endian_uint16_pairs(self) -> None:
+        encoded = MediaService._encode_pwmsong([(440, 500), (0, 100)])
+
+        self.assertEqual(
+            encoded,
+            struct.pack("<HHHH", 440, 500, 0, 100),
+        )
+        self.assertEqual(
+            MediaService._encode_pwmsong([(440, 65550)]),
+            struct.pack("<HHHH", 440, 65500, 440, 50),
+        )
+
     def test_generate_dir_uses_executable_directory_when_frozen(self) -> None:
         executable = self.root / "app" / "SnailHeater_Modern_EL.exe"
         self.external_root_patcher.stop()
@@ -99,4 +132,6 @@ class LvglBackgroundTests(unittest.TestCase):
 
 
 if __name__ == "__main__":
+    # python tools\play_pwmsong.py "D:\Workspace\OpenWorkspace\SnailHeater\Tool\SnailManager\Generate\Cache\Wallpaper\3000万年前的迪迦童年珍贵片段_5.pwm_song"
+    # python tools\play_pwmsong.py "D:\Workspace\OpenWorkspace\SnailHeater\Tool\SnailManager\Generate\Cache\Wallpaper\3000万年前的迪迦童年珍贵片段_50.pwm_song"
     unittest.main()

@@ -679,7 +679,7 @@ class BaseToolController(object):
                 return False
             crop_to_fill = self.form.PictureModeRadioButton_0.isChecked()
             background = self.media_service.prepare_background(
-                params, crop_to_fill, self.print_log, capacity
+                params, crop_to_fill, self.print_log
             )
             rate = self.media_service.validate_capacity(background, capacity)
             self.print_log(COLOR_RED % f"背景图可用容量为 {capacity // 1024} KB")
@@ -719,9 +719,9 @@ class BaseToolController(object):
             params = self.get_output_param(self.form.choosePathEdit.text().strip())
             if not params:
                 return False
-            if params["format"][0] == "lsw":
+            if params.format[0] == "lsw":
                 self.print_log(COLOR_RED % "正在使用已打包好的壁纸文件")
-                shutil.copy(params["src_path"][0], self.paths.wallpaper_file)
+                shutil.copy(params.src_path[0], self.paths.wallpaper_file)
             else:
                 self.media_service.convert(
                     params, self.form.PictureModeRadioButton_0.isChecked(), self.print_log
