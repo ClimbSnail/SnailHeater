@@ -2,6 +2,7 @@
 import tempfile
 import unittest
 import struct
+import subprocess
 from pathlib import Path
 from unittest.mock import patch
 
@@ -103,12 +104,54 @@ class LvglBackgroundTests(unittest.TestCase):
         )
 
         self.assertEqual(params.src_path, ["movie.mp4", "movie.mp4"])
-        self.assertEqual(params.format, ["pwm_song", "mjpeg"])
+        self.assertEqual(params.format, ["pwm_song_8bit", "mjpeg"])
         self.assertEqual(params.quality, ["10", "5"])
         self.assertEqual(
             [Path(path).suffix for path in params.dst_path],
-            [".pwm_song", ".mjpeg"],
+            [".pwm_song_8bit", ".mjpeg"],
         )
+
+    def test_mp4_to_8bit_pwm_song_uses_raw_u8_mono_audio(self) -> None:
+        service = MediaService(self.paths, SNAILHEATER_PROFILE)
+        source = self.root / "movie.mp4"
+        destination = self.root / "movie.pwm_song_8bit"
+        source.write_bytes(b"video")
+        params = MediaParams(
+            src_path=[str(source)],
+            dst_path=[str(destination)],
+            width=320,
+            height=240,
+            start_time="1",
+            end_time="3",
+            fps="20",
+            quality=["10"],
+            format=["pwm_song_8bit"],
+        )
+        logs = []
+
+        def fake_ffmpeg_run(args, **kwargs):
+            self.assertTrue(kwargs["check"])
+            self.assertIs(kwargs["stdout"], subprocess.DEVNULL)
+            self.assertIs(kwargs["stderr"], subprocess.PIPE)
+            Path(args[-1]).write_bytes(b"\x00\x80\xff")
+
+        with patch.object(service, "ffmpeg_executable", return_value="ffmpeg"), patch(
+            "snailheater_tool.media_service.subprocess.run", side_effect=fake_ffmpeg_run
+        ) as run:
+            service._convert_pwmsong_8bit(source, destination, params, logs.append)
+
+        self.assertEqual(destination.read_bytes(), struct.pack("<H", 8000) + b"\x00\x80\xff")
+        ffmpeg_args = run.call_args.args[0]
+        self.assertEqual(
+            ffmpeg_args[:-1],
+            [
+                "ffmpeg", "-y", "-ss", "1", "-to", "3", "-i", str(source), "-vn",
+                "-ac", "1", "-ar", "8000", "-c:a", "pcm_u8", "-f", "u8",
+            ],
+        )
+        self.assertEqual(Path(ffmpeg_args[-1]).name, "audio.u8")
+        self.assertEqual(len(logs), 1)
+        self.assertIn("8000 Hz", logs[0])
 
     def test_pwm_song_uses_little_endian_uint16_pairs(self) -> None:
         encoded = MediaService._encode_pwmsong([(440, 500), (0, 100)])
@@ -132,6 +175,6 @@ class LvglBackgroundTests(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    # python tools\play_pwmsong.py "D:\Workspace\OpenWorkspace\SnailHeater\Tool\SnailManager\Generate\Cache\Wallpaper\3000万年前的迪迦童年珍贵片段_5.pwm_song"
-    # python tools\play_pwmsong.py "D:\Workspace\OpenWorkspace\SnailHeater\Tool\SnailManager\Generate\Cache\Wallpaper\3000万年前的迪迦童年珍贵片段_50.pwm_song"
+    # python tools\play_pwmsong.py "D:\Workspace\OpenWorkspace\SnailHeater\Tool\SnailManager\Generate\Cache\Wallpaper\3000万年前的迪迦童年珍贵片段_5.pwm_song_v1"
+    # python tools\play_pwmsong.py "D:\Workspace\OpenWorkspace\SnailHeater\Tool\SnailManager\Generate\Cache\Wallpaper\3000万年前的迪迦童年珍贵片段_50.pwm_song_v1"
     unittest.main()

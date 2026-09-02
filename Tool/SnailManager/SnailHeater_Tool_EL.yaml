@@ -41,6 +41,8 @@ windows_tool:
   get_firmware_new_ver_url: http://climbsnail.cn/api/v1/sel/ota/info/open/
   # 获取最新工具版本的api
   get_tool_new_ver_url: http://climbsnail.cn/api/v1/snailheater/tool/version
+  # coredump文件上传的地址
+  coredump_upload_url: http://climbsnail.cn/api/v1/coredump
   # 自动激活的api 用于工厂批量生产（应设超级权限）
   # activate_sn_url: http://climbsnail.cn/api/v1/snailheater/sn/new/
 

@@ -18,12 +18,15 @@ IMAGE_FORMATS = {"jpg", "jpeg", "png"}
 MOVIE_FORMATS = {"mp4", "avi", "mov"}
 WALLPAPER_MASK = 17
 WALLPAPER_JPG_MAX_SIZE = 17500
-MEDIA_TYPES = {"jpeg": 0, "mjpeg": 1, "pwm_song": 123, "pcm_u8_1": 124, "rtttl": 125}
+MEDIA_TYPES = {"jpeg": 0, "mjpeg": 1, "pwm_song_v1": 123, "pcm_u8_1": 124, "rtttl": 125}
+MEDIA_SONG_TYPES = {"pwm_song_v1", "pcm_u8_1", "rtttl"}
 PWM_SONG_TICK_MS = 5
 PWM_SONG_SAMPLE_RATE = 22050
 PWM_SONG_MIN_FREQ = 80.0
 PWM_SONG_MAX_FREQ = 4000.0
 PWM_SONG_MAX_DURATION_MS = (0xFFFF // PWM_SONG_TICK_MS) * PWM_SONG_TICK_MS
+PCM_U8_1_SAMPLE_RATE = 8000
+PCM_U8_1_HEADER_STRUCT = struct.Struct("<H")
 
 
 @dataclass(frozen=True)
@@ -138,8 +141,10 @@ class MediaService:
             if ext in MOVIE_FORMATS:
                 # Keep source, destination, format, and quality entries aligned.
                 sources.extend([source, source])
-                destinations.append(str(self.paths.wallpaper_cache_dir / f"{stem}.pwm_song"))
-                formats.append("pwm_song")
+                # destinations.append(str(self.paths.wallpaper_cache_dir / f"{stem}.pwm_song_v1"))
+                # formats.append("pwm_song_v1")
+                destinations.append(str(self.paths.wallpaper_cache_dir / f"{stem}.pcm_u8_1"))
+                formats.append("pcm_u8_1")
                 qualities.append("10")
 
                 destinations.append(
@@ -166,14 +171,14 @@ class MediaService:
                 destinations.append(str(self.paths.wallpaper_cache_dir / f"{stem}.rtttl"))
                 formats.append(ext)
                 qualities.append("10")
+            elif ext == "pwm_song_v1":
+                sources.append(source)
+                destinations.append(str(self.paths.wallpaper_cache_dir / f"{stem}.pwm_song_v1"))
+                formats.append(ext)
+                qualities.append("10")
             elif ext == "pcm_u8_1":
                 sources.append(source)
                 destinations.append(str(self.paths.wallpaper_cache_dir / f"{stem}.pcm_u8_1"))
-                formats.append(ext)
-                qualities.append("10")
-            elif ext == "pwm_song":
-                sources.append(source)
-                destinations.append(str(self.paths.wallpaper_cache_dir / f"{stem}.pwm_song"))
                 formats.append(ext)
                 qualities.append("10")
             else:
@@ -205,7 +210,7 @@ class MediaService:
             destination_path = Path(destination)
             # Pre-encoded device assets must not be deleted before copying.
             reuse_existing = (
-                media_format in {"rtttl", "pcm_u8_1", "pwm_song"}
+                media_format in MEDIA_SONG_TYPES
                 and source_path.resolve() == destination_path.resolve()
             )
             if reuse_existing:
@@ -223,9 +228,11 @@ class MediaService:
                     crop_to_fill,
                     log,
                 )
-            elif media_format == "pwm_song" and source_path.suffix.lower().lstrip(".") in MOVIE_FORMATS:
-                self._convert_pwmsong(source, destination, params, log)
-            elif media_format in {"rtttl", "pcm_u8_1", "pwm_song"}:
+            elif media_format == "pwm_song_v1" and source_path.suffix.lower().lstrip(".") in MOVIE_FORMATS:
+                self._convert_pwmsong_v1(source, destination, params, log)
+            elif media_format == "pcm_u8_1" and source_path.suffix.lower().lstrip(".") in MOVIE_FORMATS:
+                self._convert_pcm_u8_1(source, destination, params, log)
+            elif media_format in MEDIA_SONG_TYPES:
                 # Pre-encoded buzzer assets are copied directly into the cache.
                 shutil.copy(source, destination)
             elif media_format in {"lsw", "bin"}:
@@ -235,7 +242,7 @@ class MediaService:
             if not Path(destination).is_file() or Path(destination).stat().st_size == 0:
                 raise RuntimeError(f"生成文件失败：{source}")
 
-    def _convert_pwmsong(
+    def _convert_pwmsong_v1(
         self,
         source: Union[str, Path],
         destination: Union[str, Path],
@@ -292,6 +299,79 @@ class MediaService:
         destination_path.parent.mkdir(parents=True, exist_ok=True)
         destination_path.write_bytes(self._encode_pwmsong(notes))
         log(f"PWM Song 生成完成：{destination_path}（{len(notes)} 个音符/休止符）")
+
+    def _convert_pcm_u8_1(
+        self,
+        source: Union[str, Path],
+        destination: Union[str, Path],
+        params: MediaParams,
+        log: Callable[[str], None],
+    ) -> None:
+        """Convert a video audio track to 8-bit PWM music with a sample-rate header.
+
+        The file starts with a little-endian uint16 sample rate, followed by a
+        headerless stream of unsigned 8-bit mono PCM samples.  The firmware can
+        read the first two bytes to configure its sample-output timer, then feed
+        every following byte directly to the PWM duty cycle.
+        """
+        source_path = Path(source).expanduser()
+        destination_path = Path(destination)
+        if not source_path.is_file():
+            raise FileNotFoundError(f"Video file does not exist: {source_path}")
+        if source_path.suffix.lower().lstrip(".") not in MOVIE_FORMATS:
+            raise ValueError(f"8-bit PWM music conversion supports video files only: {source_path}")
+        if not 0 < PCM_U8_1_SAMPLE_RATE <= 0xFFFF:
+            raise ValueError(
+                f"8-bit PWM music sample rate must be between 1 and 65535 Hz: "
+                f"{PCM_U8_1_SAMPLE_RATE}"
+            )
+
+        self.ensure_directories()
+        destination_path.parent.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix="snailheater_pcm_u8_1_") as temp_dir:
+            raw_path = Path(temp_dir) / "audio.u8"
+            try:
+                ffmpeg_args = [self.ffmpeg_executable(), "-y"]
+                if params.end_time != "0":
+                    ffmpeg_args.extend(["-ss", params.start_time, "-to", params.end_time])
+                ffmpeg_args.extend(
+                    [
+                        "-i",
+                        str(source_path),
+                        "-vn",
+                        "-ac",
+                        "1",
+                        "-ar",
+                        str(PCM_U8_1_SAMPLE_RATE),
+                        "-c:a",
+                        "pcm_u8",
+                        "-f",
+                        "u8",
+                        str(raw_path),
+                    ]
+                )
+                subprocess.run(
+                    ffmpeg_args,
+                    check=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.PIPE,
+                )
+            except subprocess.CalledProcessError as error:
+                detail = error.stderr.decode(errors="replace").strip() if error.stderr else ""
+                raise RuntimeError(f"Failed to extract video audio: {detail or source_path}") from error
+
+            samples = raw_path.read_bytes() if raw_path.is_file() else b""
+
+        if not samples:
+            raise RuntimeError(f"Failed to generate 8-bit PWM music: {destination_path}")
+        destination_path.write_bytes(
+            PCM_U8_1_HEADER_STRUCT.pack(PCM_U8_1_SAMPLE_RATE) + samples
+        )
+        log(
+            f"8-bit PWM music generated: {destination_path}"
+            f" (first 2 bytes: {PCM_U8_1_SAMPLE_RATE} Hz, little-endian uint16;"
+            " remaining bytes: unsigned mono PCM)"
+        )
 
     @staticmethod
     def _read_wav_mono(path: Path, np):
