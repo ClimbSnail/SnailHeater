@@ -48,7 +48,7 @@ windows_tool:
 
 sn_tool:
   # 蜗牛台数据库(保存激活过的激活码路径)
-  snail_db_path: "../../snail_db.db"
+  snail_db_path: "../../snail.sqlite3"
 
 # 配置服务端的配置文件 
 sn_search_server:
@@ -59,7 +59,7 @@ sn_search_server:
 # 生产环境服务器配置
 sn_search_server_prod:
   # 蜗牛台数据库
-  snail_db_path: ./snail_db.db
+  snail_db_path: ./snail.sqlite3
   # 读取的已激活过的机器激活码路径
   active_recode_path: ./active_recode.txt
   # 读取的SH_TOOL所支持的固件版本
@@ -99,7 +99,7 @@ sn_search_server_prod:
 # 开发环境服务器配置
 sn_search_server_dev:
   # 蜗牛台数据库
-  snail_db_path: ./snail_db.db
+  snail_db_path: ./snail.sqlite3
   # 读取的已激活过的机器激活码路径
   active_recode_path: ./active_recode.txt
   # 读取的SH_TOOL所支持的固件版本
@@ -140,7 +140,7 @@ sn_search_server_dev:
 # 本地环境服务器配置
 sn_search_server_test:
   # 蜗牛台数据库
-  snail_db_path: ./snail_db.db
+  snail_db_path: ./snail.sqlite3
   # 读取的已激活过的机器激活码路径
   active_recode_path: ./active_recode.txt
   # 读取的SH_TOOL所支持的固件版本

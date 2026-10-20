@@ -42,6 +42,8 @@ windows_tool:
   get_firmware_new_ver_url: http://climbsnail.cn/api/v1/snailheater/firmware/version
   # 获取最新工具版本的api
   get_tool_new_ver_url: http://climbsnail.cn/api/v1/snailheater/tool/version
+  # coredump文件上传的地址
+  coredump_upload_url: http://climbsnail.cn/api/v1/coredump
   # 自动激活的api 用于工厂批量生产（应设超级权限）
   # activate_sn_url: http://climbsnail.cn/api/v1/snailheater/sn/new/
 
@@ -51,7 +53,7 @@ windows_tool:
 
 sn_tool:
   # 蜗牛台数据库(保存激活过的激活码路径)
-  snail_db_path: "../../snail_db.db"
+  snail_db_path: "../../snail.sqlite3"
 
 # 配置服务端的配置文件 
 sn_search_server:
@@ -78,7 +80,7 @@ site_info:
 # 生产环境服务器配置
 sn_search_server_prod:
   # 蜗牛台数据库
-  snail_db_path: ./snail_db.db
+  snail_db_path: ./snail.sqlite3
   # 读取的SH_TOOL所支持的固件版本
   tool_supports_info_path: ./tool_supports_info.txt
   # server启动绑定的服务器ip
@@ -107,7 +109,7 @@ sn_search_server_prod:
 
     db_backup_url_header: "http://oss-private.climbsnail.cn/db_backup"
     bucket_private: "climbsnail-private"
-
+    
     endpoint: "oss-cn-beijing.aliyuncs.com"
   # ftp服务的URL
   ftp_url_header: "http://ftp.climbsnail.cn"
@@ -132,7 +134,7 @@ sn_search_server_prod:
 # 开发环境服务器配置
 sn_search_server_dev:
   # 蜗牛台数据库
-  snail_db_path: ./snail_db.db
+  snail_db_path: ./snail.sqlite3
   # 读取的SH_TOOL所支持的固件版本
   tool_supports_info_path: ./tool_supports_info.txt
   # server启动绑定的服务器ip
@@ -187,7 +189,7 @@ sn_search_server_dev:
 # 本地环境服务器配置
 sn_search_server_test:
   # 蜗牛台数据库
-  snail_db_path: D:/Workspace/OpenWorkspace/PersionSnailHeater/snail_db.db
+  snail_db_path: D:/Workspace/OpenWorkspace/PersionSnailHeater/snail.sqlite3
   # 读取的SH_TOOL所支持的固件版本
   tool_supports_info_path: ./tool_supports_info.txt
   # server启动绑定的服务器ip
