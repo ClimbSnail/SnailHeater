@@ -198,15 +198,13 @@ python -m PyInstaller --noconfirm --clean --icon .\images\SELO_256.ico -w -F `
   --hidden-import uvicorn.protocols.http.auto `
   .\SnailHeater_Modern_EL.py
 
-### 打包经典 PySide2 标准款
+### 打包经典 PySide2
 
 ```powershell
 python -m PyInstaller --noconfirm --clean --icon .\images\SnailHeater_256.ico -w -F `
   --add-data ".\images;images" `
   .\SnailHeater_WinTool_pyside2.py
 ```
-
-### 打包经典 PySide2 EL 款
 
 ```powershell
 python -m PyInstaller --noconfirm --clean --icon .\images\SELO_256.ico -w -F `

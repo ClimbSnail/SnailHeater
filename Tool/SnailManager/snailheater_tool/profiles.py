@@ -263,9 +263,11 @@ EL_PROFILE = ProductProfile(
     tableAddr={CHIP_ID_S3: "0x00008000"},
     otaInitAddr={CHIP_ID_S3: "0x0001e000"},
     userFwAddr={CHIP_ID_S3: "0x00020000"},
-    backgroundAddr={CHIP_ID_S3: "0x480000"},
+    # backgroundAddr={CHIP_ID_S3: "0x480000"}, # 旧地址
+    backgroundAddr={CHIP_ID_S3: "0x4C0000"},
     backgroundSize={CHIP_ID_S3: "0x50000"},
-    wallpaperAddr={CHIP_ID_S3: "0x4D0000"},
+    # wallpaperAddr={CHIP_ID_S3: "0x4D0000"}, # 旧地址
+    wallpaperAddr={CHIP_ID_S3: "0x510000"},
     coredump={CHIP_ID_S3: "0x460000"},
     coredumpSize={CHIP_ID_S3: "0x20000"},
 )
