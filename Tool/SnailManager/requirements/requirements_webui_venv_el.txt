@@ -1,0 +1,14 @@
+﻿Pillow~=9.5.0
+pyserial~=3.5
+pyyaml==6.0
+requests==2.26.0
+pyinstaller==5.5.0
+esptool==4.7.0
+setuptools==49.2.1
+
+# 现代 WebUI 本地服务与 Windows 容器
+fastapi>=0.115,<1
+uvicorn>=0.30,<1
+pywebview>=5.4,<7
+pypng==0.20220715.0
+lz4==4.3.3

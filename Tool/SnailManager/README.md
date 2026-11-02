@@ -93,6 +93,8 @@ python -m venv .venv_pyside_py38
 .\.venv_pyside_py38\Scripts\Activate
 python -m pip install --upgrade pip
 python -m pip install -r requirements\requirements_pyside_py38_venv.txt -i https://mirrors.aliyun.com/pypi/simple/
+
+deactivate 退出虚拟环境
 ```
 
 如果使用经典 PyQt5 入口，则在 Python 3.8 环境中安装：
