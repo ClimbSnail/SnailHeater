@@ -1,0 +1,54 @@
+name: Build macOS DMG
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: "macOS 运行器（macos-15-intel / macos-13 为 x86_64，兼容 Python 3.8）"
+        required: false
+        default: macos-15-intel
+        type: choice
+        options:
+          - macos-15-intel
+          - macos-13
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-dmg:
+    runs-on: ${{ github.event.inputs.runner || 'macos-15-intel' }}
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.8"
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: Tool/SnailManager/webui/package-lock.json
+
+      - name: Build app and dmg
+        working-directory: Tool/SnailManager
+        env:
+          PIP_INDEX_URL: https://pypi.org/simple
+          PYTHON_BIN: python3.8
+        run: bash build_macos.sh
+
+      - name: Show result
+        working-directory: Tool/SnailManager
+        run: ls -lh dist && shasum -a 256 dist/*.dmg
+
+      - name: Upload dmg
+        uses: actions/upload-artifact@v4
+        with:
+          name: SnailHeater_Modern_EL_macOS
+          path: Tool/SnailManager/dist/*.dmg
+          if-no-files-found: error
