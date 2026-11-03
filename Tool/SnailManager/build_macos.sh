@@ -9,7 +9,8 @@
 #   dist/SnailHeater_Modern_EL.app
 #   dist/SnailHeater_Modern_EL_macOS.dmg
 
-set -euo pipefail
+# 不用 set -u：macOS 自带 bash 3.2 在变量紧邻中文/全角标点时可能误判变量名边界
+set -eo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
@@ -23,7 +24,7 @@ ICON_SRC="images/SnailHeater_256.png"
 ICON_ICNS="images/SnailHeater_256.icns"
 DIST_DIR="dist"
 DMG_NAME="${APP_NAME}_macOS.dmg"
-PIP_INDEX_URL="${PIP_INDEX_URL:-https://pypi.org/simple}"
+PIP_INDEX="${PIP_INDEX_URL:-https://pypi.org/simple}"
 
 log() { printf '\n==> %s\n' "$*"; }
 
@@ -60,7 +61,7 @@ make_icns() {
 
 PYTHON_BIN="${PYTHON_BIN:-python3.8}"
 if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
-    echo "未找到 $PYTHON_BIN，回退到 python3（建议安装 3.8 以匹配 Windows 构建）" >&2
+    echo "未找到 ${PYTHON_BIN}，回退到 python3（建议安装 3.8 以匹配 Windows 构建）" >&2
     PYTHON_BIN="python3"
 fi
 log "使用解释器：$("$PYTHON_BIN" -c 'import sys; print(sys.executable, sys.version.split()[0])')"
@@ -71,9 +72,9 @@ rm -rf "$VENV_DIR"
 # shellcheck disable=SC1090
 source "$VENV_DIR/bin/activate"
 
-log "安装 Python 依赖（$PIP_INDEX_URL）"
+log "安装 Python 依赖（${PIP_INDEX}）"
 python -m pip install --upgrade pip
-python -m pip install -r "$REQUIREMENTS" -i "$PIP_INDEX_URL"
+python -m pip install -r "$REQUIREMENTS" -i "${PIP_INDEX}"
 
 log "构建 WebUI"
 pushd webui >/dev/null
@@ -105,7 +106,7 @@ python -m PyInstaller --noconfirm --clean \
 
 APP_PATH="$DIST_DIR/$APP_NAME.app"
 if [ ! -d "$APP_PATH" ]; then
-    echo "未生成 .app 包，请检查 PyInstaller 输出：$APP_PATH" >&2
+    echo "未生成 .app 包，请检查 PyInstaller 输出：${APP_PATH}" >&2
     exit 1
 fi
 
