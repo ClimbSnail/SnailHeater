@@ -11,6 +11,7 @@
 
 # 不用 set -u：macOS 自带 bash 3.2 在变量紧邻中文/全角标点时可能误判变量名边界
 set -eo pipefail
+trap 'echo "构建失败：${BASH_SOURCE[0]}:${LINENO} -> ${BASH_COMMAND}" >&2' ERR
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
